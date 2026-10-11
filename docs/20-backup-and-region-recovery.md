@@ -130,4 +130,4 @@ and repeated **every six months in acc**:
 
 ---
 
-[Back to contents](../README.md) · Previous: [19. Observability with Grafana Cloud](19-observability-with-grafana-cloud.md) · Next: [Open questions](open-questions.md)
+[Back to contents](../README.md) · Previous: [19. Observability with Grafana Cloud](19-observability-with-grafana-cloud.md) · Next: [21. Open standards and portability](21-open-standards-and-portability.md)

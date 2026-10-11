@@ -1,6 +1,14 @@
-# aks-design
+# OneK8s
 
-Design drafts for a large Azure Kubernetes Service (AKS) platform with strong isolation between
+**One Kubernetes platform for every cloud.** The name comes from the one ring that rules them all: one platform
+that runs in any public cloud **without changes to the applications or to how they are deployed**. Applications,
+their manifests and the platform's in-cluster configuration use only open standards – Kubernetes, OCI, Flux, the
+Gateway API, External Secrets, OIDC workload identity – and data lives in PaaS services that every major cloud offers
+with the same protocol (PostgreSQL, MySQL, Redis / Valkey, MongoDB, Kafka). Only the landing zone and the cluster
+infrastructure-as-code are cloud-specific ([section 21](docs/21-open-standards-and-portability.md)).
+
+**Azure is the first cloud implemented**; AWS and Google Cloud are the targets. This design describes the Azure
+implementation: a large Azure Kubernetes Service (AKS) platform with strong isolation between
 **internal / external** workloads and between **countries**, plus application multi-tenancy inside each isolation zone.
 
 The platform runs **two types of clusters** – zonal **stateless** clusters in the frontend network and an
@@ -22,7 +30,22 @@ collected node-locally by Grafana Alloy, with one stack per environment whose us
 shows how the platform survives the loss of the region: **only persistent data is backed up, immutably, into the
 paired region**, and the clusters are rebuilt there from IaC and Git.
 
+Picture 21 shows what makes the platform portable: what is the same in every cloud, the thin layer of cloud
+adapters, and the PaaS services every cloud offers.
+
 > Status: **draft** for review. Country codes `fi` / `se` and all IP ranges are examples.
+
+## Repositories
+
+| Repository | What it holds |
+|---|---|
+| [onek8s.github.io](https://github.com/onek8s/onek8s.github.io) | This design ([onek8s.github.io](https://onek8s.github.io/)) |
+| [azure-landing-zone](https://github.com/onek8s/azure-landing-zone) | The Azure landing zone of the build tenant: management groups, policy, hub, subscriptions, the public DNS zone |
+| [aks-terraform](https://github.com/onek8s/aks-terraform) | The AKS clusters and what an environment's clusters share: network, Key Vault, container registry, Traffic Manager |
+| [aks-fluxcd-platform](https://github.com/onek8s/aks-fluxcd-platform) | What Flux deploys into every cluster: Traefik and the Gateways, External Secrets, external-dns, policies, tenants |
+| [aks-fluxcd-example](https://github.com/onek8s/aks-fluxcd-example) | An application team's repository – cloud-neutral manifests |
+| [aks-hello](https://github.com/onek8s/aks-hello) | The example application, live at https://hello.onek8s.lol on two stateless clusters at once |
+| [aks-ai-agents](https://github.com/onek8s/aks-ai-agents) | AI agents for day-2 operations ([section 15](docs/15-ai-driven-day-2-operations.md)) |
 
 ## Contents
 
@@ -47,5 +70,6 @@ paired region**, and the clusters are rebuilt there from IaC and Git.
 - [18. Encryption at rest with customer-managed keys](docs/18-encryption-at-rest-and-customer-managed-keys.md)
 - [19. Observability with Grafana Cloud](docs/19-observability-with-grafana-cloud.md)
 - [20. Backup and region recovery](docs/20-backup-and-region-recovery.md)
+- [21. Open standards and portability](docs/21-open-standards-and-portability.md)
 - [Open questions](docs/open-questions.md)
 - [Editing the pictures](docs/editing-the-pictures.md)
