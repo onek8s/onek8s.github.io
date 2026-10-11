@@ -116,4 +116,4 @@
 
 ---
 
-[Back to contents](../README.md) · Previous: [20. Backup and region recovery](20-backup-and-region-recovery.md) · Next: [Editing the pictures](editing-the-pictures.md)
+[Back to contents](../README.md) · Previous: [21. Open standards and portability](21-open-standards-and-portability.md) · Next: [Editing the pictures](editing-the-pictures.md)

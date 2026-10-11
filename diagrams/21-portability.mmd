@@ -1,0 +1,43 @@
+%% OneK8s: one platform, every cloud. Everything above the line is the same in every cloud - applications, their
+%% manifests, the platform's Flux configuration and the open protocols they speak. Only the thin adapter layer and the
+%% cloud-specific IaC repository change when a cloud is added.
+flowchart TB
+    subgraph PORT["The same in every cloud"]
+        direction TB
+        app["Applications<br/>OCI images · 12-factor config · no cloud SDKs"]
+        team["Team repositories<br/>Deployment · Service · HTTPRoute · ExternalSecret"]
+        plat["Platform repository<br/>Flux · Helm · Gateway API · Traefik · External Secrets ·<br/>external-dns · NetworkPolicy · Pod Security · OpenTelemetry"]
+        proto["Open protocols to data services<br/>PostgreSQL · MySQL · Redis / Valkey · MongoDB wire ·<br/>Kafka · AMQP · S3 API · OIDC"]
+    end
+
+    subgraph ADAPT["Cloud adapters - a few values per cluster (cluster-settings)"]
+        direction LR
+        a_id["Workload identity<br/>OIDC federation"]
+        a_sec["Secret store<br/>ESO provider"]
+        a_dns["DNS<br/>external-dns provider"]
+        a_lb["Load balancer<br/>Service annotations"]
+        a_disk["Storage<br/>CSI StorageClass"]
+        a_reg["Registry<br/>OCI"]
+        a_id ~~~ a_sec ~~~ a_dns ~~~ a_lb ~~~ a_disk ~~~ a_reg
+    end
+
+    subgraph CLOUDS["Cloud-specific IaC - one repository per cloud"]
+        direction LR
+        az["Azure (today)<br/>azure-landing-zone · aks-terraform<br/>AKS · Key Vault · Azure DNS · ACR ·<br/>Azure Database for PostgreSQL · Azure Managed Redis ·<br/>Cosmos DB for MongoDB"]
+        aws["AWS (target)<br/>landing zone · eks-terraform<br/>EKS · Secrets Manager · Route 53 · ECR ·<br/>RDS / Aurora PostgreSQL · ElastiCache · DocumentDB"]
+        gcp["Google Cloud (target)<br/>landing zone · gke-terraform<br/>GKE · Secret Manager · Cloud DNS · Artifact Registry ·<br/>Cloud SQL / AlloyDB · Memorystore · Firestore (MongoDB compat.)"]
+    end
+
+    app --> team --> plat
+    app --> proto
+    plat --> ADAPT
+    ADAPT --> az
+    ADAPT --> aws
+    ADAPT --> gcp
+
+    classDef port fill:#e8f5e9,stroke:#2e7d32,color:#000
+    classDef adapt fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef cloud fill:#e3f2fd,stroke:#1565c0,color:#000
+    class app,team,plat,proto port
+    class a_id,a_sec,a_dns,a_lb,a_disk,a_reg adapt
+    class az,aws,gcp cloud
