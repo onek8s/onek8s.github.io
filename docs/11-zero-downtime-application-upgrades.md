@@ -11,12 +11,14 @@ application can be deployed in a way that breaks a zero-downtime rollout or a no
 | Rollout strategy | `RollingUpdate`, `maxUnavailable: 0`, `maxSurge: 25%` | `RollingUpdate` (optionally `partition` for canary) or operator-managed |
 | Probes | readiness + liveness (+ startup) required | readiness gated on replication / quorum |
 | Graceful shutdown | `preStop` delay + `terminationGracePeriodSeconds` longer than the gateway / traffic layer drain time | same, plus clean leader hand-over |
-| Resources | requests required (HPA and NAP depend on them) | requests = limits for memory |
+| Resources | requests required (HPA and NAP depend on them); resized in place by the VPA within Git bounds ([section 4](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)) | requests = limits for memory; VPA recommendations only |
 | Images | by digest, from the environment's ACR only | same |
 
 - **Scaling on load** (stateless): HPA on CPU/memory or KEDA on queue length / request rate; NAP adds nodes for
   pods that do not fit and consolidates them away again. `maxReplicas` and the NAP `NodePool` limits are sized so that
-  one cluster can take the full load.
+  one cluster can take the full load. Vertically, the VPA resizes running pods **in place** – no new pod, usually no
+  restart – within the bounds in Git ([pod right-sizing](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)),
+  so following the load needs no release; only changing the bounds does.
 - **No scaling on load in the stateful cluster**: replica counts and node pool sizes are fixed and changed as planned
   changes through the pipeline and IaC.
 - **Compatibility rule**: during a release two versions run at the same time (in different cells, and for a few

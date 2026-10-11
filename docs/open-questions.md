@@ -31,6 +31,14 @@
 - Update speeds: does `sl-az2` running the oldest supported minor leave enough time for its 1-month steps in every
   AKS release cycle, and should `sl-az3` follow the slow speed (current draft) or the fast one? With NAP, confirm that
   nodes created during scale-out use the pinned node image, not the newest one.
+- Pod right-sizing ([section 4](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)): confirm in prototyping
+  that the AKS VPA add-on runs `InPlaceOrRecreate` on every cell's minor; whether Gatekeeper (Azure Policy add-on)
+  sees the `pods/resize` subresource; that the built-in "requests set" policies and deployment safeguards accept pods
+  whose limits are only pod-level (`spec.resources`) – the safeguards may inject container defaults that break a shared
+  budget; and that `Azure Kubernetes Service RBAC Reader` can read `autoscaling.k8s.io` objects. Do application teams
+  opt in per application (current draft) or is in-place right-sizing the default with an opt-out? Should the
+  operations agent get a safe runbook that resizes the pods of an application without a VPA *up* in place during an
+  incident (it reverts itself at the next rollout)?
 - Key Vault ABAC is preview – acceptable for production, or fall back to vault per application until GA? (Affects only
   applications with a secret exception.)
 - External Secrets Operator per zone: confirm in prototyping that a controller can be limited to its zone's

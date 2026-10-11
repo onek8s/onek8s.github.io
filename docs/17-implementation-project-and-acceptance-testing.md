@@ -53,7 +53,7 @@ Rules that keep the build tenant from drifting away from what will be deployed l
 | Phase | Goal | Exit criterion |
 |---|---|---|
 | 1. Foundation | Build tenant, management and hub, `sub-aks-dev`, pipelines and OIDC, Azure Policy in audit, the client VNet | A stateless cell can be created and deleted by the pipeline |
-| 2. Rapid prototyping | Build → test → change until the design meets every requirement; [open questions](open-questions.md) answered by experiments (NAP with custom subnets, eBPF host routing with VNet encryption, Key Vault ABAC, ExternalDNS with a shared owner across cells, …); AI agents built with full permissions | Every requirement R1–R20 has at least one automated test that passes; design documents updated to what was built; agent roles and risk tiers derived from the logged agent actions |
+| 2. Rapid prototyping | Build → test → change until the design meets every requirement; [open questions](open-questions.md) answered by experiments (NAP with custom subnets, eBPF host routing with VNet encryption, Key Vault ABAC, ExternalDNS with a shared owner across cells, VPA in-place resize with NAP and HPA, pod-level in-place resize, …); AI agents built with full permissions | Every requirement R1–R20 has at least one automated test that passes; design documents updated to what was built; agent roles and risk tiers derived from the logged agent actions |
 | 3. Acceptance testing in dev | Prove performance, HA, zero-downtime upgrades, recovery and operability with **all policies switched to `deny`** and the AI agents on their least-privilege identities | All tests in the tables below pass, results recorded |
 | 4. Security reviews | Independent review of the built platform | No open critical or high findings; medium findings have an owner and a date |
 | Connection readiness gate | Platform owner, security and network team approve connecting | Checklist [below](#connection-readiness-gate) complete |
@@ -98,6 +98,7 @@ Automated negative tests, kept from phase 2, that run as a pipeline stage:
 | Peak load per cell | One cell takes 100 % of the expected prd peak (the other cells drained), for 1 hour | p95 / p99 latency and error rate within targets (*TBD*); no throttling of Firewall, Front Door, Key Vault or Entra ID |
 | Scale-out from idle | Load ramps from 10 % to 100 % of peak in 5 minutes | HPA / KEDA and NAP add capacity before latency breaches its target; time to new nodes measured per VM family, arm64 and spot included |
 | Spot eviction under load | Simulated eviction of all spot nodes of a zone | Pods move to on-demand without errors beyond the budget; no SLO breach |
+| In-place right-sizing under load | Reference application opted in (`platform/rightsizing: auto`, VPA `InPlaceOrRecreate`) with requests set 4× too high, then 4× too low for memory; a resize that cannot fit its node (`Deferred`) and one that never fits (`Infeasible`); a multi-container pod with a pod-level budget resized in place (cells on 1.36+) | VPA converges within its bounds without errors beyond the budget; CPU resizes cause no container restarts; deferred resizes end in an eviction and a NAP node, infeasible ones raise the right-sizing alert; HPA and VPA do not oscillate; the right-sizing agent's pull requests pass the gate as tier low |
 | Soak | 72 hours at 60 % of peak | No growth of memory, connections, SNAT port use or latency |
 | Network dataplane | Pod-to-pod, pod-to-ILB and pod-to-PaaS throughput and latency (`netperf` / `iperf3`) with eBPF host routing and VNet encryption | Recorded as baseline; no regression later without an explanation |
 | FQDN egress | Requests per second through the ACNS DNS proxy for the busiest reference workload | Meets the busiest expected application, or the exception is documented ([open question](open-questions.md)) |
@@ -134,6 +135,8 @@ criterion for all is **no errors beyond the budget at the load generators**.
 - Azure Policy definition change rolled out audit → deny.
 - **Adding a country online** (two new zones, [R16](08-cluster-types-stateless-and-stateful.md#adding-a-country-online)).
 - An AI agent change through every risk tier, and the kill switch ([section 15](15-ai-driven-day-2-operations.md)).
+- A VPA bound change by the right-sizing agent rolled through the cells while the VPA resizes the reference
+  application in place.
 
 ### Rebuild, backup and recovery
 

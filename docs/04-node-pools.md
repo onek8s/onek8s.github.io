@@ -94,6 +94,72 @@ How the platform handles them:
 Choosing is a trade-off the application team owns: `multi` + `spot` is the cheapest, `amd64` + `on-demand` the most
 predictable. The choice can be changed in any release, because it is only a label in the pod template.
 
+## Pod right-sizing: vertical scaling in place
+
+NAP picks VM sizes, packs nodes and sizes the N+1 headroom from the pods' **requests**, so requests that are far from
+real use cost money (too high) or reliability (too low: OOM kills, CPU throttling). Since Kubernetes 1.35 a running
+container's CPU and memory can be changed **in place** (GA), and since 1.36 the same works for the pod-level budget
+`spec.resources` ([in-place pod-level resources, beta, on by default](https://kubernetes.io/blog/2026/04/30/kubernetes-v1-36-inplace-pod-level-resources-beta/)).
+Changing the size of a running pod no longer needs a new pod, and usually not even a container restart. The
+platform uses it in two loops:
+
+| Loop | Who | How fast | Writes |
+|---|---|---|---|
+| **Online**: resize running pods to their usage | [Vertical Pod Autoscaler](https://learn.microsoft.com/en-us/azure/aks/vertical-pod-autoscaler) (AKS add-on) in mode `InPlaceOrRecreate` – deterministic, in the cluster | Minutes | The pods' `resize` subresource only, within the bounds of the application's `VerticalPodAutoscaler` |
+| **Policy**: which applications may be resized, the bounds, and the requests new pods start from | **Right-sizing agent** ([section 15](15-ai-driven-day-2-operations.md#agents)) | Daily, and on OOMKill / throttling / stuck-resize alerts | Pull requests to the fleet repository, tiered by the merge gate |
+
+The agent never resizes a pod itself: an agent with write access to pods would break *Git is the only write path*,
+and a language model does not belong in a loop that must react in minutes. It is the same split as HPA / KEDA
+(controllers scale replicas online inside bounds that are in Git) and NAP (creates nodes inside `NodePool` limits
+that are in Git).
+
+**How it is set up**
+
+- The VPA add-on (`--enable-vpa`) is enabled by the cluster IaC in every cluster. AKS supports `InPlaceOrRecreate`
+  from 1.34; all nodes are Azure Linux 3.0, which has the cgroup v2 and containerd 2.0 that in-place resize needs.
+- Every stateless Deployment gets a `VerticalPodAutoscaler` in its overlay (`apps/<app>/stateless/<env>/vpa.yaml`),
+  created by the onboarding agent with `updateMode: "Off"` – recommendations only. The requests new pods start from
+  are a patch next to it (`resources.yaml`). Both files are platform-maintained; the application's own manifests
+  stay the team's.
+- **Opt-in**: the VPA may resize an application in place only when its team adds the pod label
+  `platform/rightsizing: auto`. The right-sizing agent then switches the VPA to `InPlaceOrRecreate`, dev → acc → prd.
+- **Bounds**: `controlledValues: RequestsOnly` and a `maxAllowed` for every resource it controls; the merge gate
+  checks modes and bounds against `rightSizing` in `limits.yaml` (inside = tier low, over the soft limit = medium,
+  over the hard limit = rejected). A pull request that changes only requests / limits of a workload is low when each
+  value moves at most ×2.
+- **Restart behaviour** is the application's `resizePolicy`: `cpu: NotRequired` always; `memory: NotRequired` only
+  when the runtime does not fix its heap at start (JVM `-Xmx`, .NET `GCHeapHardLimit`, Node `--max-old-space-size`) –
+  otherwise `RestartContainer`, or memory stays out of the VPA's `controlledResources`.
+- **HPA / KEDA**: an HPA on CPU utilisation computes against the CPU request, so a VPA moving CPU would fight it. The
+  VPA then controls only memory (HPA on memory: only CPU; KEDA on queue length or request rate: both). An application
+  whose HPA scales on both stays `Off`: only its baseline in Git moves.
+- **Stateful cluster**: VPA objects only in `Off` – requests = limits for memory and fixed node pools make every size
+  change a planned change through the pipeline.
+
+**What keeps it safe**
+
+- The kubelet admits a resize only if it fits the node; otherwise the pod gets the condition `PodResizePending`
+  (`Deferred` – may fit later, `Infeasible` – never fits). NAP does **not** add nodes for a deferred resize; the VPA
+  updater then falls back to evicting the pod (PDB respected), and the recreated, pending pod is what makes NAP add a
+  node. `maxAllowed` must therefore fit the largest allowed VM size, and many deferred resizes in a zone are a
+  capacity signal for the capacity agent.
+- Resizes are admitted against the namespace `ResourceQuota`: `maxAllowed` × `maxReplicas` must fit it. The design
+  does not count on Azure Policy (Gatekeeper) seeing the `pods/resize` subresource ([open question](open-questions.md)),
+  so `maxAllowed`, quota and node allocatable are the bounds of an in-place resize, not the admission policies of
+  [section 14](14-policy-enforcement.md).
+- An in-place resize changes the pod, not the Deployment: Flux sees no drift. New pods start from the requests the
+  VPA's admission webhook sets, or – if the webhook is down – from Git; the right-sizing agent keeps Git close to the
+  VPA's target so a rebuilt cell or a drain does not start from stale numbers.
+- On increase the kubelet grows the pod cgroup before the containers', on decrease it shrinks the containers first,
+  so a pod never overshoots its budget during a resize.
+
+**Pod-level resources** (`spec.resources`, Kubernetes 1.34+) suit pods with several containers – the application and
+a sidecar share one budget, and containers without their own limits use what the others leave. From 1.36 the budget
+can be resized in place, but the VPA cannot recommend or actuate pod-level values yet (planned upstream for GA). Until
+then a pod-level budget is a value in `resources.yaml`, proposed by the right-sizing agent with the application team's
+agreement, and only when every cell of the environment runs 1.36 or later (the slow update speed runs one minor
+behind, [section 12](12-zero-downtime-cluster-upgrades.md#update-policy)).
+
 ## Zone pinning
 
 Application namespaces are named `<zone>-<app>` and carry the matching `platform/zone` label. The Azure Policy
