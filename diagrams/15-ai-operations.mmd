@@ -3,7 +3,7 @@
 flowchart LR
     subgraph SIG["Signals (read-only)"]
         direction TB
-        s_mon["Azure Monitor · Managed Prometheus<br/>Flux status · pipeline runs"]
+        s_mon["Grafana Cloud (metrics, logs, traces, alerts)<br/>Flux status · pipeline runs"]
         s_sec["Defender for Cloud · Azure Policy compliance<br/>Key Vault expiry events"]
         s_cost["Cost Management · quotas"]
         s_rel["AKS releases · node images<br/>deprecated APIs"]

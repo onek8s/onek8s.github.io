@@ -14,7 +14,8 @@ first option that fits:
 1. **Stateless cluster** – all application code. Its state lives in the options below.
 2. **Azure PaaS service in the backend network** (Azure SQL / PostgreSQL, Storage, Service Bus, Event Hubs, Cosmos DB,
    Cache for Redis, …) reached through private endpoints from the stateless clusters. Zone redundancy, backups,
-   patching and upgrades are Microsoft's job.
+   patching and upgrades are Microsoft's job; the immutable copies in the paired region are the platform's
+   ([section 20](20-backup-and-region-recovery.md)).
 3. **Stateful cluster – last option**, only when
    - no Azure PaaS service provides the capability (e.g. a product that is only shipped as a container or operator), or
    - a special use case requires it (e.g. a licence, a latency requirement to data that only the cluster can meet,
@@ -178,7 +179,7 @@ namespace `infra-dns`, with:
 Until step 5, the migration is rolled back by moving `platform/dns-publish` back. Planned migrations are
 zero-downtime. Teams start one by a pull request that changes their `placement.yaml`.
 
-**Cell failure.** An alert on the cell's health (Traefik health routes probed by synthetic monitoring, AKS and VM
+**Cell failure.** An alert on the cell's health (Traefik health routes probed by Grafana Cloud synthetic monitoring, AKS and VM
 health) dispatches the **failover**: the migration workflow for all internal applications of the failed cell, with
 step 4 skipped and step 5 deferred until the cell is back (a safe action,
 [section 15](15-ai-driven-day-2-operations.md#safe-actions-without-a-pull-request)). Their recovery time is alert +
@@ -305,10 +306,12 @@ the full load of the environment (N+1). Only the stateful spoke has pod subnets.
 | Stateful cluster | Frontend networks | – | **Blocked** – the backend never initiates connections to the frontend |
 | Stateful cluster | Internet | – | **Blocked** – no route, no outbound IP, Firewall deny-all |
 | Management VNet pipeline agents | Stateful API server (Private Link) | TCP 443 | Deployments to the stateful cluster ([section 10](10-keeping-clusters-in-sync.md)) |
+| All nodes of the environment (Grafana Alloy) | Grafana Cloud private endpoint in the hub | TCP 443 | Telemetry through Azure Private Link, so the stateful cluster still has no Internet ([section 19](19-observability-with-grafana-cloud.md#network-grafana-cloud-through-private-link)) |
 | Stateful nodes / pods | Microsoft Entra ID (`AzureActiveDirectory` service tag) | TCP 443 | Exception, needed for workload identity token exchange because Entra ID has no Private Link for sign-in – see open questions |
 | Stateful nodes (Azure Policy add-on) | `data.policy.core.windows.net`, `store.policy.core.windows.net`, `dc.services.visualstudio.com` | TCP 443 | Exception, Firewall application rules for these FQDNs only; the add-on has no Private Link ([section 14](14-policy-enforcement.md)) |
 
-Azure Monitor is reached through an Azure Monitor Private Link Scope. Other AKS add-ons that need public Azure
+Telemetry goes to Grafana Cloud through Private Link; the AKS monitoring add-on is not enabled
+([section 19](19-observability-with-grafana-cloud.md)). Other AKS add-ons that need public Azure
 endpoints are not enabled in the stateful cluster; the Azure Policy add-on is the one accepted exception ([section 14](14-policy-enforcement.md)).
 
 ---

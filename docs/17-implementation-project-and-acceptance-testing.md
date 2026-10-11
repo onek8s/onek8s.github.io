@@ -145,15 +145,23 @@ criterion for all is **no errors beyond the budget at the load generators**.
 | Rebuild the whole dev environment into an empty subscription from IaC + Git | Completes without manual steps; time measured and recorded as the environment RTO |
 | Restore a deleted Key Vault secret and a deleted Key Vault (soft delete, purge protection) | Recovered; applications reconnect |
 | PaaS point-in-time restore of the reference database | Within the agreed RPO / RTO |
-| Stateful cluster (if built): backup and restore of a namespace with its volumes (Azure Backup for AKS) into the same and a rebuilt cluster | Data consistent; within the agreed RPO / RTO |
+| Stateful cluster (if built): restore of a zone's persistent volumes only (Azure Backup for AKS, vault tier) into the same and a rebuilt cluster, the pipeline deploying the StatefulSets afterwards | Data consistent; StatefulSets bind the restored claims; within the agreed RPO / RTO |
+| Immutability of the backups: delete a recovery point, delete a blob version, shorten a retention and disable soft delete as `Owner` of the backup subscription ([section 20](20-backup-and-region-recovery.md#tests)) | Every attempt denied or blocked by multi-user authorization |
+| Region recovery drill: the primary region treated as lost; the environment rebuilt in the paired region from IaC, Git and the immutable copies only ([section 20](20-backup-and-region-recovery.md#region-recovery)) | Reference application passes its tests; RPO per data store and RTO end to end recorded |
 | Loss of the Flux source (Git unavailable) | Clusters keep running the last applied state; recovery when Git returns |
 
 ### Operations
 
 - Dashboards and alerts for every cell, zone and dependency; every chaos experiment produced its alert, and the
   runbook linked from the alert worked.
-- Logs: Kubernetes audit logs, Activity Log, Firewall, Front Door / WAF and Hubble flow logs arrive in the
-  Log Analytics workspace with the agreed retention.
+- Telemetry: metrics, logs (including Hubble flow logs) and traces of every cluster arrive in the environment's
+  Grafana Cloud stack through Private Link, also from the stateful cluster; a trace of the reference application
+  links Traefik, the application and its logs; the absent-data alert fires when a cluster's Alloy is stopped
+  ([section 19](19-observability-with-grafana-cloud.md)).
+- Logs: Kubernetes audit logs, Activity Log, Firewall and Front Door / WAF logs arrive in the Log Analytics
+  workspace with the agreed retention and can be queried from Grafana.
+- No secrets in telemetry: a test application that logs a token, a connection string and an `Authorization`
+  header; none of them reaches Grafana Cloud unredacted.
 - Cost per environment measured at idle and at peak, and the prd estimate updated.
 
 ## Security reviews

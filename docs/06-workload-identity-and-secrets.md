@@ -32,7 +32,7 @@ storage account keys for Azure services.
   "Local auth disabled" is enforced with Azure Policy on the resources, so a key-based fallback cannot be switched
   on later. Application configuration contains only endpoints and client IDs, which are not secrets.
 - **Platform components use workload identity too**: Flux (`OCIRepository` `provider: azure`), the stateful
-  deployment pipeline (workload identity federation, no client secret), External Secrets Operator (below), the Azure Monitor agent, external-dns. Unlike applications, platform components may use
+  deployment pipeline (workload identity federation, no client secret), External Secrets Operator (below), external-dns. Unlike applications, platform components may use
   Key Vault directly with their own identity ([below](#platform-components-may-use-key-vault-directly)). Images are pulled
   with the kubelet identity, which has only `AcrPull` on the environment's ACR – no `imagePullSecrets`.
 
@@ -107,7 +107,7 @@ Azure Policy denies enabling it, its CRDs are not installed, and admission rejec
 
 ## Platform components may use Key Vault directly
 
-Platform components in platform namespaces (`<zone>-secrets`, `flux-system`, monitoring) are owned,
+Platform components in platform namespaces (`<zone>-secrets`, `flux-system`, `infra-observability`) are owned,
 reviewed and upgraded by the platform team, so they are not forced through ESO. Such a component may read Key Vault
 directly with **its own workload identity**, with a data-plane role scoped as narrowly as Key Vault allows (a single
 certificate or secret where possible), declared in the IaC module and reviewed with the platform change, and with the
@@ -121,6 +121,9 @@ vault in its namespace's platform-owned egress policy. The Secrets Store CSI dri
   [section 14](14-policy-enforcement.md) apply to `<zone>-gateway` as to any application namespace.
 - **External Secrets Operator** itself, Flux and the monitoring components follow the rules above: own identity, own
   narrow roles, egress policy owned by the platform.
+- **Grafana Alloy** cannot read Key Vault, so its Grafana Cloud write token is delivered by a platform ESO controller
+  in `platform-secrets` that serves only platform namespaces. Its reader identity has Key Vault Secrets User on
+  that one secret in `kv-<env>-platform` ([section 19](19-observability-with-grafana-cloud.md#collection-grafana-alloy-node-local)).
 
 Trade-offs of delivering secrets as Kubernetes `Secret`s instead of CSI file mounts:
 

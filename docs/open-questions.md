@@ -63,7 +63,8 @@
 - "No Internet" for the stateful cluster: are the Azure Policy add-on FQDNs acceptable as a second exception next to
   Entra ID?
 - AI-driven operations: which model provider and region are acceptable for the agents (data residency of logs and
-  diagnostics sent to the model), and is a private endpoint to it required?
+  diagnostics sent to the model), and is a private endpoint to it required? The agents read application logs and
+  traces in Grafana Cloud like every stack user, so whatever personal data the logs hold may reach the model.
 - Risk tiers: may tier-low changes (patches per timetable, digest promotion that passed acc, limits inside
   `limits.yaml`) really merge to prd without a human, or does every prd change need one human at first? Who owns
   `limits.yaml` – platform team alone, or platform + security?
@@ -96,7 +97,23 @@
   have to be HSM-protected (Key Vault Premium or Managed HSM)? Is a 12-month rotation enough?
 - KMS data encryption (versionless key, automatic rotation, no re-encryption of Secrets) is preview: switch to it when
   it is GA, or earlier in dev?
+- Grafana Cloud ([section 19](19-observability-with-grafana-cloud.md)): every user of an environment's stack sees
+  the telemetry of all countries and zones (decided). Which Grafana Cloud region on Azure meets the data residency
+  requirements for that, and which personal data may the logs therefore hold? Confirm that Azure Private Link to
+  the stacks works across regions (private endpoint in the primary region, stack in another region), and which
+  ingest and query host names need a Private DNS zone in the hub. Retention per signal and environment?
+- Region recovery ([section 20](20-backup-and-region-recovery.md)): which RPO and RTO does the business require per
+  application, and do the per-store RPOs meet them (SQL geo-restore about 1 h, but the immutable LTR copy is weekly;
+  stateful volumes up to 36 h)? Vaulted backup with Cross Region Restore for AKS is still documented as preview –
+  acceptable, or rely only on the operators' own backups to the immutable storage account until GA? Does Azure
+  Backup for AKS work with the network isolated stateful cluster?
+- Region recovery: should the backup vaults use customer-managed keys, and does Cross Region Restore keep working
+  when the key's region is lost (fallback: Microsoft-managed keys with infrastructure encryption)? Is a second
+  ExpressRoute / VPN connection in the paired region provisioned in advance, or built in the recovery?
+- Region recovery: is rebuilding the images from Git acceptable for the RTO, or should the prd ACR be geo-replicated
+  to the paired region so the deployed digests stay valid? Who owns the backup subscription and the Resource Guard
+  (backup administrators and security team, current draft)?
 
 ---
 
-[Back to contents](../README.md) · Previous: [18. Encryption at rest with customer-managed keys](18-encryption-at-rest-and-customer-managed-keys.md) · Next: [Editing the pictures](editing-the-pictures.md)
+[Back to contents](../README.md) · Previous: [20. Backup and region recovery](20-backup-and-region-recovery.md) · Next: [Editing the pictures](editing-the-pictures.md)

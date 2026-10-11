@@ -20,7 +20,8 @@ flowchart LR
     subgraph H["Hub"]
         direction TB
         fw["Azure Firewall"]
-        azure["AKS required FQDNs, MCR,<br/>Entra ID, Azure Monitor"]
+        azure["AKS required FQDNs, MCR,<br/>Entra ID"]
+        gpe["Grafana Cloud<br/>private endpoint"]
     end
 
     subgraph O["Other zones: int-se, ext-fi, ext-se"]
@@ -38,6 +39,7 @@ flowchart LR
     api -->|"TCP 443 KMS key<br/>(own cluster's key only)"| pkv
     Z -->|"⑥ all egress via UDR"| fw
     fw -->|"FQDN allow-list"| azure
+    fw -->|"⑥b TCP 443 Alloy telemetry<br/>(Private Link)"| gpe
     Z x-.-x|"⛔ BLOCKED<br/>NSG + Firewall + Cilium policy<br/>(only ⑦ Cilium health TCP 4240 node↔node, optional)"| O
 
     linkStyle 9 stroke:#c62828,stroke-width:3px,stroke-dasharray:6 4
@@ -49,4 +51,4 @@ flowchart LR
     class api,dns,ms,pkv cp
     class n,p,eso,kv int
     class on,okv other
-    class fw,azure hub
+    class fw,azure,gpe hub

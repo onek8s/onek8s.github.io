@@ -47,7 +47,7 @@ Either way, every interactive user switches from the old to the new version **ex
 4. **Test** through the per-cell test host names (external zones) and against the cell's Traefik IPs with the
    applications' real host names (internal zones): smoke and synthetic tests over the real TLS path.
 5. **Return** the cell to Front Door: its external clients come back in steps, a quarter of its IP blocks at a time,
-   and this is the moment they switch to the new version. The pipeline watches error-rate and latency SLOs per cell;
+   and this is the moment they switch to the new version. The pipeline watches the error-rate and latency SLOs per cell in Grafana Cloud ([SLO gates](19-observability-with-grafana-cloud.md#what-grafana-cloud-does));
    on a breach it drains the cell again – its external clients fall back to the old version in the other cells – and
    moves the tag back, which also rolls back the cell's internal applications.
 6. **Soak**, then repeat for the next cell. After the last cell all clients are on the new version.

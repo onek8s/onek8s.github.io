@@ -34,7 +34,7 @@ paths) are kept in the guardrails repository, versioned like code.
 
 | Agent | Responsibility | Triggered by | Output |
 |---|---|---|---|
-| **Operations agent** (on-call) | Triage alerts, correlate metrics, logs, Flux and pipeline status, Azure Resource Health; diagnose; verify that a fix worked; draft the incident report | Azure Monitor alerts, Flux notifications, failed pipeline runs, schedule (daily health report) | Incident issue with diagnosis and evidence, task for a change agent, dispatch of a [safe runbook action](#safe-actions-without-a-pull-request) |
+| **Operations agent** (on-call) | Triage alerts, correlate metrics, logs, Flux and pipeline status, Azure Resource Health; diagnose; verify that a fix worked; draft the incident report | Grafana Cloud alerts (IRM webhook), Flux notifications, failed pipeline runs, schedule (daily health report) | Incident issue with diagnosis and evidence, task for a change agent, dispatch of a [safe runbook action](#safe-actions-without-a-pull-request) |
 | **Platform change agent** | General IaC and fleet changes: fixes from incidents, platform component versions (Traefik, KEDA, operators, External Secrets Operator), configuration | Task from the operations agent, issue assigned by a human | Pull request |
 | **Upgrade agent** | Runs the [update policy](12-zero-downtime-cluster-upgrades.md#update-policy): takes the target versions the version pipeline computes (the timetable stays deterministic), reads the release notes, checks the fleet manifests for removed APIs on the target minor, follows the cell-by-cell rollout and stops it on failed health | Version pipeline output, AKS release events | Version pull requests per environment and speed with a compatibility report; halt + incident on failed health |
 | **Release agent** | Prepares the application promotion pull requests dev → acc → prd ([section 10](10-keeping-clusters-in-sync.md)), summarises the change set, watches the cell gates | Successful release in the previous environment | Promotion pull request with release notes and risk summary |
@@ -137,14 +137,16 @@ installation tokens. The identities and their role assignments are IaC in the gu
 
 | Agent | Azure roles | Never |
 |---|---|---|
-| All agents | `Reader` on the environment subscription; `Monitoring Reader`; `Log Analytics Reader` limited to the platform tables (table-level RBAC – no application logs that may hold personal data) | Any write role, `Contributor`, `Owner`, `User Access Administrator`, PIM eligibility |
+| All agents | `Reader` on the environment subscription; `Monitoring Reader`; a Grafana Cloud `Viewer` service account per agent and environment, which sees all telemetry of the stack like every Grafana user ([section 19](19-observability-with-grafana-cloud.md#stacks-and-access)) | Any write role, `Contributor`, `Owner`, `User Access Administrator`, PIM eligibility; any role on the backup subscription ([section 20](20-backup-and-region-recovery.md)) |
 | Operations, platform, upgrade, release, right-sizing | `Azure Kubernetes Service RBAC Reader` on the clusters (does not include `Secret`s); read access to the Flux and pipeline status | `Azure Kubernetes Service RBAC Writer` / `Cluster Admin`, `listClusterAdminCredential` |
 | Capacity and cost | `Cost Management Reader`; quota read | – |
 | Security and compliance | `Security Reader`; `Key Vault Reader` on the zone and platform vaults (metadata and expiry dates, not values) | `Key Vault Secrets User` / `Officer`, `Key Vault Certificate User` |
 | Onboarding, reviewer | `Reader` only | – |
 
 No agent has a data-plane role on the PaaS services or the ACR: they do not need application data to run the
-platform, and a prompt injection through a log line or an issue then cannot exfiltrate it. Only the guardrails
+platform, and a prompt injection through a log line or an issue then cannot exfiltrate it. Agents do read
+application logs and traces in Grafana Cloud, and the [rule of what must not be sent](19-observability-with-grafana-cloud.md#what-must-not-be-sent)
+keeps secrets out of them; their outbound access stays limited to the model provider and GitHub. Only the guardrails
 pipeline may create role assignments for agent identities; any other role assignment to one of them triggers an
 Activity Log alert, and a daily comparison against the guardrails IaC reports and removes it.
 

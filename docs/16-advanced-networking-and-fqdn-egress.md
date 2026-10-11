@@ -59,7 +59,7 @@ What eBPF host routing changes for the rest of the design:
 
 - **No iptables in the host network namespace.** AKS installs an *iptables blocker* that prevents new host iptables
   rules, and they would be bypassed anyway. Nothing in this design needs them: applications may not use
-  `hostNetwork` or privileged pods, and every platform DaemonSet (CSI drivers, monitoring agent, Defender sensor) is
+  `hostNetwork` or privileged pods, and every platform DaemonSet (CSI drivers, Grafana Alloy, Defender sensor) is
   checked for host iptables use before it is added. The standard **NodeLocal DNS** setup relies on host iptables rules
   and is therefore not used; DNS stays on CoreDNS (see [open questions](open-questions.md)).
 - **SNAT moves to eBPF.** In the stateless clusters Cilium masquerades pod traffic with BPF instead of
@@ -138,9 +138,10 @@ spec:
   IP needs no policy change.
 - **Environment-specific names** (`psql-dev-…`, `psql-prd-…`) come from the Kustomize overlays like image digests;
   `stateless` and `stateful` overlays may differ.
-- **Platform presets.** A Kustomize component in `infrastructure/base` offers presets – `entra-id`, `azure-monitor` – that expand to the right names per zone and
+- **Platform presets.** A Kustomize component in `infrastructure/base` offers presets – such as `entra-id` – that expand to the right names per zone and
   environment. They are still part of the application's own `egress` policy: nothing is opened for an application
-  that does not ask for it.
+  that does not ask for it. Telemetry needs no entry: the baseline allows every pod to reach the Grafana Alloy on its
+  own node ([section 19](19-observability-with-grafana-cloud.md#collection-grafana-alloy-node-local)).
 - **No policy, no egress.** An application that needs nothing outside the cluster simply has no `egress` policy (CI
   reports this explicitly at onboarding, so it is a decision, not an omission).
 
@@ -159,7 +160,7 @@ on its own; together with Cilium's default deny that is enough to make FQDN poli
 | No Key Vault names (`*.vault.azure.net`, `*.vaultcore.azure.net`) in application `toFQDNs` or DNS rules | Applications get secrets only from the zone's External Secrets Operator; platform namespaces may name a vault in their own policies ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)) |
 | Pod `dnsPolicy` must be `ClusterFirst` (no `None` with own `nameservers`), no `hostNetwork` | DNS must go through CoreDNS and the ACNS DNS proxy, or FQDN policies cannot work |
 
-Platform namespaces (`<zone>-gateway`, `<zone>-secrets` with External Secrets Operator, `flux-system`, monitoring) have
+Platform namespaces (`<zone>-gateway`, `<zone>-secrets` with External Secrets Operator, `flux-system`, `infra-observability`) have
 platform-owned egress policies built the same way – FQDNs wherever the destination has a name – and are reviewed
 with the platform change. They are the only egress policies that may name a Key Vault; `<zone>-gateway` does not – Traefik gets its
 certificate from External Secrets Operator. `kube-system` and node (host network) traffic – kubelet, image pulls, AKS-required FQDNs –
@@ -168,8 +169,10 @@ are not pod traffic; they are controlled by the Firewall allow-list as before.
 ## Observing and troubleshooting
 
 - **Dropped egress is visible per namespace**: ACNS container network logs (Hubble flows with verdict `DROPPED` and
-  reason *policy denied*, plus DNS responses `REFUSED` by the DNS proxy) are collected to Log Analytics, and the
-  ACNS metrics feed Managed Prometheus / Grafana. Application teams have read access to their namespaces' flows.
+  reason *policy denied*, plus DNS responses `REFUSED` by the DNS proxy) are collected from every node by Grafana
+  Alloy into Grafana Cloud Logs, and the Cilium and Hubble metrics into Grafana Cloud Metrics
+  ([section 19](19-observability-with-grafana-cloud.md)). Every user of the environment's stack, application teams
+  included, can see the flows.
 - **In dev** the operations agent ([section 15](15-ai-driven-day-2-operations.md)) summarises drops after a
   deployment and proposes the missing FQDN as a pull request to the application – reviewed by the application team,
   plus a Firewall pull request (high tier) if the zone does not allow the name either.

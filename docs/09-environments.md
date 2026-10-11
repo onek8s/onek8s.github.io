@@ -25,7 +25,8 @@ smaller stateful node pools.
 - **Clusters are cattle, built by IaC.** An environment module creates what all clusters of an environment share
   and what must survive a cluster rebuild: the Key Vaults per zone (with the application secrets), the platform Key
   Vault (with the environment's certificates and their role assignments), the application managed identities, the
-  ACR and the Azure Policy assignments. Two cluster modules (stateless, stateful) with `env` and `az` as parameters
+  ACR and the Azure Policy assignments – and, in the backup subscription, the zones' immutable backup vaults and
+  backup storage accounts in the paired region ([section 20](20-backup-and-region-recovery.md)). Two cluster modules (stateless, stateful) with `env` and `az` as parameters
   create the cluster's customer-managed keys in the platform Key Vault, its control plane identity and disk encryption set
   ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)), the VNet, cluster, system pool (and, in the stateful cluster, the zone node pools), private endpoints to the shared zone and platform Key Vaults, the federated
   credentials and – in stateless clusters – the Flux bootstrap. The IaC also writes a

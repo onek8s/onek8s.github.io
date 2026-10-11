@@ -1,0 +1,64 @@
+%% Observability with Grafana Cloud: node-local Grafana Alloy in every cluster, Private Link from the hub,
+%% one stack per environment outside the platform's region; anyone who can sign in to a stack sees all its data.
+%% Azure-produced logs stay in Log Analytics and are read in place by the Azure Monitor data source.
+flowchart LR
+    subgraph CL["Every cluster (stateless cells and the stateful cluster)"]
+        direction TB
+        subgraph NODE["Zone node (every node, every zone)"]
+            direction TB
+            app["Application pod<br/>stdout JSON logs · /metrics<br/>OpenTelemetry SDK"]
+            an["alloy-node (DaemonSet)<br/>own node only: pod logs, kubelet/cAdvisor,<br/>PodMonitors, Hubble flows + metrics,<br/>OTLP :4317/:4318 (internalTrafficPolicy Local)<br/>redaction · write-ahead log"]
+        end
+        ac["alloy-cluster (system pool)<br/>kube-state-metrics, events, API server,<br/>CoreDNS, Traefik, Flux, ESO"]
+        tok["grafana-&lt;env&gt;-write token<br/>ExternalSecret ← kv-&lt;env&gt;-platform<br/>(platform ESO controller)"]
+    end
+
+    subgraph HUB["Hub"]
+        direction TB
+        fw["Azure Firewall<br/>node subnets → Grafana PE, TCP 443<br/>no Grafana FQDN on any Internet allow-list"]
+        pe["Private endpoint snet-hub-pe<br/>Private DNS zone per ingest host name"]
+    end
+
+    subgraph MG["Management VNet"]
+        direction TB
+        pipe["Release / upgrade pipelines<br/>SLO gates (metrics:read)"]
+        probe["Synthetic monitoring private probes<br/>internal apps, cell health routes"]
+    end
+
+    subgraph GC["Grafana Cloud (Azure, outside the platform's primary region)"]
+        direction TB
+        stack["Stacks &lt;org&gt;-dev / -acc / -prd<br/>Metrics · Logs · Traces · SLO<br/>Alerting · IRM on-call · Synthetic Monitoring"]
+        amds["Azure Monitor data source<br/>Activity Log, AKS audit, Firewall, Front Door,<br/>Key Vault, PaaS logs and metrics"]
+    end
+
+    law["Log Analytics log-&lt;env&gt;-platform<br/>(diagnostic settings, SOC)"]
+    users["Users and AI agents<br/>Entra ID SSO, grp-grafana-&lt;env&gt;<br/>everyone sees all data of the stack"]
+    oncall["Platform and team on-call<br/>operations agent (webhook)"]
+
+    app -->|"OTLP / scrape / log files<br/>same node only"| an
+    tok -.-> an
+    tok -.-> ac
+    an --> fw
+    ac --> fw
+    fw --> pe
+    pipe --> pe
+    probe --> pe
+    pe -->|"Azure Private Link"| stack
+    stack --- amds
+    amds -->|"read in place"| law
+    users -->|"Internet, Conditional Access"| stack
+    stack -->|"alerts by team label"| oncall
+
+    note["Not used: Container Insights, Azure Monitor managed Prometheus<br/>Never sent: secrets, tokens, request/response bodies, personal IDs in labels<br/>Watchdog: absent-data alert per cluster and Alloy (fires on region loss too)"]
+
+    classDef cp fill:#eceff1,stroke:#455a64,color:#000
+    classDef sl fill:#e0f2f1,stroke:#00695c,color:#000
+    classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef id fill:#e8f5e9,stroke:#2e7d32,color:#000
+    classDef note fill:#fffde7,stroke:#9e9d24,color:#000
+    class app,an,ac sl
+    class tok id
+    class fw,pe,pipe,probe hub
+    class stack,amds,law cp
+    class users,oncall id
+    class note note

@@ -12,12 +12,13 @@ fleet/
 │   ├── acc/{sl-az1,sl-az2}/
 │   └── prd/{sl-az1,sl-az2,sl-az3}/
 ├── infrastructure/
-│   ├── base/                      # Cilium baseline policies + FQDN egress presets, External Secrets Operator per zone, monitoring
+│   ├── base/                      # Cilium baseline policies + FQDN egress presets, External Secrets Operator per zone, Grafana Alloy
 │   ├── stateless/                 # NAP NodePool + AKSNodeClass per zone, Traefik + Gateways + certificate ExternalSecret per zone, KEDA, ExternalDNS
 │   └── stateful/                  # storage classes (ZRS), operators (no Gateway API) – applied by the pipeline
 └── apps/
     └── <app>/
         ├── base/                      # incl. the application's CiliumNetworkPolicy `egress` (FQDNs)
+        ├── observability/             # dashboards, alert rules, slo.yaml – applied to Grafana Cloud by Terraform
         ├── stateless/{dev,acc,prd}/   # image digests + replicas/HPA per environment – Flux; internal apps: placement.yaml (home cell)
         └── stateful/{dev,acc,prd}/    # applied by the pipeline
 ```

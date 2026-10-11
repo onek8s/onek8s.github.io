@@ -17,7 +17,10 @@ how applications may send traffic out of a cluster only to destinations they hav
 policy**. Picture 17 shows how the platform is built and accepted in a separate **build tenant** that is not connected
 to the corporate network, before the accepted version is deployed to the corporate landing zone. Picture 18 shows how data at rest is encrypted with **customer-managed keys** from
 the platform Key Vault: one key per control plane and per cluster's node disks, and one per isolation zone for
-persistent volumes.
+persistent volumes. Picture 19 shows how all metrics, logs and traces go to **Grafana Cloud** through Private Link,
+collected node-locally by Grafana Alloy, with one stack per environment whose users see all of its data. Picture 20
+shows how the platform survives the loss of the region: **only persistent data is backed up, immutably, into the
+paired region**, and the clusters are rebuilt there from IaC and Git.
 
 > Status: **draft** for review. Country codes `fi` / `se` and all IP ranges are examples.
 
@@ -42,5 +45,7 @@ persistent volumes.
 - [16. Advanced networking: eBPF host routing and FQDN egress](docs/16-advanced-networking-and-fqdn-egress.md)
 - [17. Implementation project and acceptance testing](docs/17-implementation-project-and-acceptance-testing.md)
 - [18. Encryption at rest with customer-managed keys](docs/18-encryption-at-rest-and-customer-managed-keys.md)
+- [19. Observability with Grafana Cloud](docs/19-observability-with-grafana-cloud.md)
+- [20. Backup and region recovery](docs/20-backup-and-region-recovery.md)
 - [Open questions](docs/open-questions.md)
 - [Editing the pictures](docs/editing-the-pictures.md)

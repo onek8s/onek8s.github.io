@@ -1,0 +1,52 @@
+%% Backup and region recovery: only persistent data is backed up, immutably, into the paired region;
+%% clusters and everything else are rebuilt there from IaC and Git.
+flowchart LR
+    subgraph PRI["Primary region"]
+        direction TB
+        paas["Azure PaaS per zone<br/>SQL · PostgreSQL · Storage · Cosmos DB"]
+        pv["Stateful cluster: persistent volumes<br/>of the zone's application namespaces"]
+        kv["Zone Key Vaults: secrets that cannot be issued again<br/>platform vault: keys that backed-up data needs"]
+        bv["Backup vault bvault-&lt;env&gt;-&lt;zone&gt;<br/>immutability locked · soft delete always on<br/>multi-user authorization (Resource Guard)<br/>GRS + Cross Region Restore"]
+        rebuilt["Not backed up: clusters, etcd, node disks,<br/>Kubernetes objects, ACR images, certificates,<br/>cluster KMS/disk keys, messaging, caches"]
+    end
+
+    subgraph PAIR["Paired region (same geography)"]
+        direction TB
+        st["Storage account stbkp&lt;env&gt;&lt;zone&gt;<br/>version-level immutability, locked<br/>private endpoint only, CanNotDelete lock"]
+        crr["Secondary copy of the vault's recovery points<br/>(Cross Region Restore)"]
+        geo["Geo-redundant PaaS backups<br/>(geo-restore)"]
+        dr["Rebuilt environment (after a declared region loss)<br/>hub · management · Key Vaults · ACR · cells · stateful cluster<br/>from IaC + Git, names with suffix -&lt;pair&gt;"]
+    end
+
+    git["GitHub: IaC, fleet, guardrails<br/>(outside the region)"]
+    gc["Grafana Cloud<br/>(outside the region)"]
+    fd["Front Door (global)<br/>origins moved to the new cells"]
+
+    paas -->|"SQL LTR immutable · PostgreSQL vaulted"| bv
+    pv -->|"Azure Backup for AKS, vault tier"| bv
+    bv -->|"GRS"| crr
+    paas -->|"geo-redundant backup storage"| geo
+    paas -->|"blob object replication ·<br/>Cosmos DB daily export"| st
+    kv -->|"backup job: every new version + nightly"| st
+
+    git -->|"1-2 rebuild"| dr
+    st -->|"3-4 restore secrets, keys, blobs"| dr
+    geo -->|"4 geo-restore databases"| dr
+    crr -->|"5 restore PVCs first, then StatefulSets"| dr
+    fd -->|"7 traffic"| dr
+    gc -.->|"dashboards and alerts already there"| dr
+
+    note["Retention example: daily 35 d · weekly 12 w · monthly 12 m (prd); acc 14 d<br/>Backup subscription per environment: no platform or agent role can delete<br/>Region loss is declared by humans · drill in acc every six months"]
+
+    classDef cp fill:#eceff1,stroke:#455a64,color:#000
+    classDef sf fill:#fce4ec,stroke:#ad1457,color:#000
+    classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef sl fill:#e0f2f1,stroke:#00695c,color:#000
+    classDef note fill:#fffde7,stroke:#9e9d24,color:#000
+    classDef blocked fill:#ffebee,stroke:#c62828,color:#000,stroke-dasharray: 5 5
+    class paas,kv,bv,st,crr,geo cp
+    class pv sf
+    class dr sl
+    class git,gc,fd hub
+    class rebuilt blocked
+    class note note

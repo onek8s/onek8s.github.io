@@ -80,8 +80,9 @@ zone the same way ([open questions](open-questions.md)).
 - **Azure Files**: the CSI driver's dynamically created storage accounts would use Microsoft-managed keys. Each zone
   therefore has one storage account created by IaC (ZRS, private endpoint in `snet-<zone>-pe`, CMK with
   `key-sf-pv-<zone>`), and the zone's Azure Files StorageClass points at it (`storageAccount` parameter).
-- **Backups** (Azure Backup for AKS) are disk snapshots that keep the disk's encryption set, so a zone's backups are
-  under the same key as its data.
+- **Backups** (Azure Backup for AKS) are disk snapshots that keep the disk's encryption set, so a zone's snapshots
+  are under the same key as its data. The vault-tier copies that protect against a region loss are restored into
+  volumes under the paired region's new zone keys ([section 20](20-backup-and-region-recovery.md#per-data-store)).
 - A disk encryption set on a StorageClass applies only to **new** volumes. The per-zone classes therefore exist
   before the first workload is onboarded. Adding a country adds the zones' keys, disk encryption sets and
   StorageClasses ([adding a country](08-cluster-types-stateless-and-stateful.md#adding-a-country-online)).
@@ -125,4 +126,4 @@ If this is not acceptable, the keys move to a separate `kv-<env>-keys` vault per
 
 ---
 
-[Back to contents](../README.md) · Previous: [17. Implementation project and acceptance testing](17-implementation-project-and-acceptance-testing.md) · Next: [Open questions](open-questions.md)
+[Back to contents](../README.md) · Previous: [17. Implementation project and acceptance testing](17-implementation-project-and-acceptance-testing.md) · Next: [19. Observability with Grafana Cloud](19-observability-with-grafana-cloud.md)

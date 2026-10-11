@@ -28,7 +28,7 @@ flowchart TB
     ns_efi --> p_efi
     ns_ese --> p_ese
 
-    ds["Platform DaemonSets<br/>(Cilium, CSI, monitoring agent)<br/>tolerate all zones"]
+    ds["Platform DaemonSets<br/>(Cilium, CSI, Grafana Alloy)<br/>tolerate all zones"]
     ds -.->|"runs on every node"| POOLS
 
     nap["Stateless clusters: node auto provisioning (Karpenter)<br/>NodePool + AKSNodeClass per zone (Flux): zone subnet, cell's AZ,<br/>allow-list of VNet-encryption-capable SKUs (amd64 + arm64)<br/>on-demand NodePool limits sized for N+1; spot NodePool tainted, higher weight, falls back to on-demand<br/>nodes created for pending pods, consolidated when under-used"]
