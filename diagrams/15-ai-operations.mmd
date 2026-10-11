@@ -13,7 +13,7 @@ flowchart LR
     subgraph AG["Agent runtime – management VNet, one managed identity per agent and environment"]
         direction TB
         a_obs["Operations agent<br/>triage · diagnosis · verification"]
-        a_chg["Change agents<br/>platform · upgrade · capacity & cost ·<br/>security · onboarding"]
+        a_chg["Change agents<br/>platform · upgrade · capacity & cost ·<br/>right-sizing · security · onboarding"]
         a_rev["Reviewer agent<br/>separate context, never the author"]
     end
 
@@ -44,6 +44,7 @@ flowchart LR
     subgraph RT["Runtime guardrails"]
         direction TB
         clu["Clusters and Azure resources<br/>Azure Policy deny · Azure RBAC ·<br/>cell by cell · SLO gates · budgets"]
+        ctl["In-cluster controllers inside Git bounds<br/>HPA / KEDA · VPA in-place resize · NAP"]
     end
 
     s_mon & s_sec & s_cost & s_rel & s_req --> a_obs
@@ -58,6 +59,7 @@ flowchart LR
     t_low & t_med & t_high -->|"merge"| main
     main --> pipe -->|"apply"| clu
     rb -->|"same pipelines"| pipe
+    pipe -->|"bounds"| ctl -->|"resize · scale"| clu
     clu -->|"health · drift · compliance"| s_mon
 
     no["No agent identity has write access to<br/>Azure, Kubernetes, Key Vault secrets,<br/>main or the guardrails"]
@@ -74,5 +76,5 @@ flowchart LR
     class a_obs,a_chg,a_rev hub
     class g_lim,g_pol,g_gate,tier,t_low,t_med,t_high,rb note
     class pr,main,pipe idn
-    class clu sl
+    class clu,ctl sl
     class no blocked

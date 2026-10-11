@@ -48,7 +48,7 @@ application's policy (application team) and, if the zone does not have it yet, t
 | ACNS | `--enable-acns` (observability + security) | `--enable-acns` (observability + security) |
 | eBPF host routing | `--acns-datapath-acceleration-mode BpfVeth` | `--acns-datapath-acceleration-mode BpfVeth` |
 | Node OS | Azure Linux 3.0 – system pool `--os-sku AzureLinux`, NAP `AKSNodeClass` `imageFamily: AzureLinux` | Azure Linux 3.0 – all node pools `--os-sku AzureLinux` |
-| Kubernetes | ≥ 1.33 (N-1 / N-2 already are) | ≥ 1.33: created on the second latest GA minor (N-1) and kept there with LTS, see below |
+| Kubernetes | ≥ 1.33 (every cluster starts on 1.36) | ≥ 1.33: created on 1.36 and kept there with LTS, see below |
 
 eBPF host routing requires Kubernetes 1.33 or later, Ubuntu 24.04 or Azure Linux 3.0 on **every** node of the cluster
 (it is all or nothing), and no iptables rules in the node's network namespace. Azure Linux 3.0 is chosen because it
@@ -77,7 +77,8 @@ What eBPF host routing changes for the rest of the design:
 
 ### Stateful cluster and LTS
 
-The stateful cluster is created on the **second latest GA minor** (N-1, the same minor as `sl-az1`) and then stays on
+The stateful cluster is created on the **second latest GA minor** (N-1, the same minor as `sl-az1`; 1.36 at the start
+of the platform) and then stays on
 it with Long Term Support ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)); its slower upgrade
 cycle exists because of the more demanding workloads it runs, not because it starts on an old version. It therefore
 meets the 1.33 requirement from day one and runs the same ACNS settings as the stateless clusters – eBPF host routing

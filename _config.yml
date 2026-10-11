@@ -1,6 +1,6 @@
 title: aks-design
 # Used by the "Edit this page" links.
-repository: olljanat-ai/aks-design
+repository: onek8s/onek8s.github.io
 branch: main
 # Only publish the design document and its pictures.
 exclude:

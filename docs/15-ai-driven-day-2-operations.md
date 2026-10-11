@@ -3,7 +3,7 @@
 ![AI-driven day 2 operations](../images/15-ai-operations.svg)
 
 This design was written by AI, and the platform it describes is built to be operated mostly by AI too: upgrades,
-capacity, cost, compliance, drift, incident triage and application onboarding are run by **agents**. Agents may
+capacity, cost, pod right-sizing, compliance, drift, incident triage and application onboarding are run by **agents**. Agents may
 change every environment, prd included, but **only the way a human platform engineer would: with a pull request to
 the IaC or fleet repository**. Humans no longer make most of the changes; they own the **guardrails** that decide
 which changes can be merged and by whom.
@@ -38,7 +38,8 @@ paths) are kept in the guardrails repository, versioned like code.
 | **Platform change agent** | General IaC and fleet changes: fixes from incidents, platform component versions (Traefik, KEDA, operators, External Secrets Operator), configuration | Task from the operations agent, issue assigned by a human | Pull request |
 | **Upgrade agent** | Runs the [update policy](12-zero-downtime-cluster-upgrades.md#update-policy): takes the target versions the version pipeline computes (the timetable stays deterministic), reads the release notes, checks the fleet manifests for removed APIs on the target minor, follows the cell-by-cell rollout and stops it on failed health | Version pipeline output, AKS release events | Version pull requests per environment and speed with a compatibility report; halt + incident on failed health |
 | **Release agent** | Prepares the application promotion pull requests dev → acc → prd ([section 10](10-keeping-clusters-in-sync.md)), summarises the change set, watches the cell gates | Successful release in the previous environment | Promotion pull request with release notes and risk summary |
-| **Capacity and cost agent** | NAP `NodePool` limits, spot share, amd64 / arm64 fit, system pool and stateful node pool sizes, quota headroom, idle resources; suggests right-sizing to application teams | Schedule (weekly), quota and budget alerts | Pull requests within `limits.yaml`, issues to application teams |
+| **Capacity and cost agent** | NAP `NodePool` limits, spot share, amd64 / arm64 fit, system pool and stateful node pool sizes, quota headroom, idle resources | Schedule (weekly), quota and budget alerts | Pull requests within `limits.yaml`, issues to application teams |
+| **Right-sizing agent** | Pod CPU and memory ([pod right-sizing](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)): the policy of the VPA that resizes pods **in place, online** – which applications (on by default, team opt-out), modes and `minAllowed` / `maxAllowed` bounds, HPA interplay, quota and N+1 fit – and the requests in Git new pods start from; watches resize health (`PodResizePending`, OOMKills, throttling). Never resizes a pod itself | Schedule (daily), task issues from the operations agent | Pull requests to the applications' `vpa.yaml` / `resources.yaml` within `limits.yaml`, issues to application teams and the capacity agent |
 | **Security and compliance agent** | Azure Policy non-compliance, Defender for Cloud recommendations, image CVEs of platform components, certificate and secret expiry, policy `audit` → `deny` promotion ([section 14](14-policy-enforcement.md)), stateful-cluster drift report | Schedule (daily), Defender / Key Vault events | Pull requests for platform findings, issues to application teams for theirs |
 | **Onboarding agent** | Turns an application team's request (new application, zone, identity, Key Vault secret exception, arch / capacity choice) into the IaC and fleet changes: namespace, managed identity, federated credentials, role assignments, overlays | Issue from a request template | Pull requests – always tier medium or high, because they create identities |
 | **Reviewer agent** | Reviews every agent pull request against this design and the evidence: does the change do what its intent says, is the rollback plan real, does it widen access; its review is a required check, never a human approval | Every pull request | Review with findings |
@@ -88,7 +89,7 @@ The examples use GitHub; Azure DevOps offers the same with branch policies, requ
 
 | Tier | Examples | Required to merge |
 |---|---|---|
-| **Low** | Patch version or node image per the update timetable; promotion of image digests that run in acc and passed all its gates; HPA / KEDA bounds, NAP `NodePool` limits, spot share and node pool sizes inside `limits.yaml`; alert rules and dashboards; platform component patch versions; documentation | Plan, policy and CI checks green + reviewer agent; auto-merge (prd only inside a change window) |
+| **Low** | Patch version or node image per the update timetable; promotion of image digests that run in acc and passed all its gates; HPA / KEDA bounds, VPA modes and bounds and resource-only request changes, NAP `NodePool` limits, spot share and node pool sizes inside `limits.yaml`; alert rules and dashboards; platform component patch versions; documentation | Plan, policy and CI checks green + reviewer agent; auto-merge (prd only inside a change window) |
 | **Medium** | Kubernetes minor upgrade of a stateless cell; platform component minor versions; new application in an existing zone; Azure Policy definition rollout `audit` → `deny`; changes over a `limits.yaml` soft limit; any change the reviewer agent flags | Low + **1 human** from the platform team |
 | **High** | Role assignments and identities (outside the onboarding pattern), federated credentials, NSG / Firewall / route / address plan, new country, Key Vault access, deletion of anything that holds data (Key Vault, ACR, storage, databases, the stateful cluster), stateful cluster version changes, Azure Policy exemptions, changes to CI / pipeline definitions | Low + **2 humans**: platform and security |
 | **Not allowed for agents** | Changes in the guardrails or runbooks repositories, the agents' own identities and permissions, rulesets, break-glass, disabling Azure Policy assignments | Humans only, in the guardrails repository |
@@ -105,8 +106,13 @@ environments:
       maxNodesPerZone: { soft: 60, hard: 120 }     # over soft = medium, over hard = rejected
       maxSpotShare: 0.5
     allowedVmSizes: [Standard_D4ads_v6, Standard_D8ads_v6, Standard_D4pds_v6, Standard_D8pds_v6]
+rightSizing:                                       # VPA objects and resource-only workload changes
+  updateModes: ["Off", Initial, InPlaceOrRecreate] # stateful cluster: "Off" only
+  controlledValues: [RequestsOnly]
+  maxAllowed: { cpu: { soft: 4, hard: 16 }, memory: { soft: 16Gi, hard: 64Gi } }   # per container
+  maxStepFactor: 2                                 # a request or limit moves at most ×2 per pull request
 kubernetes:
-  allowedMinors: { stateless: ["1.33", "1.34"], stateful: ["1.34"] }   # filled by the upgrade agent's PR, approved per tier
+  allowedMinors: { stateless: ["1.36"], stateful: ["1.36"] }   # 1.36 is the floor; newer minors added by the upgrade agent's PR, approved per tier
 forbidden:
   - action: delete
     types: [Microsoft.KeyVault/vaults, Microsoft.ContainerRegistry/registries, Microsoft.Storage/storageAccounts, Microsoft.Sql/servers]
@@ -132,7 +138,7 @@ installation tokens. The identities and their role assignments are IaC in the gu
 | Agent | Azure roles | Never |
 |---|---|---|
 | All agents | `Reader` on the environment subscription; `Monitoring Reader`; `Log Analytics Reader` limited to the platform tables (table-level RBAC – no application logs that may hold personal data) | Any write role, `Contributor`, `Owner`, `User Access Administrator`, PIM eligibility |
-| Operations, platform, upgrade, release | `Azure Kubernetes Service RBAC Reader` on the clusters (does not include `Secret`s); read access to the Flux and pipeline status | `Azure Kubernetes Service RBAC Writer` / `Cluster Admin`, `listClusterAdminCredential` |
+| Operations, platform, upgrade, release, right-sizing | `Azure Kubernetes Service RBAC Reader` on the clusters (does not include `Secret`s); read access to the Flux and pipeline status | `Azure Kubernetes Service RBAC Writer` / `Cluster Admin`, `listClusterAdminCredential` |
 | Capacity and cost | `Cost Management Reader`; quota read | – |
 | Security and compliance | `Security Reader`; `Key Vault Reader` on the zone and platform vaults (metadata and expiry dates, not values) | `Key Vault Secrets User` / `Officer`, `Key Vault Certificate User` |
 | Onboarding, reviewer | `Reader` only | – |
@@ -146,7 +152,7 @@ Activity Log alert, and a daily comparison against the guardrails IaC reports an
 
 | Agent | GitHub App permissions | Repositories |
 |---|---|---|
-| Change agents (platform, upgrade, release, capacity, security, onboarding) | `contents: write` only on `agent/<name>/*` branches (ruleset), `pull_requests: write`, `issues: write` | IaC, fleet, design |
+| Change agents (platform, upgrade, release, capacity, right-sizing, security, onboarding) | `contents: write` only on `agent/<name>/*` branches (ruleset), `pull_requests: write`, `issues: write` | IaC, fleet, design |
 | Operations agent | `issues: write`; `actions: write` | Issues in IaC and fleet; dispatch in the runbooks repository only |
 | Reviewer agent | `pull_requests: write` (reviews), `checks: write` | IaC, fleet, design |
 | All | `contents: read` | Guardrails, runbooks |
