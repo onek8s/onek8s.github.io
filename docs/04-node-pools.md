@@ -113,28 +113,36 @@ and a language model does not belong in a loop that must react in minutes. It is
 (controllers scale replicas online inside bounds that are in Git) and NAP (creates nodes inside `NodePool` limits
 that are in Git).
 
-**How it is set up**
+**How it is set up – on by default**
 
-- The VPA add-on (`--enable-vpa`) is enabled by the cluster IaC in every cluster. AKS supports `InPlaceOrRecreate`
-  from 1.34; all nodes are Azure Linux 3.0, which has the cgroup v2 and containerd 2.0 that in-place resize needs.
-- Every stateless Deployment gets a `VerticalPodAutoscaler` in its overlay (`apps/<app>/stateless/<env>/vpa.yaml`),
-  created by the onboarding agent with `updateMode: "Off"` – recommendations only. The requests new pods start from
-  are a patch next to it (`resources.yaml`). Both files are platform-maintained; the application's own manifests
-  stay the team's.
-- **Opt-in**: the VPA may resize an application in place only when its team adds the pod label
-  `platform/rightsizing: auto`. The right-sizing agent then switches the VPA to `InPlaceOrRecreate`, dev → acc → prd.
+- Every cluster starts on Kubernetes **1.36** ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)), so
+  container-level (GA) and pod-level (beta) in-place resize are available in every cell from day one. The VPA add-on
+  (`--enable-vpa`) is enabled by the cluster IaC in every cluster; all nodes are Azure Linux 3.0, which has the
+  cgroup v2 and containerd 2.0 that in-place resize needs.
+- **Every stateless Deployment is right-sized by default.** The onboarding agent creates a `VerticalPodAutoscaler` in
+  the application's overlay (`apps/<app>/stateless/<env>/vpa.yaml`) with `updateMode: InPlaceOrRecreate` from the first
+  deploy, and safe starting bounds taken from the requests the team declared: memory `minAllowed` = the declared
+  request (nothing shrinks before there is usage data), CPU `minAllowed` = a quarter of it, `maxAllowed` = twice the
+  declared values. The right-sizing agent widens the bounds once it has 14 days of usage. The requests new pods start
+  from are a patch next to it (`resources.yaml`). Both files are platform-maintained; the application's own manifests
+  stay the team's. CI checks on the rendered manifests that every Deployment has its VPA (like the PDB check).
+- **Opt-out**: an application team that does not want its pods resized sets the pod label
+  `platform/rightsizing: off`. Its VPA then stays in `updateMode: "Off"` – recommendations only, which the
+  right-sizing agent still uses to move the baseline in Git by pull request. The right-sizing agent also falls back to
+  `Off` by itself for an application whose resizes misbehave (oscillation, restarts), and says so in an issue.
 - **Bounds**: `controlledValues: RequestsOnly` and a `maxAllowed` for every resource it controls; the merge gate
   checks modes and bounds against `rightSizing` in `limits.yaml` (inside = tier low, over the soft limit = medium,
   over the hard limit = rejected). A pull request that changes only requests / limits of a workload is low when each
   value moves at most ×2.
-- **Restart behaviour** is the application's `resizePolicy`: `cpu: NotRequired` always; `memory: NotRequired` only
-  when the runtime does not fix its heap at start (JVM `-Xmx`, .NET `GCHeapHardLimit`, Node `--max-old-space-size`) –
-  otherwise `RestartContainer`, or memory stays out of the VPA's `controlledResources`.
+- **Only requests move, limits stay in Git.** A runtime that sizes its heap from the memory limit at start (JVM
+  `MaxRAMPercentage`, .NET, Node) is therefore not affected by a resize, and memory `maxAllowed` must not exceed the
+  container's memory limit. Containers use `resizePolicy` `NotRequired` for CPU and memory, so a resize never
+  restarts them.
 - **HPA / KEDA**: an HPA on CPU utilisation computes against the CPU request, so a VPA moving CPU would fight it. The
   VPA then controls only memory (HPA on memory: only CPU; KEDA on queue length or request rate: both). An application
   whose HPA scales on both stays `Off`: only its baseline in Git moves.
 - **Stateful cluster**: VPA objects only in `Off` – requests = limits for memory and fixed node pools make every size
-  change a planned change through the pipeline.
+  change a planned change through the pipeline. Right-sizing by default applies to the stateless clusters.
 
 **What keeps it safe**
 
@@ -153,12 +161,11 @@ that are in Git).
 - On increase the kubelet grows the pod cgroup before the containers', on decrease it shrinks the containers first,
   so a pod never overshoots its budget during a resize.
 
-**Pod-level resources** (`spec.resources`, Kubernetes 1.34+) suit pods with several containers – the application and
-a sidecar share one budget, and containers without their own limits use what the others leave. From 1.36 the budget
-can be resized in place, but the VPA cannot recommend or actuate pod-level values yet (planned upstream for GA). Until
+**Pod-level resources** (`spec.resources`) suit pods with several containers – the application and a sidecar share
+one budget, and containers without their own limits use what the others leave. On 1.36 the budget can be resized in
+place in every cell, but the VPA cannot recommend or actuate pod-level values yet (planned upstream for GA). Until
 then a pod-level budget is a value in `resources.yaml`, proposed by the right-sizing agent with the application team's
-agreement, and only when every cell of the environment runs 1.36 or later (the slow update speed runs one minor
-behind, [section 12](12-zero-downtime-cluster-upgrades.md#update-policy)).
+agreement, and the VPA does not move the same resources of those containers.
 
 ## Zone pinning
 

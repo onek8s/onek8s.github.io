@@ -22,6 +22,13 @@ with data on disks) are harder to move and test.
 | How nodes are updated | Cell drained, control plane + system pool upgraded, NAP replaces the zone nodes ([below](#stateless-clusters)) | Same | **Patched in place** where possible; nodes replaced only when a change requires it ([below](#stateful-cluster)) |
 | AKS auto-upgrade channels | `none` – the version pipeline decides | `none` | Cluster `none`; node OS channel for in-place patches ([below](#stateful-cluster)) |
 
+**Starting point: Kubernetes 1.36.** The platform is new, so every cluster – both stateless speeds and the stateful
+cluster – is created on **1.36** (AKS GA June 2026, also an LTS minor), and 1.36 is the **floor**: no cluster runs an
+older minor. The slow speed's "one minor behind `sl-az1`" therefore starts to apply only when `sl-az1` moves past
+1.36; until then `sl-az2` runs 1.36 too, with its slower patch timetable. The floor gives every cell in-place
+pod resize for containers (GA) and pod-level resources (beta), which [pod right-sizing](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)
+relies on, and meets the 1.33 requirement of eBPF host routing ([section 16](16-advanced-networking-and-fqdn-egress.md)).
+
 **Why two speeds in the stateless clusters.** At any moment one cell runs a version that is newer and less proven and
 the other cell(s) a version that `sl-az1` has already run in production – so a regression in a Kubernetes patch, a
 node image or a minor version reaches only the fast cell first, while the slow cell(s) keep serving

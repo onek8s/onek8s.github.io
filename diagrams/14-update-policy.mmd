@@ -11,7 +11,7 @@ flowchart LR
         f_dev --> f_acc --> f_prd
     end
 
-    subgraph SLOW["Slow speed – sl-az2 (+ sl-az3) · one minor behind sl-az1 (N-2)"]
+    subgraph SLOW["Slow speed – sl-az2 (+ sl-az3) · one minor behind sl-az1 (N-2), never below 1.36"]
         direction LR
         s_dev["dev<br/>+1 month"]
         s_acc["acc<br/>+1 month after dev"]
@@ -22,7 +22,7 @@ flowchart LR
     subgraph SF["Stateful – sf · created on N-1, then LTS"]
         direction TB
         sf_rule["Only when absolutely necessary:<br/>security, bug, AKS supportability<br/>patch existing nodes in place first,<br/>control plane only before node replacement"]
-        sf_lts["Created on the second latest GA minor (N-1);<br/>that minor kept with LTS as long as possible;<br/>upgrade to the next LTS minor within the<br/>last 6 months of LTS support, dev → acc → prd"]
+        sf_lts["Created on the second latest GA minor (N-1, 1.36 at the start);<br/>that minor kept with LTS as long as possible;<br/>upgrade to the next LTS minor within the<br/>last 6 months of LTS support, dev → acc → prd"]
     end
 
     rel ==> f_dev
