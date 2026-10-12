@@ -111,7 +111,9 @@ There is only one stateful cluster, so it is upgraded **in place** and protected
   channel `Unmanaged` (the OS's own unattended upgrades) with reboots coordinated one node at a time (kured), only inside
   the planned maintenance window (`aksManagedNodeOSUpgradeSchedule`), dev a week before acc and two weeks before prd,
   respecting the PDBs. A node is reimaged with a new node image only when an in-place patch is not possible or AKS
-  support requires it.
+  support requires it. Because these nodes live long, **Image Cleaner** (`--enable-image-cleaner`, daily) removes
+  unused, vulnerable images from them. The stateless cells do not need it: their NAP nodes are replaced regularly
+  (`expireAfter`, drift, cell rebuilds).
 - **Control plane**: zone-redundant (Premium tier); upgrading it does not restart workloads.
 - **Node pools**: one fixed-size pool per isolation zone *and* AZ, so a pool upgrade touches only one AZ. Surge settings
   `maxSurge: 1`, `maxUnavailable: 0`, a drain timeout and node soak time; drains respect the PDBs, so at most one

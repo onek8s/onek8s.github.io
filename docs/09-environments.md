@@ -39,7 +39,10 @@ smaller stateful node pools.
   in the stateful cluster; no manual `kubectl apply`. Human access in acc and prd is read-only Kubernetes RBAC plus
   break-glass via PIM.
 - **Every environment has its own ACR** (in its backend spoke); the promotion pipeline imports the exact image
-  digests from the previous environment's ACR (`az acr import`), so prd never pulls from the Internet.
+  digests from the previous environment's ACR (`az acr import`), so prd never pulls from the Internet. CI signs every
+  image it builds; promotion first verifies the signature, then copies it with the image (an OCI referrer, for
+  example with `oras cp -r`). An unsigned image therefore never reaches the acc or prd registry
+  ([section 14](14-policy-enforcement.md)).
 
 ---
 

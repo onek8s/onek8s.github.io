@@ -109,7 +109,7 @@ Telemetry never goes over the Internet. This matters most for the stateful clust
 | SLOs | Grafana SLO | Every `HTTPRoute` gets two **default SLOs** from Traefik metrics, without any application code: availability (share of non-5xx responses) and latency (share of requests under the application's threshold). Teams set the objectives in `apps/<app>/observability/slo.yaml` and may add their own SLIs |
 | Alerting and on-call | Grafana Alerting, Grafana IRM | Multi-window, multi-burn-rate alerts on every SLO. Notification policies route by `team`: platform alerts go to the platform on-call, application alerts to the application team's escalation chain. Every alert links to its runbook and dashboard |
 | Synthetic monitoring | Grafana Synthetic Monitoring | Public probes for every external application's Front Door host name. Private probes run in the management VNet against every internal application and against the cells' Traefik health routes; they drive the cell health alert ([cell failure](08-cluster-types-stateless-and-stateful.md#internal-zones-one-home-cell-per-application-moved-by-migration)) |
-| Cost and usage | Usage attribution by label, Adaptive Metrics and Adaptive Logs | Usage is reported per `team` and `zone`. The capacity and cost agent ([section 15](15-ai-driven-day-2-operations.md)) proposes dropping unused metrics |
+| Cost and usage | Usage attribution by label, Adaptive Metrics and Adaptive Logs | Usage is reported per `team` and `zone`. The capacity and cost agent ([section 15](15-ai-driven-day-2-operations.md)) proposes dropping unused metrics. Compute efficiency is shown per zone and team with two ratios: **request efficiency** (usage ÷ requests) and **allocation efficiency** (requests ÷ node allocatable). Either one alone hides waste: right-sized pods can still pack badly onto the chosen VM sizes |
 
 **SLO gates.** Releases ([section 11](11-zero-downtime-application-upgrades.md#releases-cell-by-cell)) and cluster
 upgrades ([section 12](12-zero-downtime-cluster-upgrades.md)) are gated on these SLOs, per cell. The pipeline queries
@@ -134,6 +134,31 @@ enforces:
   every stack user can query these logs from Grafana.
 - Defender for Cloud and Defender for Containers alerts go to the SOC tooling as before
   ([section 17](17-implementation-project-and-acceptance-testing.md#security-reviews)), and are also shown in Grafana.
+
+## Security detections and forensics
+
+Collecting everything is not the same as seeing what matters. Next to the SLO alerts, the platform defines what
+must **never happen** in it. Each detection has an owner who answers it:
+
+| Detection (source) | Owner |
+|---|---|
+| A role assignment, PIM activation or federated credential change outside the IaC, guardrails and onboarding pipelines (Activity Log, Entra ID audit log) | Security team |
+| Any write to a production resource by an identity that is not a deployment identity, or a human sign-in to a cluster outside break-glass (Activity Log, `kube-audit-admin`) | Platform on-call |
+| A key, vault, backup vault or Resource Guard change ([section 18](18-encryption-at-rest-and-customer-managed-keys.md), [section 20](20-backup-and-region-recovery.md)) | Security team |
+| A workload identity used from an unexpected cluster or IP, or reading resources outside its zone (Entra ID sign-in logs) | Security team, application team informed |
+| Rising Cilium policy drops or DNS refusals in acc / prd ([section 16](16-advanced-networking-and-fqdn-egress.md#observing-and-troubleshooting)) | Application team, platform on-call |
+| Defender for Containers runtime alerts (reverse shell, crypto mining, unexpected binaries) | SOC, platform on-call |
+
+The detections are Grafana alert rules on the Log Analytics data source and Sentinel analytics rules in the SOC
+tooling, kept as code. A detection that keeps firing without action is fixed or removed, so that the remaining ones
+are trusted.
+
+**Forensics.** Metrics, logs and flow logs show symptoms; during an incident the platform team sometimes needs
+the kernel's view: which process opened a socket, what a container executed. A kernel-level tracing tool
+([Inspektor Gadget](https://www.inspektor-gadget.io/), eBPF-based and Kubernetes-aware) is deployed **only during an
+incident**, through break-glass, as a privileged DaemonSet in a platform namespace. It is not installed by default,
+because a privileged, cluster-wide tracer is itself a high-value target. Its compatibility with eBPF host routing is
+checked in prototyping ([open questions](open-questions.md)).
 
 ## What must not be sent
 

@@ -67,7 +67,9 @@ What eBPF host routing changes for the rest of the design:
   cluster does not masquerade (VNet-routable pod IPs) and keeps it that way.
 - **Features that cannot be combined** with eBPF host routing are not used: Static Egress Gateway, Confidential VMs,
   Pod Sandboxing, Windows nodes and a self-managed Istio Ambient. The Azure Policy VM-size allow-list contains no
-  confidential SKUs.
+  confidential SKUs. **Virtual nodes** (Azure Container Instances) are not used either, for a different reason: their
+  pods are not enforced by Cilium and run no DaemonSets, so they would bypass the FQDN egress policies, zone pinning
+  and the node-local Grafana Alloy.
 - **Enabling it rolls the nodes** (rolling node pool upgrade, existing connections may be disrupted). In the
   stateless clusters it is part of the cluster IaC from day one; changing it on an existing cell follows the
   drain-and-upgrade procedure of [section 12](12-zero-downtime-cluster-upgrades.md#stateless-clusters), one cell at a
@@ -144,6 +146,11 @@ spec:
   own node ([section 19](19-observability-with-grafana-cloud.md#collection-grafana-alloy-node-local)).
 - **No policy, no egress.** An application that needs nothing outside the cluster simply has no `egress` policy (CI
   reports this explicitly at onboarding, so it is a decision, not an omission).
+- **No instance metadata.** The Azure Instance Metadata Service (`169.254.169.254`) is a common pivot for stealing
+  credentials. Application pods cannot reach it: it has no name that `toFQDNs` could allow, CIDR egress is rejected,
+  and `hostNetwork` is forbidden. Workload identity does not need it. The isolation tests of
+  [section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) check this from
+  every zone.
 
 ## What Azure Policy enforces
 

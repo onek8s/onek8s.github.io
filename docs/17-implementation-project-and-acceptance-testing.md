@@ -86,6 +86,9 @@ Automated negative tests, kept from phase 2, that run as a pipeline stage:
 | Application A's `ExternalSecret` references application B's secret in the same zone Key Vault | Sync fails with `403` from Key Vault ABAC ([section 6](06-workload-identity-and-secrets.md)) |
 | An application reads Key Vault itself: SDK call with its own identity, a pod running as `secrets-reader`, a `SecretProviderClass` or CSI volume, a hand-made `Secret`, a vault name in its egress policy | Dropped by Cilium / `403` (no role) / denied by admission; an Azure Resource Graph query finds no Key Vault data-plane role on any application identity |
 | Egress to an FQDN not in the application's policy, to an IP address, and to an FQDN in the policy but not in the zone's Firewall allow-list | Dropped by Cilium; CI check fails the last one before deployment ([section 16](16-advanced-networking-and-fqdn-egress.md)) |
+| From a pod in every zone, request a token from the instance metadata service (`169.254.169.254`) | Dropped by Cilium |
+| Sign in to every cluster with the local admin credential (`az aks get-credentials --admin`) and SSH to a node | Both refused: local accounts and SSH are disabled ([section 3](03-control-plane.md)) |
+| Promote an image that is not signed by the platform's CI; push an image to the acc registry with any identity other than the promotion pipeline | Promotion fails on the signature check; the push is refused (no role). An unsigned image deployed in dev shows up as non-compliant in Image Integrity ([section 14](14-policy-enforcement.md)) |
 | Apply each forbidden manifest of the [policy table](14-policy-enforcement.md) (privileged pod, image not from ACR, `toCIDR`, `PersistentVolumeClaim` in a stateless cluster, …) | Denied by admission |
 | Reach the API server from the client VNet, the hub and a spoke | Only from the management VNet ([section 3](03-control-plane.md)) |
 | Azure Resource Graph: public IPs, public endpoints of PaaS / Key Vault / ACR, local auth enabled | None except the designed ones (Front Door) |
@@ -110,6 +113,11 @@ Automated negative tests, kept from phase 2, that run as a pipeline stage:
 
 Fault injection with [Azure Chaos Studio](https://learn.microsoft.com/en-us/azure/chaos-studio/chaos-studio-overview)
 and Kubernetes chaos experiments, every one under load. Each experiment must also raise the expected alert.
+Chaos Studio's AKS faults run through Chaos Mesh, which installs a privileged daemon on every node. In dev of the
+build tenant it is installed only for the duration of the tests, in a platform namespace with a time-limited
+exemption ([section 14](14-policy-enforcement.md)); whether its network faults work with eBPF host routing and a
+private cluster is checked first ([open questions](open-questions.md)). VM- and zone-level faults (stop VMSS
+instances, zone down) need no in-cluster agent.
 
 | Fault | Pass criterion |
 |---|---|
@@ -163,6 +171,10 @@ criterion for all is **no errors beyond the budget at the load generators**.
 - No secrets in telemetry: a test application that logs a token, a connection string and an `Authorization`
   header; none of them reaches Grafana Cloud unredacted.
 - Cost per environment measured at idle and at peak, and the prd estimate updated.
+- Break-glass: the PIM break-glass path to a cluster and to Azure is used once end to end, raises its alert, and the
+  operations agent opens the pull request that brings Git back in line. Repeated every six months in acc.
+- Security detections ([section 19](19-observability-with-grafana-cloud.md#security-detections-and-forensics)):
+  each one is triggered once on purpose and reaches its owner.
 
 ## Security reviews
 

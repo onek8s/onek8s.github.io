@@ -9,4 +9,4 @@ scripts/render.sh
 
 ---
 
-[Back to contents](../README.md) · Previous: [Open questions](open-questions.md)
+[Back to contents](../README.md) · Previous: [Comparison with Wolkwacht](wolkwacht-comparison.md)
