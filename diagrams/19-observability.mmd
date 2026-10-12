@@ -28,7 +28,7 @@ flowchart LR
     subgraph GC["Grafana Cloud (Azure, outside the platform's primary region)"]
         direction TB
         stack["Stacks &lt;org&gt;-dev / -acc / -prd<br/>Metrics · Logs · Traces · SLO<br/>Alerting · IRM on-call · Synthetic Monitoring"]
-        amds["Azure Monitor data source<br/>Activity Log, AKS audit, Firewall, Front Door,<br/>Key Vault, PaaS logs and metrics"]
+        amds["Azure Monitor data source<br/>Activity Log, AKS audit, Firewall, Traffic Manager,<br/>Key Vault, PaaS logs and metrics"]
     end
 
     law["Log Analytics log-&lt;env&gt;-platform<br/>(diagnostic settings, SOC)"]

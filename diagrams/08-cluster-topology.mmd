@@ -6,7 +6,7 @@ flowchart TB
 
     subgraph EDGE["Entry points – outside the cells"]
         direction LR
-        waf["Azure Front Door Premium + WAF<br/>external zones · <b>active-active</b><br/>client IP blocks → cell (rule set)<br/>origins via Private Link"]
+        waf["Azure Traffic Manager<br/>external zones · <b>active-active</b><br/>client network blocks → cell (Subnet routing)<br/>endpoints: the zone gateways' public LBs"]
         agw_in["Hub Private DNS · internal zones<br/>&lt;app&gt;.int-fi.&lt;env&gt;.example.com → Traefik IP of its <b>home cell</b><br/>records kept by ExternalDNS in the cells<br/>migration workflow moves apps between cells"]
     end
 
@@ -34,9 +34,9 @@ flowchart TB
 
     blocked(("Internet"))
 
-    internet ==>|"HTTPS"| waf
+    internet ==>|"DNS"| waf
     corp ==> agw_in
-    EDGE ==>|"HTTPS to the Traefik ILB of the zone<br/>external: every cell via Front Door, each client IP → one cell, failure or drain moves its clients<br/>internal: straight to the app's home cell (TLS ends at Traefik), moved by migration"| FRONT
+    EDGE ==>|"HTTPS to the Traefik of the zone (TLS ends at Traefik)<br/>external: every cell, Traffic Manager answers each client network with one cell, failure or drain moves its clients<br/>internal: straight to the app's home cell (ILB), moved by migration"| FRONT
     FRONT -->|"egress + east-west"| fw
     fw -->|"TLS only: PaaS private endpoints (preferred),<br/>stateful app internal LBs"| BACK
     sf --> PAAS

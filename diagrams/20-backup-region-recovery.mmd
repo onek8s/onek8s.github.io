@@ -20,7 +20,7 @@ flowchart LR
 
     git["GitHub: IaC, fleet, guardrails<br/>(outside the region)"]
     gc["Grafana Cloud<br/>(outside the region)"]
-    fd["Front Door (global)<br/>origins moved to the new cells"]
+    fd["Traffic Manager (global)<br/>endpoints moved to the new cells"]
 
     paas -->|"SQL LTR immutable · PostgreSQL vaulted"| bv
     pv -->|"Azure Backup for AKS, vault tier"| bv

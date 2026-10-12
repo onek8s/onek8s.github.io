@@ -23,22 +23,23 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
   their CRDs are not installed), and Azure Policy rejects `Ingress` objects.
 - **Traefik is the Gateway API implementation**, one instance per isolation zone in the platform namespace
   `<zone>-gateway` (a reserved application name) on the zone's nodes, behind an internal load balancer in
-  `snet-<zone>-ilb`. The platform owns the `GatewayClass` and one `Gateway` per zone; application teams own only
+  `snet-<zone>-ilb` (an external zone's: a public load balancer, see
+  [incoming traffic](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)). The platform owns the `GatewayClass` and one `Gateway` per zone; application teams own only
   `HTTPRoute`s in their namespaces – the Gateway API role split between cluster operator and application developer. `allowedRoutes` selects namespaces with `platform/zone=<zone>`, so a route
   can never attach to another zone's gateway.
-- **Internal DNS names with Let's Encrypt certificates.** Each zone has its own DNS name space, e.g.
-  `*.ext-fi.prd.example.com`, resolved only by the Private DNS zone in the hub (split horizon: the name has no
-  public A record). Traefik serves the zone's wildcard certificate from the platform Key Vault
+- **DNS names with Let's Encrypt certificates.** Each zone has its own DNS name space, e.g.
+  `*.int-fi.prd.example.com`; an internal zone's names are resolved only by its Private DNS zone in the hub (split
+  horizon: the name has no public A record), an external zone's are public. Traefik serves the zone's wildcard
+  certificate from the platform Key Vault
   ([below](#certificates-issued-centrally-distributed-through-the-platform-key-vault)). Because the certificate is publicly
-  trusted, Front Door validates the backend without uploading custom root certificates, and
-  clients inside the corporate network need no private CA.
+  trusted, Internet clients and clients inside the corporate network need no private CA.
 - **No non-TLS traffic.** Traefik has only the `websecure` entry point on 443; port 80 is not exposed at all (no
   HTTP→HTTPS redirect listener either), the internal load balancer has only port 443, and the NSG on `snet-<zone>-ilb`
   allows only TCP 443. Azure Policy rejects `Gateway` listeners with protocol `HTTP`, `HTTPRoute`s that do not attach to
   the HTTPS listener, hostnames outside the zone's domain, `Ingress` objects, and `LoadBalancer` / `NodePort` Services
-  outside `<zone>-gateway`. Traefik adds HSTS to every response. Front Door listens on HTTPS only and
-  re-encrypts to Traefik (end-to-end TLS); internal clients connect to Traefik directly, so their TLS session ends
-  there.
+  outside `<zone>-gateway`. Traefik adds HSTS to every response. Every client - external ones through the
+  address Traffic Manager gives them, internal ones directly - connects to the zone's Traefik, so the client's TLS
+  session ends there and nothing in between decrypts it.
 
 ## Stateful cluster: the application terminates TLS
 

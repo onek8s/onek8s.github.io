@@ -5,7 +5,7 @@ flowchart LR
 
     subgraph ZONE["Zone ext-fi (node pool extfi)"]
         direction LR
-        appgw["Front Door WAF (ext) /<br/>direct from corporate network (int)<br/>HTTPS only"]
+        appgw["Traffic Manager picks the cell (ext) /<br/>direct from corporate network (int)<br/>HTTPS only"]
         subgraph ING["ns: ext-fi-gateway (platform)"]
             ic["Traefik · Gateway ext-fi<br/>listener HTTPS :443 only<br/>*.ext-fi.&lt;env&gt;.example.com<br/>(Let's Encrypt, from Key Vault via ESO)"]
         end
@@ -25,7 +25,7 @@ flowchart LR
 
     http["Plain HTTP :80"]:::off
 
-    client -->|"HTTPS"| appgw -->|"HTTPS (re-encrypt)"| ic
+    client -->|"DNS"| appgw -->|"HTTPS (TLS ends at Traefik)"| ic
     ic -->|"HTTP, allowed by policy"| a1
     ic -->|"HTTP, allowed by policy"| b1
     a1 & a2 & b1 -->|"DNS allowed"| dns

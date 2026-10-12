@@ -23,7 +23,7 @@ platform is rebuilt in the paired region, and only the data is restored into it.
 | Platform Key Vault `kv-<env>-platform` | Only customer-managed keys that backed-up data depends on (for example a PaaS service's TDE key, if one is used) | Certificates (issued again by the renewal job), the cluster KMS and disk keys (new clusters get new keys, [section 18](18-encryption-at-rest-and-customer-managed-keys.md)), the Grafana tokens |
 | ACR | – | Images are built again by CI from the Git commits that the fleet repository deploys ([open questions](open-questions.md)) |
 | Messaging (Service Bus, Event Hubs) and caches (Redis) | – (in-flight data and caches, not records) | Namespaces, queues, topics and caches |
-| Hub, management VNet, Firewall, Front Door, DNS, identities, policies | – | Everything (IaC repository and guardrails repository) |
+| Hub, management VNet, Firewall, Traffic Manager, DNS, identities, policies | – | Everything (IaC repository and guardrails repository) |
 | Git, GitHub environments, Grafana Cloud | Not in the region ([section 19](19-observability-with-grafana-cloud.md#network-grafana-cloud-through-private-link)) | – |
 
 An application team that keeps data anywhere else must name it at onboarding. That data is either moved into one of
@@ -102,8 +102,8 @@ environment in the paired region, prd first:
    deploys the StatefulSets, which bind the restored claims by name.
 6. **Images**: CI builds the images of the commits that the fleet repository deploys, pushes them to the new ACR,
    and the release agent opens the pull request that moves the digests. Applications start once their images exist.
-7. **Traffic**: Front Door is global and survives; the IaC points its origin groups at the new cells' Private Link
-   Services. The internal Private DNS zones are created in the new hub, and ExternalDNS fills them. Grafana Cloud
+7. **Traffic**: Traffic Manager is global and survives; the IaC points its endpoints at the new cells' external
+   gateways. The internal Private DNS zones are created in the new hub, and ExternalDNS fills them. Grafana Cloud
    was outside the region, so the dashboards and alerts are already there.
 
 - **RTO** is measured, not assumed. It is the time of the rebuild drill below, and it is dominated by the database
