@@ -22,8 +22,8 @@ of that cloud, and a handful of values per cluster (`cluster-settings`) that the
 | Secrets | [External Secrets Operator](https://external-secrets.io/) | Teams write `ExternalSecret`s against a `SecretStore` named `key-vault`; only the store's provider is cloud-specific ([section 6](06-workload-identity-and-secrets.md)) |
 | Identity | OIDC workload identity federation | Pods get cloud tokens through a Kubernetes service account – Entra Workload ID, EKS Pod Identity / IRSA, GKE Workload Identity Federation – never stored keys |
 | DNS | [external-dns](https://kubernetes-sigs.github.io/external-dns/) | Publishes listener hostnames in Azure DNS, Route 53 or Cloud DNS – one provider flag |
-| Network policy | Kubernetes `NetworkPolicy`, Cilium | Deny-by-default between namespaces in every cloud; AKS, EKS and GKE all offer Cilium-based data planes |
-| Workload security | Pod Security Standards, `ValidatingAdmissionPolicy` (CEL) | Built into Kubernetes, enforced the same way everywhere ([section 14](14-policy-enforcement.md)) |
+| Network policy | Kubernetes `NetworkPolicy`, Cilium | Deny-by-default between namespaces in every cloud; AKS, EKS and GKE all offer Cilium-based data planes. The FQDN egress policies are `CiliumNetworkPolicy` objects and need a Cilium agent with its DNS proxy – see [below](#what-stays-cloud-specific) |
+| Workload security | Pod Security Standards, Gatekeeper constraint templates, `ValidatingAdmissionPolicy` (CEL) | The rules of [section 14](14-policy-enforcement.md) are Gatekeeper templates and CEL policies kept in the IaC repository; on AKS the Azure Policy add-on delivers them, elsewhere the same templates run on open-source Gatekeeper ([below](#what-stays-cloud-specific)) |
 | Telemetry | [OpenTelemetry](https://opentelemetry.io/), Prometheus | Apps emit OTLP; the collector's destination is configuration ([section 19](19-observability-with-grafana-cloud.md)) |
 
 The example application shows it end to end: [aks-hello](https://github.com/onek8s/aks-hello) and its manifests in
@@ -71,11 +71,56 @@ extensions), MongoDB feature coverage and Redis modules differ. So:
 | The few facts the cluster needs about its cloud: secret store URL, identities' client IDs, DNS zone, load balancer annotations, StorageClass | `cluster-settings` of each cluster, filled in by the IaC | `clusters/<cluster>/cluster-settings.yaml` in [aks-fluxcd-platform](https://github.com/onek8s/aks-fluxcd-platform) |
 | Providers of a few platform components | Platform repository, per cloud overlay | External Secrets `azurekv`, external-dns `azure`, Azure load balancer annotations on Traefik |
 | Day-2 tools that read the cloud | [aks-ai-agents](https://github.com/onek8s/aks-ai-agents) | Azure tools behind a cloud-neutral tool interface |
+| How the admission policies reach the cluster | Cluster IaC (policy assignments) | Azure Policy add-on (Gatekeeper managed by AKS), assigned per environment subscription |
+| The data plane that enforces FQDN egress | Cluster IaC (CNI choice) | Azure CNI powered by Cilium with ACNS |
+| Human access to the clusters | Landing zone and cluster IaC | Entra ID groups, PIM, Azure RBAC for Kubernetes |
 
-Two Azure specifics are accepted on purpose and have a counterpart elsewhere: the AKS GitOps extension installs
-Flux (on EKS / GKE Flux is bootstrapped the usual way – the `GitRepository` and `Kustomization` objects are the same),
-and the Azure Policy add-on enforces Azure-side policy (the in-cluster rules use portable Pod Security and
-`ValidatingAdmissionPolicy`).
+Azure specifics that are accepted on purpose, and what replaces them in another cloud:
+
+- **Flux** is installed by the AKS GitOps extension; on EKS / GKE it is bootstrapped the usual way. The
+  `GitRepository`, `OCIRepository` and `Kustomization` objects are the same.
+- **Admission policy.** The Azure Policy add-on is the single policy engine on Azure (R14), but what it runs is
+  Gatekeeper: the constraint templates (Rego, CEL) and mutation objects (`Assign`, `AssignMetadata`) of
+  [section 14](14-policy-enforcement.md) live in the IaC repository and are not Azure-only code. EKS and GKE have no Azure Policy, so another cloud runs either **open-source
+  Gatekeeper** with the same templates, delivered by Flux, or the clusters are connected with **Azure Arc** so that
+  Azure Policy keeps being the one engine and compliance view across clouds. The choice is an
+  [open question](open-questions.md); either way, CI already tests the templates with `gator verify` outside any cluster.
+- **FQDN egress** needs Cilium's DNS-aware policies in every cloud. EKS can run Cilium as its CNI instead of the
+  default VPC CNI; GKE Dataplane V2 is Cilium-based but has its own FQDN policy object. A second cloud must therefore
+  prove R20 with its own data plane before it is accepted, and may need a generated translation of the `egress`
+  policies – the application team still writes only the list of names.
+- **Identity for humans** stays Entra ID: EKS and GKE both accept an external OIDC identity provider for cluster
+  sign-in, so the same groups and PIM activation apply; the cloud's own IAM is used only to manage its resources.
+
+## Sovereignty, regulation and exit
+
+Portability is also how the platform answers regulation. **DORA** asks financial entities for an exit strategy from
+critical ICT providers and for tested recovery with defined RTO and RPO; **NIS2** asks for supply-chain risk
+management and business continuity. This design contributes:
+
+| Requirement | Where the design meets it |
+|---|---|
+| Recovery from the loss of a region, tested | Immutable backups in the paired region, drill every six months ([section 20](20-backup-and-region-recovery.md)) |
+| Defined RTO and RPO | Measured in the drills; the business targets are still [open](open-questions.md) |
+| Exit from the cloud provider | Applications and their deployment do not change between clouds (this section); data uses open protocols |
+| Control of keys | Customer-managed keys for etcd, node disks and persistent volumes; crypto-shredding by disabling a key ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)) |
+| Data residency | Isolation zones per country (R3); primary and paired regions chosen inside the EU, covered by the EU Data Boundary |
+
+Data in an EU region is not the same as data under EU law only: all three target clouds, and several platform
+services, are run by companies subject to the US CLOUD Act. The dependencies outside the corporate tenant are
+listed so they can be judged together, not one by one:
+
+| Dependency | Holds | Section |
+|---|---|---|
+| Azure (and later AWS / Google Cloud) | Everything, with customer-managed keys | – |
+| GitHub | IaC, fleet and design repositories, pipeline runs | [section 15](15-ai-driven-day-2-operations.md) |
+| Grafana Cloud | All telemetry, including the logs' personal data | [section 19](19-observability-with-grafana-cloud.md) |
+| The AI agents' model provider | Logs, traces and diagnostics sent in prompts | [section 15](15-ai-driven-day-2-operations.md) |
+| Let's Encrypt | Public certificate requests (zone names only) | [section 13](13-encryption-in-transit-and-tls.md) |
+
+Whether the exit strategy must also include a **European provider** – one with managed Kubernetes and managed
+PostgreSQL, Redis-compatible and Kafka services, so that "another implementation of the same platform" stays possible
+outside US jurisdiction – is an [open question](open-questions.md). Nothing in the application contract prevents it.
 
 ## Adding a cloud
 

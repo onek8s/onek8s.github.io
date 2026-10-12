@@ -114,6 +114,42 @@
   to the paired region so the deployed digests stay valid? Who owns the backup subscription and the Resource Guard
   (backup administrators and security team, current draft)?
 
+Raised by the [comparison with Wolkwacht](wolkwacht-comparison.md):
+
+- Image signatures ([section 14](14-policy-enforcement.md)): AKS Image Integrity (Ratify) is preview, verifies only
+  Notation signatures and supports only the `audit` effect, so the draft enforces signatures in the promotion
+  pipeline and only audits them at admission. Is that enough, or is an admission `deny` required – with open-source
+  Ratify on Gatekeeper, which is also what another cloud would run? Does Image Integrity work in the network
+  isolated stateful cluster?
+- Identity-based east-west authorisation: inside a zone, Cilium policies decide by namespace and labels, and
+  traffic between nodes is encrypted by VNet encryption, not mTLS. Do some applications need service-to-service
+  authorisation by workload identity and HTTP method / path (for example payments)? If so, is Azure Kubernetes
+  Application Network (managed Istio ambient) an option once it is GA – does it work with eBPF host routing, a private
+  cluster, Traefik's own Gateway API CRDs and the "no service mesh" rule of R9b?
+- Second cloud ([section 21](21-open-standards-and-portability.md#what-stays-cloud-specific)): open-source Gatekeeper
+  with the same templates, or Azure Arc-enabled Kubernetes so that Azure Policy stays the one engine (R14) across
+  clouds? Which Cilium-based data plane proves R20 on EKS and on GKE?
+- Sovereignty ([section 21](21-open-standards-and-portability.md#sovereignty-regulation-and-exit)): do DORA or NIS2
+  apply to the organisation, and does the exit strategy have to include a European provider outside US jurisdiction?
+  Are GitHub, Grafana Cloud and the model provider acceptable as dependencies under the CLOUD Act?
+- Platform services list: [section 21](21-open-standards-and-portability.md#data-in-paas-services-that-every-cloud-offers)
+  offers only services with the same protocol in every cloud and excludes Service Bus and Cosmos DB's NoSQL API, while
+  sections [6](06-workload-identity-and-secrets.md), [8](08-cluster-types-stateless-and-stateful.md) and
+  [20](20-backup-and-region-recovery.md) still list Azure SQL, Service Bus and Cosmos DB. Are Azure-only services
+  allowed as a documented, cloud-pinning exception (like a PostgreSQL extension), or removed from those sections?
+- Small single-team workloads: may a team run outside OneK8s, for example on Azure Container Apps, when it needs no
+  Kubernetes API and scales to zero most of the day – or does every workload belong on the platform for isolation,
+  policy and portability?
+- GPU and AI inference workloads (for example KAITO model serving) are not in scope today. If they come: which GPU
+  VM sizes support VNet encryption and encryption at host, and can NAP provision them per zone?
+- Chaos Studio's AKS faults use Chaos Mesh (privileged daemon, network faults through traffic control rules): does it
+  work with eBPF host routing and the private API server, or is a different tool (for example Gremlin) needed for the
+  in-cluster faults?
+- Inspektor Gadget and kube-bench: confirm that both run with eBPF host routing and Azure Linux 3.0, and that Image
+  Cleaner works in the network isolated stateful cluster (it needs a vulnerability database).
+- Confirm that `--ssh-access disabled` also applies to NAP nodes, and that disabling local accounts does not break
+  any AKS add-on or extension the platform uses.
+
 ---
 
-[Back to contents](../README.md) · Previous: [21. Open standards and portability](21-open-standards-and-portability.md) · Next: [Editing the pictures](editing-the-pictures.md)
+[Back to contents](../README.md) · Previous: [21. Open standards and portability](21-open-standards-and-portability.md) · Next: [Comparison with Wolkwacht](wolkwacht-comparison.md)

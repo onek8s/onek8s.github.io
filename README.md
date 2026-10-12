@@ -72,4 +72,5 @@ adapters, and the PaaS services every cloud offers.
 - [20. Backup and region recovery](docs/20-backup-and-region-recovery.md)
 - [21. Open standards and portability](docs/21-open-standards-and-portability.md)
 - [Open questions](docs/open-questions.md)
+- [Comparison with Wolkwacht](docs/wolkwacht-comparison.md)
 - [Editing the pictures](docs/editing-the-pictures.md)
