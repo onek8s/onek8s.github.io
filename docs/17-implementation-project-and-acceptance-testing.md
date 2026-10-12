@@ -14,7 +14,7 @@ landing zone and connected to the corporate network.
 cells and, if built, a three-AZ stateful cluster – and is built from the same IaC modules and the same fleet
 repository; only parameters differ ([section 9](09-environments.md)). Everything acceptance has to prove is a property
 of the modules and the configuration, not of an individual environment. For the duration of the performance tests,
-dev gets prd's capacity parameters (NAP `NodePool` limits, stateful node pool sizes, Firewall and Front Door SKUs),
+dev gets prd's capacity parameters (NAP `NodePool` limits, stateful node pool sizes, Firewall SKU),
 then goes back to its own.
 
 ## Build tenant
@@ -31,6 +31,7 @@ then goes back to its own.
 | AI agents | **Full permissions during phases 1 and 2**: Owner on the build tenant's subscriptions and cluster admin, so they can change Azure and the clusters directly, not only through pull requests; every action is logged (Activity Log, Entra ID sign-in logs, Kubernetes audit logs) | The agents are built in the same project, and what they really need is not known yet: their least-privilege identities, risk tiers and merge gate ([section 15](15-ai-driven-day-2-operations.md)) are derived from what they actually did; the model provider question can also be answered here with synthetic data |
 | Data | **Synthetic test data only**; no copies of production or customer data | The tenant does not have the corporate controls, so it must not hold anything they protect |
 | Internet | Egress through the hub Firewall, the same FQDN allow-lists as designed, plus what prototyping temporarily needs | – |
+| API servers | **Public in dev during prototyping** (Entra ID and Azure RBAC only, local accounts disabled): the lab's pipelines and agents reach the cells without a path into their networks. Private, as in [section 3](03-control-plane.md), before acceptance | The private API server path is the last thing switched, so phase 2 is not held up by it |
 
 Rules that keep the build tenant from drifting away from what will be deployed later:
 
@@ -68,7 +69,7 @@ platform change for the rest of the platform's life.
 A **reference application** is deployed into every isolation zone of every cell before acceptance starts: an HTTP API
 with a frontend in the stateless cells, a PaaS database through workload identity, a Key Vault secret exception, an
 FQDN egress policy and – if the stateful cluster is built – a StatefulSet with three replicas. Load is generated from
-the Internet through Front Door for `ext-*` zones and from the client VNet directly to the home cell for `int-*` zones, and
+the Internet through Traffic Manager for `ext-*` zones and from the client VNet directly to the home cell for `int-*` zones, and
 the generators' own error rate and latency are the measurement in every test below. Targets marked *TBD* are
 agreed with the application owners before phase 3 starts.
 
@@ -91,14 +92,14 @@ Automated negative tests, kept from phase 2, that run as a pipeline stage:
 | Promote an image that is not signed by the platform's CI; push an image to the acc registry with any identity other than the promotion pipeline | Promotion fails on the signature check; the push is refused (no role). An unsigned image deployed in dev shows up as non-compliant in Image Integrity ([section 14](14-policy-enforcement.md)) |
 | Apply each forbidden manifest of the [policy table](14-policy-enforcement.md) (privileged pod, image not from ACR, `toCIDR`, `PersistentVolumeClaim` in a stateless cluster, …) | Denied by admission |
 | Reach the API server from the client VNet, the hub and a spoke | Only from the management VNet ([section 3](03-control-plane.md)) |
-| Azure Resource Graph: public IPs, public endpoints of PaaS / Key Vault / ACR, local auth enabled | None except the designed ones (Front Door) |
+| Azure Resource Graph: public IPs, public endpoints of PaaS / Key Vault / ACR, local auth enabled | None except the designed ones (the external zones' gateway load balancers) |
 | Stateful cluster: any Internet destination | Blocked, apart from the documented Entra ID and Azure Policy exceptions |
 
 ### Performance and capacity
 
 | Test | How | Pass criterion |
 |---|---|---|
-| Peak load per cell | One cell takes 100 % of the expected prd peak (the other cells drained), for 1 hour | p95 / p99 latency and error rate within targets (*TBD*); no throttling of Firewall, Front Door, Key Vault or Entra ID |
+| Peak load per cell | One cell takes 100 % of the expected prd peak (the other cells drained), for 1 hour | p95 / p99 latency and error rate within targets (*TBD*); no throttling of Firewall, the gateways' load balancers, Key Vault or Entra ID |
 | Scale-out from idle | Load ramps from 10 % to 100 % of peak in 5 minutes | HPA / KEDA and NAP add capacity before latency breaches its target; time to new nodes measured per VM family, arm64 and spot included |
 | Spot eviction under load | Simulated eviction of all spot nodes of a zone | Pods move to on-demand without errors beyond the budget; no SLO breach |
 | In-place right-sizing under load | Reference application with the default VPA (`InPlaceOrRecreate`) and requests set 4× too high, then 4× too low for memory; a resize that cannot fit its node (`Deferred`) and one that never fits (`Infeasible`); a multi-container pod with a pod-level budget resized in place; a second application with `platform/rightsizing: off` | VPA converges within its bounds without errors beyond the budget; the opted-out application is never resized; CPU resizes cause no container restarts; deferred resizes end in an eviction and a NAP node, infeasible ones raise the right-sizing alert; HPA and VPA do not oscillate; the right-sizing agent's pull requests pass the gate as tier low |
@@ -121,12 +122,12 @@ instances, zone down) need no in-cluster agent.
 
 | Fault | Pass criterion |
 |---|---|
-| Loss of a whole cell (stop all nodes of `sl-az1`, then `sl-az2`) | Front Door moves external traffic to the remaining cells within the target (*TBD*); the alert-driven failover migrates the stopped cell's internal applications to another cell within the internal recovery time target (*TBD*); errors within budget; the surviving cell carries 100 % |
+| Loss of a whole cell (stop all nodes of `sl-az1`, then `sl-az2`) | Traffic Manager moves external traffic to the remaining cells within the target (*TBD*, probe interval + TTL); the alert-driven failover migrates the stopped cell's internal applications to another cell within the internal recovery time target (*TBD*); errors within budget; the surviving cell carries 100 % |
 | AZ outage (Chaos Studio zone-down on all VMSS of one AZ, stateless and stateful) | Same as above for stateless; the stateful cluster keeps quorum and serves from two AZs |
 | Node failures: kill system pool node, application node, the node of a Traefik replica | No user-visible errors beyond budget; PDBs respected |
 | Platform components: restart Cilium agents, ACNS security agent, CoreDNS, Traefik, Flux, the Azure Policy add-on | FQDN policies stay enforced during Cilium restarts; traffic continues; admission fails closed as designed |
 | Dependency loss: PaaS failover (zone-redundant database), Key Vault unavailable for External Secrets Operator, ESO controller of a zone stopped, Entra ID token endpoint slow | Applications keep running and new pods start with cached credentials and the Secrets already in the cluster; failed syncs alert; recovery without manual steps |
-| Traffic layer and placement: remove a Front Door origin; migrate internal applications back and forth under load; stop ExternalDNS in one cell during a migration | Failover within target; cell affinity re-established; planned migrations without failed requests; DNS records always point to a cell that serves the application |
+| Traffic layer and placement: disable a cell's Traffic Manager endpoint; migrate internal applications back and forth under load; stop ExternalDNS in one cell during a migration | Failover within target; cell affinity re-established; planned migrations without failed requests; DNS records always point to a cell that serves the application |
 | Firewall rule mistake (block a platform FQDN in one cell) | Detected by monitoring, contained to one cell |
 
 ### Zero-downtime upgrades and changes
@@ -166,7 +167,7 @@ criterion for all is **no errors beyond the budget at the load generators**.
   Grafana Cloud stack through Private Link, also from the stateful cluster; a trace of the reference application
   links Traefik, the application and its logs; the absent-data alert fires when a cluster's Alloy is stopped
   ([section 19](19-observability-with-grafana-cloud.md)).
-- Logs: Kubernetes audit logs, Activity Log, Firewall and Front Door / WAF logs arrive in the Log Analytics
+- Logs: Kubernetes audit logs, Activity Log, Firewall and Traffic Manager logs arrive in the Log Analytics
   workspace with the agreed retention and can be queried from Grafana.
 - No secrets in telemetry: a test application that logs a token, a connection string and an `Authorization`
   header; none of them reaches Grafana Cloud unredacted.
@@ -187,7 +188,7 @@ in the build tenant with all policies in `deny`.
 | Cloud configuration | Defender for Cloud secure score and recommendations, the corporate Azure Policy initiatives in `deny` with zero non-compliant resources (or approved exemptions), CIS AKS benchmark, IaC scanning in CI | Security team |
 | Identity and access | All role assignments in all subscriptions, PIM settings and break-glass accounts, no standing write access; workload identity federated credentials (issuer, subject per ServiceAccount); GitHub OIDC subjects per environment; AI agent identities read-only, full prototyping permissions removed and the derived roles compared with the logged actions | Security team + identity team |
 | Network | NSG and Firewall rule sets against [section 5](05-allowed-and-blocked-flows.md), FQDN allow-lists per zone, WAF policies, no unexpected public endpoints, the stateful cluster's "no Internet" exceptions | Network + security teams |
-| Penetration test | External: Internet → Front Door → `ext-*` zones. Internal: client VNet → Traefik of the `int-*` zones. **Assumed breach**: a compromised pod in each zone tries container escape, IMDS / token theft, lateral movement to other zones, cells, Key Vaults, the API server and the stateful cluster | Independent party |
+| Penetration test | External: Internet → the `ext-*` zones' gateways (the addresses Traffic Manager hands out). Internal: client VNet → Traefik of the `int-*` zones. **Assumed breach**: a compromised pod in each zone tries container escape, IMDS / token theft, lateral movement to other zones, cells, Key Vaults, the API server and the stateful cluster | Independent party |
 | Supply chain | Image sources and ACR import path, vulnerability scanning, image signatures / digests, Flux source verification, branch protection and required reviews, secret scanning of all repositories | Security team |
 | Data protection | Encryption in transit verified (VNet encryption on the node links, TLS-only listeners), encryption at rest with customer-managed keys verified per cluster and zone ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)): KMS and disk encryption set on every cluster, encryption at host on every node, per-zone StorageClasses only; a key rotation and a key revocation (disable, recover) rehearsed in dev; data residency per country zone | Security + privacy |
 | Detection and response | Defender for Containers and Defender for Cloud alerts reach the SOC tooling; the pen test's activity was detected | SOC |

@@ -23,8 +23,8 @@ application can be deployed in a way that breaks a zero-downtime rollout or a no
   changes through the pipeline and IaC.
 - **Compatibility rule**: during a release two versions run at the same time (in different cells, and for a few
   minutes inside a cell during the rolling update), so API and message changes must be backwards compatible and
-  database changes follow *expand → migrate → contract* over separate releases. Client-IP affinity (external zones)
-  and the single home cell (internal zones) reduce what *clients* see of this, but clients that change addresses,
+  database changes follow *expand → migrate → contract* over separate releases. DNS affinity (external zones)
+  and the single home cell (internal zones) reduce what *clients* see of this, but clients that change networks,
   rollbacks and the data shared by all cells still meet both versions.
 
 ## Releases cell by cell
@@ -32,21 +32,22 @@ application can be deployed in a way that breaks a zero-downtime rollout or a no
 A release – a new signed fleet artifact `fleet:<git-sha>` with any number of application changes – moves through the
 cells of an environment **one cell at a time**, with the same *drain → change → test → return* procedure as a
 cluster upgrade ([section 12](12-zero-downtime-cluster-upgrades.md#stateless-clusters)). External applications run in
-every cell behind client-IP affinity; internal applications run only in their home cell
+every cell behind Traffic Manager's DNS affinity; internal applications run only in their home cell
 ([incoming traffic](08-cluster-types-stateless-and-stateful.md#incoming-traffic-from-outside-and-from-inside)).
 Either way, every interactive user switches from the old to the new version **exactly once and never back**:
 
 1. **Stateful stage first** (only if the environment has a stateful cluster): providers before consumers
    ([section 10](10-keeping-clusters-in-sync.md)).
-2. **Drain cell 1**: take it out of Front Door. Its external users move to the other cells, which still run the old
-   version, so nobody sees a change yet. Internal applications whose home is cell 1 keep serving.
+2. **Drain cell 1**: disable its Traffic Manager endpoints and wait for the DNS answers to expire and the cell's
+   connections to drain. Its external users move to the other cells, which still run the old version, so nobody
+   sees a change yet. Internal applications whose home is cell 1 keep serving.
 3. **Deploy**: the pipeline moves the cell's tag (`<env>-sl-az1`) to the new artifact; Flux rolls it out and the
    pipeline waits until all Kustomizations are `Ready`. No external traffic reaches the cell during the rolling
    update; the internal applications of the cell are updated **in place** by their zero-downtime rolling update –
    this is the moment their users switch to the new version.
 4. **Test** through the per-cell test host names (external zones) and against the cell's Traefik IPs with the
    applications' real host names (internal zones): smoke and synthetic tests over the real TLS path.
-5. **Return** the cell to Front Door: its external clients come back in steps, a quarter of its IP blocks at a time,
+5. **Return** the cell to Traffic Manager: its external clients come back in steps, a quarter of its address blocks at a time,
    and this is the moment they switch to the new version. The pipeline watches the error-rate and latency SLOs per cell in Grafana Cloud ([SLO gates](19-observability-with-grafana-cloud.md#what-grafana-cloud-does));
    on a breach it drains the cell again – its external clients fall back to the old version in the other cells – and
    moves the tag back, which also rolls back the cell's internal applications.

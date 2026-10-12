@@ -60,8 +60,8 @@ Clients never connect to a pod or node directly, and the stateful cluster is nev
 platform. The two kinds of zones use the cells differently, because their availability requirements differ:
 
 - **External zones (`ext-*`): every application runs in every cell, active-active.** A **traffic layer** (Azure
-  Front Door, the cell router) outside the cells pins each client to one cell by its IP address and moves the
-  clients of a failed or drained cell to another cell automatically.
+  Traffic Manager, the cell router) outside the cells answers each client's DNS query with one cell, chosen by the
+  client's network, and leaves a failed or drained cell out of its answers.
 - **Internal zones (`int-*`): every application runs in one cell, its home cell.** The application team chooses the
   cell; its DNS name points straight to the Traefik gateway of that cell, maintained by ExternalDNS. A **migration
   workflow** moves an application to another cell without downtime – on request, around cluster upgrades, and after
@@ -71,7 +71,7 @@ platform. The two kinds of zones use the cells differently, because their availa
 
 | Source | Entry point | Path to the cells |
 |---|---|---|
-| Internet (external zones `ext-*`) | **Azure Front Door Premium** with a WAF policy per zone; public DNS name of the application → Front Door endpoint | Private Link origins: a Private Link Service on the Traefik internal load balancer of the zone in **every** cell. No public IP in any spoke |
+| Internet (external zones `ext-*`) | **Azure Traffic Manager**: public DNS name of the application → CNAME to the zone's Traffic Manager profile, which answers with one cell | The public load balancer of the zone's Traefik gateway in **every** cell: one public IP per external zone and cell, HTTPS (443) only |
 | Corporate network (internal zones `int-*`) | **The zone's Traefik gateway in the application's home cell**: `<app>.int-fi.prd.example.com` resolves in the hub Private DNS to the Traefik internal load balancer IP of zone `int-fi` in that cell | On-premises → ExpressRoute/VPN → hub Firewall → Traefik internal load balancer of the zone in the home cell |
 | Other Azure workloads (other spokes) | Same as the corporate network | Same as above; a Firewall rule per source |
 | Applications in the same zone and cell | Kubernetes Service (`<app>.<zone>-<app>.svc`) | Stays inside the cell and its availability zone; never goes through the traffic layer or to another cell |
@@ -83,58 +83,66 @@ Cache for Redis) or in the token, so a client can be moved to another cell at an
 What the cell choice controls is **which application version** a client sees while a release moves through the cells
 one by one ([releases cell by cell](11-zero-downtime-application-upgrades.md#releases-cell-by-cell)).
 
-### External zones: active-active with client-IP affinity
+### External zones: active-active with DNS affinity
 
-**The client's TLS session ends at Front Door**, not in a cell. Front Door terminates the client's TLS, runs the
-WAF, opens its own TLS connection to the Traefik gateways and chooses the cell **per HTTP request**. All cells carry
-external traffic all the time, and every client is mapped to one cell **by its IP address**, so it keeps using the
-same cell across requests, TLS sessions and reconnects – also clients that do not support cookies (API clients,
-mobile apps, other systems):
+**The traffic layer is DNS.** An external application's public name is a CNAME to the zone's **Azure Traffic
+Manager** profile, which answers every DNS query with the public address of the zone's Traefik gateway in one cell.
+The client then connects straight to that cell: **its TLS session ends at the zone's Traefik** in the cell, with the
+zone's certificate – end to end, nothing in between decrypts it. All cells carry external traffic all the time, and
+every client is mapped to one cell **by its network**, so it keeps using the same cell across requests, TLS sessions
+and reconnects – also clients that do not support cookies (API clients, mobile apps, other systems):
 
 - **The affinity exists for consistent versions, not for state.** It makes sure that a client sees **one
   application version at a time** during a release.
-- **Why not cookies:** cookie affinity (the only affinity Front Door offers built in) works only for clients that
-  keep cookies, and some clients will not.
-- **A failed or drained cell moves its clients** to another cell, and they come back when it returns. The mapping is
-  deterministic, so every request of a client lands on the same cell again.
+- **A failed or drained cell is left out of the answers**, and its clients move to another cell as soon as their
+  cached DNS answer expires (the record's TTL, 30 s); they come back when it returns.
 - **All cells always prove that they work.** A cluster that only receives traffic in a failure is a cold standby
   with cold caches and untested capacity. With active-active, a cell failure only affects the clients of that cell
   (half or a third).
 - **Long-lived connections** (WebSockets, Server-Sent Events, gRPC streaming) stay on one cell for the life of the
-  connection. Applications that use them must reconnect with back-off, because draining a cell closes them after the
-  drain timeout.
+  connection – DNS is only asked again when the client reconnects. Applications that use them must reconnect with
+  back-off, because draining a cell closes them after the drain timeout.
 
-How Front Door maps the client IP to a cell:
+How Traffic Manager maps a client to a cell:
 
-| | Front Door (external zones) |
+| | Traffic Manager (external zones) |
 |---|---|
-| Mapping | Rule set per zone: the IPv4 and IPv6 address space is split into blocks (e.g. 16 per family), and each block is assigned to a cell with a rule *socket address in &lt;blocks&gt; → route configuration override: origin group of that cell*. Blocks are assigned by measured traffic so that the cells get similar load |
-| Client IP used | *Socket address* (the address that connected to Front Door), not `X-Forwarded-For`, which a client could forge |
-| Origins | One origin group per cell and zone: the cell's own origin at priority 1, the other cells at priorities 2 and 3 in the fixed order `az1` → `az2` → `az3`, so the clients of a failed cell all move to the same cell |
-| Health probe | HTTPS `GET` to the zone's Traefik health route, which answers only when Traefik and its routes are ready |
-| Take a cell out | Disable the cell's origin: its clients go to the next cell of their origin group |
-| Return a cell | Enable the origin; in steps if wanted, by re-mapping the cell's blocks back a quarter at a time |
+| Profiles | Per zone and environment one **parent** profile with the *Subnet* routing method, and per cell one **child** profile with the *Priority* routing method, nested as the parent's endpoints |
+| Mapping | The parent maps the IPv4 and IPv6 address space, split into blocks (e.g. 16 per family), to the cells' child profiles. Blocks are assigned by measured traffic so that the cells get similar load |
+| Client address used | The address of the client's DNS resolver, or the client subnet it passes on (EDNS Client Subnet) – not anything the client sends in HTTP |
+| Fallback | Each child profile lists the cell's own gateway at priority 1 and the other cells at priorities 2 and 3, in the fixed order `az1` → `az2` → `az3`, so the clients of a failed cell all move to the same cell |
+| Health probe | HTTPS `GET /healthz` of an application of the zone, through each cell's gateway with the application's host name (`custom_header host`), every 30 s; a cell is left out after 2 failures |
+| Take a cell out | Disable the cell's endpoints: its blocks are answered with the next cell of their child profile |
+| Return a cell | Enable the endpoints; in steps if wanted, by mapping the cell's blocks back a quarter at a time |
+| TTL | 30 s, so a drain or a failover reaches most clients within a minute |
 
-Limits of client-IP affinity, accepted in this design:
+Limits of DNS affinity, accepted in this design:
 
-- **NAT**: all users behind one address (a carrier-grade NAT, a partner's proxy) land on the same cell, so the load
-  is less even than with cookies. The cells are sized N+1 anyway; the block assignment is rebalanced from the access
-  logs when needed (outside releases, because it moves clients).
-- **Changing addresses**: a mobile client that switches networks may change cells. During a release it can then see
+- **Resolvers**: clients behind a large shared resolver (a public DNS service without client subnet) land on the
+  same cell, so the load is less even than with per-request routing. The cells are sized N+1 anyway; the block
+  assignment is rebalanced from the access logs when needed (outside releases, because it moves clients).
+- **Cached answers**: a client or resolver that ignores the TTL keeps using a drained cell longer. The drain timeout
+  of a cell (section 12) is chosen with that in mind, and a failed cell's clients retry until their cache expires.
+- **Changing networks**: a mobile client that switches networks may change cells. During a release it can then see
   the other version, which the [compatibility rule](11-zero-downtime-application-upgrades.md) covers.
+- **No WAF in the traffic layer.** Traffic Manager only answers DNS; HTTP reaches Traefik unfiltered. Rate limits
+  and request limits are Traefik middlewares of the zone; a web application firewall in front of the external zones
+  is an [open question](open-questions.md).
 
-**Real client IP**: the cells see Front Door's addresses; the client IP is in `X-Forwarded-For`, which Traefik
-accepts only from the Private Link Service's NAT IPs (`forwardedHeaders.trustedIPs`).
+**Real client IP**: the zone's Traefik `Service` uses `externalTrafficPolicy: Local`, so Traefik sees the client's own
+address; there is no proxy whose `X-Forwarded-For` it would have to trust.
 
-Every external zone's Traefik gateway also answers to a **per-cell test host name** (e.g.
-`*.sl-az1.ext-fi.prd.example.com`): a Front Door route to the cell's origin group whose WAF policy admits only the
-pipeline's egress IPs. The release and upgrade pipelines run their smoke and synthetic tests through the real WAF and
-TLS path before the cell gets user traffic ([releases](11-zero-downtime-application-upgrades.md#releases-cell-by-cell), [section 12](12-zero-downtime-cluster-upgrades.md#stateless-clusters)).
+Every external application also has a **per-cell host name** (e.g. `<app>-<cluster>.ext-fi.prd.example.com`, an A
+record of that cell's gateway kept by ExternalDNS). The release and upgrade pipelines run their smoke and synthetic
+tests on it, through the cell's real TLS path, before the cell gets user traffic
+([releases](11-zero-downtime-application-upgrades.md#releases-cell-by-cell), [section 12](12-zero-downtime-cluster-upgrades.md#stateless-clusters));
+the same names are the Traffic Manager endpoints.
 
-Front Door is a global service that reaches the cells through Private Link: the Traefik `Service` in `<zone>-gateway`
-creates the Private Link Service itself (`service.beta.kubernetes.io/azure-pls-create: "true"`), and the NSG of
-`snet-ext-<country>-ilb` allows TCP 443 only from the Private Link Service's NAT IPs. This traffic does not pass the hub
-Firewall; the Front Door WAF and Traefik are its controls.
+The external zones' gateways are the only public addresses of the platform: one Azure Standard public load balancer
+IP per external zone and cell, created by the Traefik `Service` in `<zone>-gateway`, protected by Azure DDoS
+Network Protection on the cell VNets. The NSG of `snet-ext-<country>-nodes` allows TCP 443 from the Internet and
+nothing else from outside the VNet. This traffic does not pass the hub Firewall; the NSG, Traefik and the
+application's Cilium ingress (only from the zone's gateway) are its controls.
 
 ### Internal zones: one home cell per application, moved by migration
 
@@ -288,7 +296,8 @@ dev → acc → prd, and the existing zones only get new routes and Firewall rul
 7. **Policies and Git:** the zone's Azure Policy mutation and validation, Traefik gateway and namespaces through
    Flux and the stateful pipeline.
 8. **Entry points:** the internal zone's Private DNS zone in the hub (with ExternalDNS's role on it) and a static
-   Traefik IP per cell in `cluster-vars`; the external zone's WAF policy, origin groups, Private Link origins and IP-block rule set in Front Door; approve the Private Link connections. Existing zones' entry
+   Traefik IP per cell in `cluster-vars`; the external zone's Traffic Manager profiles (the parent with its block
+   mapping, a child per cell) and the public DNS CNAMEs of its applications. Existing zones' entry
    points do not change.
 
 In the backend spoke each isolation zone's `snet-<zone>-pe` also holds the private endpoints of that zone's PaaS

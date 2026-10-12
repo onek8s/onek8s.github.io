@@ -108,7 +108,7 @@ Telemetry never goes over the Internet. This matters most for the stateful clust
 | Traces | Grafana Cloud Traces (Tempo), OpenTelemetry | Applications use the OpenTelemetry SDK with W3C `traceparent`. Traefik creates the first span of every request. Head sampling is set in the SDK: 100 % in dev and acc, a default of 10 % in prd that applications may raise. Errors are always kept, and logs carry `trace_id` so that logs, metrics (exemplars) and traces link to each other |
 | SLOs | Grafana SLO | Every `HTTPRoute` gets two **default SLOs** from Traefik metrics, without any application code: availability (share of non-5xx responses) and latency (share of requests under the application's threshold). Teams set the objectives in `apps/<app>/observability/slo.yaml` and may add their own SLIs |
 | Alerting and on-call | Grafana Alerting, Grafana IRM | Multi-window, multi-burn-rate alerts on every SLO. Notification policies route by `team`: platform alerts go to the platform on-call, application alerts to the application team's escalation chain. Every alert links to its runbook and dashboard |
-| Synthetic monitoring | Grafana Synthetic Monitoring | Public probes for every external application's Front Door host name. Private probes run in the management VNet against every internal application and against the cells' Traefik health routes; they drive the cell health alert ([cell failure](08-cluster-types-stateless-and-stateful.md#internal-zones-one-home-cell-per-application-moved-by-migration)) |
+| Synthetic monitoring | Grafana Synthetic Monitoring | Public probes for every external application's Traffic Manager host name and its per-cell host names. Private probes run in the management VNet against every internal application and against the cells' Traefik health routes; they drive the cell health alert ([cell failure](08-cluster-types-stateless-and-stateful.md#internal-zones-one-home-cell-per-application-moved-by-migration)) |
 | Cost and usage | Usage attribution by label, Adaptive Metrics and Adaptive Logs | Usage is reported per `team` and `zone`. The capacity and cost agent ([section 15](15-ai-driven-day-2-operations.md)) proposes dropping unused metrics. Compute efficiency is shown per zone and team with two ratios: **request efficiency** (usage ÷ requests) and **allocation efficiency** (requests ÷ node allocatable). Either one alone hides waste: right-sized pods can still pack badly onto the chosen VM sizes |
 
 **SLO gates.** Releases ([section 11](11-zero-downtime-application-upgrades.md#releases-cell-by-cell)) and cluster
@@ -127,8 +127,8 @@ the environment's Log Analytics workspace (`log-<env>-platform`), through diagno
 enforces:
 
 - Activity Log; AKS resource logs (`kube-audit-admin`, `kube-apiserver`, `cluster-autoscaler`, `guard`);
-  Azure Firewall, Front Door / WAF, Key Vault, private endpoint and PaaS diagnostic logs; Azure Policy compliance.
-- Grafana reads them, and Azure Monitor platform metrics (Firewall, Front Door, PaaS), through the **Azure Monitor
+  Azure Firewall, Traffic Manager, Key Vault, private endpoint and PaaS diagnostic logs; Azure Policy compliance.
+- Grafana reads them, and Azure Monitor platform metrics (Firewall, Traffic Manager endpoint health, PaaS), through the **Azure Monitor
   data source**. It uses an app registration per environment with `Monitoring Reader` and `Log Analytics Reader` on
   the environment subscription, a certificate credential, and rotation by IaC. The access rule applies here too:
   every stack user can query these logs from Grafana.

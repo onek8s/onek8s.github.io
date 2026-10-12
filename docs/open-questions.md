@@ -6,11 +6,15 @@
   is the platform the owner of these prefixes in the central IPAM?
 - Is CoreDNS on the shared system pool acceptable, or should each zone run its own CoreDNS? (The standard NodeLocal
   DNS setup needs host iptables rules and does not fit eBPF host routing, see [section 16](16-advanced-networking-and-fqdn-egress.md).)
-- One Front Door profile per environment with a WAF policy per external zone (current draft), or a profile per zone?
+- Web application firewall for the external zones: Azure Traffic Manager (current draft) is DNS only, so HTTP reaches
+  the zone's Traefik unfiltered. Is that acceptable with rate limits in Traefik, or is a WAF needed – a WAF
+  middleware in the zone's Traefik (Coraza, the same in every cloud), or Application Gateway WAF v2 per zone and
+  cell in front of it?
 - Release cadence: is one fleet release train per environment and day (or a few) fast enough, given that each cell
   costs a drain, rollout, tests and a return ramp? Which applications need a faster path?
-- Client-IP affinity (external zones): how much traffic comes from large NATs (carrier-grade NAT, partners' proxies)
-  or from clients that change addresses? This decides how even the load is and how many clients can meet both versions in a release.
+- DNS affinity (external zones, Traffic Manager *Subnet* routing): how much traffic comes through large shared
+  resolvers without EDNS Client Subnet, or from clients that change networks or ignore the 30 s TTL? This decides
+  how even the load is, how fast a drain takes effect and how many clients can meet both versions in a release.
 - Internal applications, one home cell each: what recovery time is acceptable when a cell fails (alert →
   migration → DNS)? Do the corporate DNS forwarders honour a 60 s TTL, or do they enforce a minimum cache time?
 - ExternalDNS across cells: confirm that a shared `txt-owner-id` with policy `upsert-only` lets the target cell take

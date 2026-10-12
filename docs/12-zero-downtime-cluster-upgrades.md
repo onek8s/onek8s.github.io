@@ -80,13 +80,14 @@ two never run in the same cell at the same time:
 1. pre-scale the remaining cluster(s) to full-load capacity;
 2. take the cell out of traffic: move the internal applications whose home is this cell to another cell with the
    **migration workflow** ([internal zones](08-cluster-types-stateless-and-stateful.md#internal-zones-one-home-cell-per-application-moved-by-migration)),
-   then disable the cell's Front Door origins and wait for connection draining;
+   then disable the cell's Traffic Manager endpoints and wait for the DNS answers to expire and the connections to
+   drain;
 3. upgrade the control plane and the system pool; NAP then replaces the zone nodes with the new node image and
    version through drift (the cell's `NodePool` disruption budgets are opened for this while it is out of traffic) – or, for large changes (new VNet, CNI, OS SKU), **create a fresh cluster**
    from IaC and let Flux bootstrap it (blue/green at cluster level);
 4. wait until all Flux Kustomizations are `Ready`, run smoke and synthetic tests through the cell's per-cell test
    host names ([incoming traffic](08-cluster-types-stateless-and-stateful.md#incoming-traffic-from-outside-and-from-inside));
-5. return the cell's external clients on Front Door in steps of IP blocks while watching error-rate and latency
+5. return the cell's external clients on Traffic Manager in steps of address blocks while watching error-rate and latency
    SLOs; on breach take the cell out again and stop. After the soak, migrate the internal applications back to their
    chosen home cell;
 6. repeat for the next cell.
