@@ -120,8 +120,9 @@
 
 Raised by the [comparison with Wolkwacht](wolkwacht-comparison.md):
 
-- Image signatures ([section 14](14-policy-enforcement.md)): AKS Image Integrity (Ratify) is preview, verifies only
-  Notation signatures and supports only the `audit` effect, so the draft enforces signatures in the promotion
+- Image signatures ([section 14](14-policy-enforcement.md)): AKS Image Integrity (Ratify) is preview (still so in
+  October 2026, not retired: AKS keeps updating its Ratify; dev runs it), verifies only Notation signatures and
+  supports only the `audit` effect, so the draft enforces signatures in the promotion
   pipeline and only audits them at admission. Is that enough, or is an admission `deny` required – with open-source
   Ratify on Gatekeeper, which is also what another cloud would run? Does Image Integrity work in the network
   isolated stateful cluster?
