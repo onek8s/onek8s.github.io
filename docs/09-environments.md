@@ -44,6 +44,11 @@ Capacity rules that the cost model must leave room for, all of them checked in a
   limits and files the raise before it is needed.
 - **Reservations and savings plans** cover only the steady baseline (system pools, stateful pools, the on-demand
   share that always runs), proposed by the cost agent as purchases for the platform owner.
+- **Who pays**: OpenCost splits each cell's cost by namespace, and so by the namespaces' `platform/team` and
+  `platform/cost-center` labels ([section 7](07-application-multi-tenancy.md#ownership-and-cost)); a monthly
+  budget per environment subscription alerts its owners at 80 % and 100 % of actual cost and at a 100 % forecast.
+  GPU nodes are the variable part's most expensive item: they exist only while a GPU pod runs
+  ([section 4](04-node-pools.md#gpus-chosen-by-the-application)).
 
 > **The stateful cluster is optional.** It is not built until the first workload has an approved stateful-cluster
 > exception ([where does a workload run](08-cluster-types-stateless-and-stateful.md#where-does-a-workload-run)); until then every environment runs only the stateless

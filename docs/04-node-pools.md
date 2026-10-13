@@ -109,6 +109,28 @@ How the platform handles them:
 Choosing is a trade-off the application team owns: `multi` + `spot` is the cheapest, `amd64` + `on-demand` the most
 predictable. The choice can be changed in any release, because it is only a label in the pod template.
 
+## GPUs, chosen by the application
+
+An application that needs a GPU asks for it the same way ([decision D42](decisions.md#decision-matrix)): it requests
+the GPUs (`resources.limits: nvidia.com/gpu: 1`) and carries the label `platform/accelerator: nvidia-gpu`. An Azure
+Policy mutation turns the label into the toleration of the zone's GPU `NodePool`; the request is what makes NAP
+create a GPU node.
+
+- **One GPU `NodePool` per zone**, `<zone>gpu`, with its own `AKSNodeClass` in the zone's subnet: on-demand only,
+  amd64, the zone's label and taint plus `platform/accelerator=nvidia-gpu:NoSchedule`. No other `NodePool` offers a
+  GPU, and no pod without the label tolerates these nodes, so ordinary pods never land on them.
+- **Only VM sizes with VNet encryption and encryption at host**, like every zone node. Among the GPU sizes that is
+  today only NC H100 v5 (`Standard_NC40ads_H100_v5`, one H100); the `NodePool` requires that series and the GPU name.
+- **AKS's managed GPU stack** (preview): AKS installs and patches the NVIDIA driver, the device plugin and the DCGM
+  metrics exporter on the nodes, so the platform runs no GPU operator.
+- **Cost**: a GPU node is the most expensive thing in a cell. The `NodePool` scales to zero and removes an empty node
+  after a minute, its limits allow one node per zone in dev, and the family's vCPU quota is raised only where GPUs
+  are wanted. OpenCost reports the node's cost against the namespace that used it
+  ([section 7](07-application-multi-tenancy.md#ownership-and-cost)).
+- **Validation**: Azure Policy rejects a GPU request without the label, the label without a GPU request (a pod that
+  would hold a GPU node without using its GPU), a GPU pod that is not amd64, and the GPU toleration without the label.
+  The stateful cluster offers no GPUs.
+
 ## Pod right-sizing: vertical scaling in place
 
 NAP picks VM sizes, packs nodes and sizes the N+1 headroom from the pods' **requests**, so requests that are far from
