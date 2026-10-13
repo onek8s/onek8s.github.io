@@ -124,8 +124,8 @@ create a GPU node.
 - **AKS's managed GPU stack** (preview): AKS installs and patches the NVIDIA driver, the device plugin and the DCGM
   metrics exporter on the nodes, so the platform runs no GPU operator.
 - **Cost**: a GPU node is the most expensive thing in a cell. The `NodePool` scales to zero and removes an empty node
-  after a minute, its limits allow one node per zone in dev, and the family's vCPU quota is raised only where GPUs
-  are wanted. OpenCost reports the node's cost against the namespace that used it
+  after a minute, its vCPU limit is set per cluster, and the family's vCPU quota is raised only where GPUs are
+  wanted. The dev lab runs none: its limit is 0, so the GPU rules are tested there by dry runs only. OpenCost reports the node's cost against the namespace that used it
   ([section 7](07-application-multi-tenancy.md#ownership-and-cost)).
 - **Validation**: Azure Policy rejects a GPU request without the label, the label without a GPU request (a pod that
   would hold a GPU node without using its GPU), a GPU pod that is not amd64, and the GPU toleration without the label.
