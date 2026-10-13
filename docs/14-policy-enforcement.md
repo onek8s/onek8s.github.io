@@ -56,7 +56,7 @@ Limits of the add-on and how the design handles them:
 | Max 10 000 pods per cluster | Well above the expected size; monitored |
 
 **Day-1 set.** The first cluster of any environment is accepted only with these rules in `deny` (they are the
-acceptance checklist of a new cell, and today's dev lab already denies the storage rules and runs every mutation):
+acceptance checklist of a new cell; today's dev lab runs every mutation and already denies the storage, FQDN egress, Gateway, NodePool, placement label, ESO, ServiceAccount, rollout, VPA, Ingress and read-only root filesystem rules):
 zone placement from the namespace (mutation and validation), `platform/arch` and `platform/capacity` mutations,
 images by digest from the environment's ACR, Secrets only through ESO and no Secrets Store CSI, FQDN-only egress,
 `PersistentVolumeClaim` rejected in stateless cells, Gateway and HTTPS-only listener rules, `LoadBalancer` and
@@ -78,7 +78,7 @@ local accounts and SSH off, CMK). Everything else in the table starts in `audit`
 | `VerticalPodAutoscaler`: `updateMode` `Off` / `Initial` / `InPlaceOrRecreate`, `controlledValues: RequestsOnly`, `maxAllowed` set for every controlled resource ([pod right-sizing](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)); also checked by the merge gate against `limits.yaml`. Every Deployment has one, in `InPlaceOrRecreate` unless its pods carry `platform/rightsizing: off` (CI check on the rendered manifests) | ✔ | all three modes | `Off` only |
 | Egress out of the cluster only by FQDN: application `CiliumNetworkPolicy` egress limited to `toEndpoints`, in-cluster `toServices` and `toFQDNs` with ports (no `toCIDR`/`toCIDRSet`/`toEntities`); no bare or too broad wildcards; DNS rules only for declared names; no `NetworkPolicy` egress `ipBlock`; `CiliumClusterwideNetworkPolicy` and Cilium CIDR / egress gateway objects platform only; `dnsPolicy: ClusterFirst` ([section 16](16-advanced-networking-and-fqdn-egress.md)) | ✔ | | |
 | Cluster: Cilium dataplane, ACNS enabled, Azure Linux 3.0 on all node pools / `AKSNodeClass` `imageFamily: AzureLinux`; eBPF host routing (`BpfVeth`); Key Vault secrets provider (Secrets Store CSI) add-on disabled; local accounts disabled; SSH access disabled ([section 3](03-control-plane.md)) | ✔ | | |
-| Replica and rollout guardrails (PDB existence: CI check) of [section 11](11-zero-downtime-application-upgrades.md) | ✔ | ≥ 2 replicas | ≥ 3 replicas, zone spread |
+| Replica and rollout guardrails (PDB existence: CI check) of [section 11](11-zero-downtime-application-upgrades.md): `replicas` / HPA `minReplicas`, `topologySpreadConstraints`, `RollingUpdate` with `maxUnavailable: 0`, PodDisruptionBudgets with `maxUnavailable` ≥ 1 (never `minAvailable`, which can block every drain) | ✔ | ≥ 2 replicas, spread over nodes | ≥ 3 replicas, zone spread |
 | Reject `PersistentVolumeClaim` | | ✔ | |
 | NAP `NodePool` / `AKSNodeClass`: subnet, `platform/zone` label, taint and AZ of its zone; only allowed VNet-encryption-capable VM sizes (amd64 and arm64); a spot `NodePool` must carry the `platform/capacity=spot:NoSchedule` taint | | ✔ | |
 | Reject `Ingress`; only HTTPS `Gateway` listeners; `HTTPRoute` only to the zone's HTTPS listener and zone domain | | ✔ | |
