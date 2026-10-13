@@ -27,7 +27,9 @@ No Gatekeeper is installed by Flux.
   the Defender for Cloud secure score per environment go to Grafana Cloud. A *drop* in either raises an alert to the
   security agent, which matters more than the absolute score. The CIS AKS benchmark and the NSA/CISA Kubernetes
   hardening guidance are the reference controls, and the checklist is repeated with every Kubernetes minor upgrade,
-  because new minors can change defaults.
+  because new minors can change defaults. The full benchmark – nodes (kube-bench), Kubernetes policies (Kubescape)
+  and the cluster's Azure settings – also runs as a pipeline stage after every cell change, with every accepted
+  failure listed with its reason ([section 17](17-implementation-project-and-acceptance-testing.md#cis-benchmark)).
 - **Platform namespaces**: `kube-system` and `gatekeeper-system` are excluded by the add-on; `flux-system` and other
   platform namespaces are excluded from application rules through the definitions' namespace exclusion parameters.
   The zones' own platform namespaces, `<zone>-gateway` (the zone's App Routing gateway) and `<zone>-secrets`
