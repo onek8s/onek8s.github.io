@@ -54,8 +54,8 @@ Rules that keep the build tenant from drifting away from what will be deployed l
 | Phase | Goal | Exit criterion |
 |---|---|---|
 | 1. Foundation | Build tenant, management and hub, `sub-aks-dev`, pipelines and OIDC, Azure Policy in audit, the client VNet | A stateless cell can be created and deleted by the pipeline |
-| 2. Rapid prototyping | Build → test → change until the design meets every requirement; the assumptions of the [capability matrix](decisions.md#azure-capability-and-verification-matrix) proven by experiments (NAP with custom subnets, eBPF host routing with VNet encryption, Key Vault ABAC, ExternalDNS with a shared owner across cells, VPA in-place resize with NAP and HPA, pod-level in-place resize, …); AI agents built with full permissions | Every requirement R1–R20 has at least one automated test that passes; design documents updated to what was built; agent roles and risk tiers derived from the logged agent actions |
-| 3. Acceptance testing in dev | Prove performance, HA, zero-downtime upgrades, recovery and operability with **all policies switched to `deny`** and the AI agents on their least-privilege identities | All tests in the tables below pass, results recorded |
+| 2. Rapid prototyping | Build → test → change until the design meets every requirement; the assumptions of the [capability matrix](decisions.md#azure-capability-and-verification-matrix) proven by experiments (NAP with custom subnets, eBPF host routing with VNet encryption, Key Vault ABAC, ExternalDNS with a shared owner across cells, VPA in-place resize with NAP and HPA, pod-level in-place resize, …); AI agents built with full permissions | Every requirement R1–R20 has at least one automated test that passes; the [CIS benchmark](#cis-benchmark) runs after every cell change with no unaccepted failure and its baseline recorded; design documents updated to what was built; agent roles and risk tiers derived from the logged agent actions |
+| 3. Acceptance testing in dev | Prove performance, HA, zero-downtime upgrades, recovery and operability with **all policies switched to `deny`** and the AI agents on their least-privilege identities | All tests in the tables below pass, results recorded; the CIS benchmark at its [target](#cis-benchmark) |
 | 4. Security reviews | Independent review of the built platform | No open critical or high findings; medium findings have an owner and a date |
 | Connection readiness gate | Platform owner, security and network team approve connecting | Checklist [below](#connection-readiness-gate) complete |
 | 5. Corporate tenant | The same code deployed to the corporate landing zone: dev, then acc, then prd | Corporate integration tests in dev, application onboarding and user acceptance in acc |
@@ -96,6 +96,52 @@ Each check names the requirement it covers. A forbidden manifest refused by a ru
 | Reach the API server from the client VNet, the hub and a spoke | Only from the management VNet ([section 3](03-control-plane.md)) |
 | Azure Resource Graph: public IPs, public endpoints of PaaS / Key Vault / ACR, local auth enabled | None except the designed ones (the external zones' gateway load balancers) |
 | Stateful cluster: any Internet destination | Blocked, apart from the documented Entra ID and Azure Policy exceptions |
+
+### CIS benchmark
+
+The [CIS Azure Kubernetes Service (AKS) Benchmark](https://www.cisecurity.org/benchmark/kubernetes) is the reference
+hardening checklist ([section 14](14-policy-enforcement.md)). Like the isolation tests, it is an automated stage that
+runs after every change of a cell, weekly, and by hand, and it stays in the pipelines for the platform's life. It has three
+sources, merged into one result per CIS recommendation and a score (the share of automated recommendations that pass):
+
+| Benchmark section | Source | What is checked |
+|---|---|---|
+| 3 Worker nodes | kube-bench (`aks-1.8`), one read-only Job per node | Kubelet configuration files, their permissions and owners; kubelet flags (anonymous auth, authorization mode, client CA, read-only port, certificate rotation, …) |
+| 4 Policies | Kubescape (`cis-aks-t1.8.0`) against the API server, read-only, nothing installed | RBAC (cluster-admin, secrets, wildcards, pod creation, token creation, webhooks, …), default service accounts and token mounting, Pod Security per namespace, a network policy in every namespace, secrets as files, the `default` namespace |
+| 2 Logging, 5 Managed services | The cluster's Azure settings | Audit logs to Log Analytics, Defender for Containers image scanning, the registry (no admin or anonymous access, kubelet `AcrPull` only), Azure RBAC with local accounts off, KMS, the API server's exposure, private nodes, network policy, TLS on every gateway listener, Entra ID |
+
+A failure is either fixed or **accepted with its reason** in a list kept next to the test, optionally for named objects
+only; any other failure, including a new object that fails an accepted recommendation, fails the stage. The list holds
+three kinds of entries: the dev lab's own exceptions, which acc and prd do not have; what AKS manages and cannot be changed
+(its control-plane users, the add-ons' RBAC and namespaces); and design decisions with their section. The score and the
+result per recommendation are kept for every run, and a drop raises an alert to the security agent
+([section 15](15-ai-driven-day-2-operations.md)).
+
+**Baseline and improvements in the dev lab** (`aks-dev-stateless-az1`, Kubernetes 1.36, October 2026):
+
+| | Score | Result |
+|---|---|---|
+| First run | 55 % (23 of 42 automated) | Every node check (section 3) passes. 19 failures: no audit logs (2.1.1); the lab's public API server (5.4.1, 5.4.2) and Defender for Containers off (5.1.1); RBAC of AKS, the Flux extension and External Secrets Operator (4.1.x); default service accounts that mount tokens, and platform namespaces without a network policy or restricted Pod Security (4.1.5, 4.2.8, 4.4.2); Kubescape's security-context control, which fails every workload (4.7.2); what Kubernetes puts into `default` (4.7.3) |
+| After the first round | 59 % (24 of 41 automated; 4.7.1, a list of every namespace to review, counted as manual) | Audit logs pass (2.1.1); no unaccepted failure. Objects failing an accepted recommendation down from 22 to 6 (4.1.5, only Kubernetes' empty namespaces and AKS's), 12 to 9 (4.2.8) and 8 to 2 (4.4.2, the AKS add-on namespaces). Isolation tests unchanged and green |
+
+Improvements made in the first round: Kubernetes audit logs (`kube-audit-admin`, `guard`) of every cluster to the
+environment's Log Analytics workspace ([section 19](19-observability-with-grafana-cloud.md)); Cilium policies for the
+platform's own namespaces (external-dns, External Secrets Operator, the platform gateway) like the zones' ones; no service
+account token from a `default` service account in any namespace the platform creates; Kubernetes' empty namespaces
+(`default`, `kube-public`, `kube-node-lease`) restricted, with a deny-all policy.
+
+**Target.** In dev no unaccepted failure and no drop. In acc and prd the lab exceptions are gone – private API server
+(5.4.1, 5.4.2) and Defender for Containers (5.1.1) – so those recommendations pass there; what remains accepted is only
+what AKS manages and the documented design decisions. Follow-ups that would raise the score further, each a change
+through phase 2:
+
+- External Secrets Operator per zone with Secret access only in its zone's namespaces instead of the chart's
+  cluster-wide role (4.1.2).
+- Network policies for the AKS add-on namespaces (`aks-istio-system`, `gatekeeper-system`) if AKS supports them there
+  (4.4.2), and restricted Pod Security for `flux-system` once the Flux extension's pods meet it (4.2.8).
+- The gateways' namespaces on restricted Pod Security once App Routing lets its gateway pods set a seccomp profile
+  (4.2.8, [section 14](14-policy-enforcement.md)).
+- An image vulnerability scan in the pipeline for the dev lab, where Defender for Containers is off (5.1.1).
 
 ### Performance and capacity
 
@@ -187,7 +233,7 @@ in the build tenant with all policies in `deny`.
 | Review | Scope | By |
 |---|---|---|
 | Threat model | STRIDE over the design documents and the as-built diagrams: trust boundaries (Internet, corporate network, cells, isolation zones, management VNet, CI/CD, AI agents) | Security architect with the platform team |
-| Cloud configuration | Defender for Cloud secure score and recommendations, the corporate Azure Policy initiatives in `deny` with zero non-compliant resources (or approved exemptions), CIS AKS benchmark, IaC scanning in CI | Security team |
+| Cloud configuration | Defender for Cloud secure score and recommendations, the corporate Azure Policy initiatives in `deny` with zero non-compliant resources (or approved exemptions), the [CIS benchmark](#cis-benchmark) results and every accepted failure's reason, IaC scanning in CI | Security team |
 | Identity and access | All role assignments in all subscriptions, PIM settings and break-glass accounts, no standing write access; workload identity federated credentials (issuer, subject per ServiceAccount); GitHub OIDC subjects per environment; AI agent identities read-only, full prototyping permissions removed and the derived roles compared with the logged actions | Security team + identity team |
 | Network | NSG and Firewall rule sets against [section 5](05-allowed-and-blocked-flows.md), FQDN allow-lists per zone, WAF policies, no unexpected public endpoints, the stateful cluster's "no Internet" exceptions | Network + security teams |
 | Penetration test | External: Internet → the `ext-*` zones' gateways (the addresses Traffic Manager hands out). Internal: client VNet → the gateways of the `int-*` zones. **Assumed breach**: a compromised pod in each zone tries container escape, IMDS / token theft, lateral movement to other zones, cells, Key Vaults, the API server and the stateful cluster | Independent party |
