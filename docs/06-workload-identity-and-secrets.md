@@ -30,7 +30,9 @@ storage account keys for Azure services.
 | Other Azure APIs (App Configuration, Azure OpenAI, …) | Azure RBAC roles | `disableLocalAuth` where available |
 
   "Local auth disabled" is enforced with Azure Policy on the resources, so a key-based fallback cannot be switched
-  on later. Application configuration contains only endpoints and client IDs, which are not secrets.
+  on later. Application configuration contains only endpoints and client IDs, which are not secrets. The table lists
+  the Azure services; the ones without an equivalent in every cloud (Azure SQL, Service Bus, Cosmos DB's NoSQL API)
+  are available only as a documented cloud-pinning exception ([section 21](21-open-standards-and-portability.md#data-in-paas-services-that-every-cloud-offers)).
 - **Platform components use workload identity too**: Flux (`OCIRepository` `provider: azure`), the stateful
   deployment pipeline (workload identity federation, no client secret), External Secrets Operator (below), external-dns. Unlike applications, platform components may use
   Key Vault directly with their own identity ([below](#platform-components-may-use-key-vault-directly)). Images are pulled
@@ -60,7 +62,11 @@ Constraints to keep in mind: Key Vault ABAC is **preview**, supports **secrets o
 operations) and only **vault name + secret name** attributes, and lowercase values. Therefore the secret naming
 convention `<app>-<secret>` is mandatory and must be enforced by the platform. A name condition on
 `readMetadata` breaks list calls – gate `getSecret` instead. Because most applications need no secrets at all, the
-vault stays small and the preview dependency affects only the few exceptions.
+vault stays small and the preview dependency affects only the few exceptions. ABAC is also not the only boundary
+between two applications of a zone: each has its own reader identity, its own `SecretStore`, and admission rejects
+an `ExternalSecret` that names another application's prefix ([section 14](14-policy-enforcement.md)), so a change in
+the preview cannot open a path on its own. The fallback, one vault per application with a secret exception, is a
+per-application flag in the environment IaC module ([decision D15](decisions.md#decision-matrix)).
 
 ## Delivered only by External Secrets Operator
 

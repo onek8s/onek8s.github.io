@@ -21,13 +21,17 @@ platform is rebuilt in the paired region, and only the data is restored into it.
 | Stateless clusters | – (they hold no data) | Everything |
 | Zone Key Vaults `kv-<env>-<zone>` | **Secrets that cannot be issued again** (third-party API keys, partner credentials) | The vaults, their role assignments and ABAC conditions; secrets the platform can issue again |
 | Platform Key Vault `kv-<env>-platform` | Only customer-managed keys that backed-up data depends on (for example a PaaS service's TDE key, if one is used) | Certificates (issued again by the renewal job), the cluster KMS and disk keys (new clusters get new keys, [section 18](18-encryption-at-rest-and-customer-managed-keys.md)), the Grafana tokens |
-| ACR | – | Images are built again by CI from the Git commits that the fleet repository deploys ([open questions](open-questions.md)) |
+| ACR | prd: the registry is **geo-replicated to the paired region** (ACR Premium), so every deployed digest stays valid and image builds leave the critical path of the prd recovery ([decision D35](decisions.md#decision-matrix)) | dev and acc: images are built again by CI from the Git commits that the fleet repository deploys |
 | Messaging (Service Bus, Event Hubs) and caches (Redis) | – (in-flight data and caches, not records) | Namespaces, queues, topics and caches |
 | Hub, management VNet, Firewall, Traffic Manager, DNS, identities, policies | – | Everything (IaC repository and guardrails repository) |
 | Git, GitHub environments, Grafana Cloud | Not in the region ([section 19](19-observability-with-grafana-cloud.md#network-grafana-cloud-through-private-link)) | – |
 
-An application team that keeps data anywhere else must name it at onboarding. That data is either moved into one of
-the data stores below or backed up by an export job into the zone's immutable backup account.
+**Every data store is named at onboarding.** The onboarding request lists each data store of the application
+with its type, the backup mechanism from the table below, the RPO and RTO the business expects of it and the team
+that owns its restore; the onboarding agent turns the list into the Azure Policy-checked backup posture and a row in
+the environment's dependency inventory in Grafana. An application team that keeps data anywhere else must name it
+there too. That data is either moved into one of the data stores below or backed up by an export job into the
+zone's immutable backup account.
 
 ## Where the backups go
 
@@ -50,6 +54,9 @@ zone**, so the copies of different countries stay apart like the data itself (R3
 - **Retention** (example, to be agreed per data class): daily recovery points for 35 days, weekly for 12 weeks,
   monthly for 12 months in prd. acc keeps the same layout with 14 days, so the procedures can be rehearsed there.
   dev has none, because it holds synthetic data only; the restore drills use acc.
+- **Keys of the backups**: the backup vaults and the backup storage accounts use **Microsoft-managed keys with
+  infrastructure encryption**, not customer-managed keys, so a Cross Region Restore never depends on a key whose
+  region is lost; the data they hold is CMK-encrypted at its source ([decision D33](decisions.md#decision-matrix)).
 
 ## Per data store
 
@@ -86,7 +93,9 @@ environment in the paired region, prd first:
 
 1. **Bootstrap**: GitHub-hosted runners with OIDC federation to the environment subscriptions run the IaC with
    `region=<pair>`. They create the hub, the management VNet with its pipeline agents, and the corporate
-   connectivity (an ExpressRoute or VPN connection in the paired region). Once the agents are up, the pipelines run
+   connectivity. For prd the ExpressRoute circuit (or VPN) in the paired region is **provisioned in advance** and only
+   connected in the recovery, because ordering a circuit takes days that no prd RTO can absorb; dev and acc build
+   theirs in the recovery ([decision D34](decisions.md#decision-matrix)). Once the agents are up, the pipelines run
    from the management VNet as before.
 2. **Environment module**: the zone and platform Key Vaults, managed identities, Azure Policy assignments, backend
    spoke, ACR and private endpoints. Names that must be globally unique (Key Vaults, storage accounts, ACR, SQL
@@ -100,14 +109,15 @@ environment in the paired region, prd first:
    stateful cluster, **restore the persistent volumes first** (Cross Region Restore of the namespaces' volumes,
    restoring only `PersistentVolumeClaim`s and their volumes, with the new zone StorageClasses). The pipeline then
    deploys the StatefulSets, which bind the restored claims by name.
-6. **Images**: CI builds the images of the commits that the fleet repository deploys, pushes them to the new ACR,
-   and the release agent opens the pull request that moves the digests. Applications start once their images exist.
+6. **Images**: prd's ACR replica in the paired region already holds every deployed digest, so the cells start their
+   applications unchanged. In dev and acc, CI builds the images of the commits that the fleet repository deploys,
+   pushes them to the new ACR, and the release agent opens the pull request that moves the digests.
 7. **Traffic**: Traffic Manager is global and survives; the IaC points its endpoints at the new cells' external
    gateways. The internal Private DNS zones are created in the new hub, and ExternalDNS fills them. Grafana Cloud
    was outside the region, so the dashboards and alerts are already there.
 
 - **RTO** is measured, not assumed. It is the time of the rebuild drill below, and it is dominated by the database
-  restores and the image builds. The target is set with the business ([open questions](open-questions.md)).
+  restores and the image builds. The target is set with the business ([sign-off H04](decisions.md#human-sign-offs-still-needed)).
 - **Address plan**: the paired region reuses the environment's own prefixes
   ([address plan](08-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)), so Firewall rules, NSGs and
   on-premises routes keep their meaning. That works only because the primary region's spokes are gone; a

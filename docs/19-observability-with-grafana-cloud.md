@@ -158,7 +158,7 @@ the kernel's view: which process opened a socket, what a container executed. A k
 ([Inspektor Gadget](https://www.inspektor-gadget.io/), eBPF-based and Kubernetes-aware) is deployed **only during an
 incident**, through break-glass, as a privileged DaemonSet in a platform namespace. It is not installed by default,
 because a privileged, cluster-wide tracer is itself a high-value target. Its compatibility with eBPF host routing is
-checked in prototyping ([open questions](open-questions.md)).
+checked in prototyping ([verification V19](decisions.md#azure-capability-and-verification-matrix)).
 
 ## What must not be sent
 
@@ -170,7 +170,7 @@ Because every stack user sees all data, **nothing may be sent that a stack user 
 - **Personal data only where the stack's users may see it**: no request or response bodies, and no personal
   identifiers in metric labels. Logs may hold the personal data that the operations staff of every country are
   allowed to process. Whether this holds for all countries, and the stacks' data residency, are
-  [open questions](open-questions.md).
+  the privacy sign-off [H10](decisions.md#human-sign-offs-still-needed).
 - **Retention** (example, to be agreed): metrics 13 months; logs 30 days in prd and 14 days in dev and acc; traces
   14 days. Kubernetes audit logs and Firewall logs stay in Log Analytics with the SOC's retention.
 

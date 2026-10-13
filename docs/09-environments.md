@@ -6,12 +6,44 @@
 |---|---|---|---|---|
 | dev | `sub-aks-dev` | `aks-dev-sl-az1`, `aks-dev-sl-az2` | (`aks-dev-sf`) | 2 (3) |
 | acc | `sub-aks-acc` | `aks-acc-sl-az1`, `aks-acc-sl-az2` | (`aks-acc-sf`) | 2 (3) |
-| prd | `sub-aks-prd` | `aks-prd-sl-az1`, `aks-prd-sl-az2` (+ `aks-prd-sl-az3`) | (`aks-prd-sf`) | 2–3 (3–4) |
+| prd | `sub-aks-prd` | `aks-prd-sl-az1`, `aks-prd-sl-az2`, `aks-prd-sl-az3` | (`aks-prd-sf`) | 3 (4) |
 
-**Minimum 6 clusters**, 9 with the stateful cluster; one more per environment that gets a third stateless cluster.
-dev and acc must have the *same topology* as prd (at least two stateless clusters, and a three-AZ stateful cluster if
-prd has one), otherwise the upgrade procedures cannot be rehearsed there; they can use lower NAP `NodePool` limits and
-smaller stateful node pools.
+**Seven clusters**, ten with the stateful cluster. dev and acc must have the *same topology* as prd (at least two
+stateless clusters, and a three-AZ stateful cluster if prd has one), otherwise the upgrade procedures cannot be
+rehearsed there; they can use lower NAP `NodePool` limits and smaller stateful node pools.
+
+**Why three cells in prd** ([decision D08](decisions.md#decision-matrix)). With two cells each must be able to carry
+100 % of the load, and losing an availability zone *while* the other cell is drained for an upgrade leaves nothing.
+With three cells each carries a third and must be able to take half (N+1 = 50 % headroom), an AZ loss during an
+upgrade still leaves one cell in traffic, and a cell failure affects a third of the external clients instead of
+half. What the third cell costs is its fixed part, because NAP scales the zone nodes on load in every cell: two
+system nodes, the gateways' Envoy pods and istiod, one public load balancer per external zone, the internal load
+balancers, the private endpoints to the vaults and the ACR, and a hub peering. Dev and acc rehearse the same
+procedures with two cells because the procedures are per cell, not per count.
+
+## Cost and capacity model
+
+The cost of an environment has three parts. The numbers are measured in the build tenant at idle and at prd peak
+([section 17](17-implementation-project-and-acceptance-testing.md#operations)) and recorded per environment and
+isolation zone in Grafana Cloud; this page only fixes the structure, so the estimate and the budget are the platform
+owner's sign-off ([H05](decisions.md#human-sign-offs-still-needed)).
+
+| Part | What is in it | Scales with | Where it is capped |
+|---|---|---|---|
+| **Fixed per cell** | System pool (two nodes), App Routing istiod and the zones' Envoy pods, the zone gateways' load balancers and public IPs, private endpoints (zone vaults, platform vault, ACR), hub peering, AKS Standard tier, Defender for Containers | Number of cells and zones | IaC |
+| **Fixed per environment** | Hub share (Firewall, DNS, Bastion, DDoS plan), Key Vaults, ACR Premium (and its prd replica), Traffic Manager profiles, backup vaults and storage, Grafana Cloud stack, Log Analytics, the stateful cluster's node pools and control plane if built | Number of environments, zones and stateful workloads | IaC |
+| **Variable** | NAP zone nodes (on-demand and spot), PaaS data services, Grafana Cloud ingest and retention, Firewall data processing, ACNS per node | Load, right-sizing, spot share, telemetry volume | `limits.yaml`: `NodePool` limits per zone, `maxSpotShare`, retention; budgets and quota alerts to the capacity agent |
+
+Capacity rules that the cost model must leave room for, all of them checked in acceptance:
+
+- **N+1 per environment**: with `k` cells, every cell's on-demand `NodePool` limits, vCPU quota and node subnets allow
+  it to carry `1/(k-1)` of the environment on top of its own share (100 % extra with two cells, 50 % with three).
+  Spot capacity is not counted.
+- **Quota headroom** for the surge of a cell upgrade (NAP drift replaces nodes before it removes them) and of the
+  stateful cluster's `maxSurge: 1` per pool; the capacity agent watches quota use against the sum of the `NodePool`
+  limits and files the raise before it is needed.
+- **Reservations and savings plans** cover only the steady baseline (system pools, stateful pools, the on-demand
+  share that always runs), proposed by the cost agent as purchases for the platform owner.
 
 > **The stateful cluster is optional.** It is not built until the first workload has an approved stateful-cluster
 > exception ([where does a workload run](08-cluster-types-stateless-and-stateful.md#where-does-a-workload-run)); until then every environment runs only the stateless
