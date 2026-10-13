@@ -25,6 +25,32 @@ Inside the allowed flows, a pod reaches a destination outside the cluster only i
 destination by **FQDN** in its own Cilium egress policy ([section 16](16-advanced-networking-and-fqdn-egress.md)): the
 Firewall decides what a *zone* may reach, the FQDN policy what an *application* may reach.
 
+## Isolation matrix
+
+What each principal can reach, per isolation zone. "Own" means the zone, namespace or application the principal
+belongs to; everything not listed is blocked, and the negative tests of
+[section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) try every blocked
+cell of this table after every change.
+
+| Principal | Kubernetes API | Network | Azure identities | Secrets | Certificates | Application data |
+|---|---|---|---|---|---|---|
+| Application pod | None: `automountServiceAccountToken: false`, no API access | Own namespace, the zone's gateway (ingress only), CoreDNS, the node's Alloy, declared FQDNs of the own zone; never IMDS, another zone, a vault or the stateful cluster of another zone | Own workload identity (`id-<zone>-<app>`), roles only on the zone's own resources | Only the Kubernetes `Secret`s ESO wrote into its namespace | The zone's wildcard (or its own) as a `Secret`, if onboarded with one | Own PaaS resources through the identity |
+| Application team (humans) | Own namespaces only (Entra ID group), read-only in acc and prd | – | None; pipelines write secrets to the zone vault under the application's prefix only | Own prefix in the zone vault (pipeline) | None | Through the application only |
+| Zone ESO controller (`<zone>-secrets`) | `Secret` writes and `serviceaccounts/token` in the zone's namespaces | Own zone vault PE, platform vault PE | None of its own; uses each namespace's `secrets-reader` token | Every application's reader identity of the zone, each limited by ABAC to its prefix | The zone's certificates, by per-object RBAC | None |
+| Zone gateway (`<zone>-gateway`) | None (istiod configures it) | Own zone's application pods, istiod; receives from Internet or corporate network | None | None | The zone's wildcard, through ESO | None |
+| Other zone, same cell | Blocked (RBAC by namespace) | Blocked by NSG, Firewall and Cilium | Different identities | Different vault | Different certificate | Different PaaS resources, private endpoints in the other zone's subnet |
+| Stateful cluster, same zone | Separate cluster | Only from the same zone of the stateless clusters, on the application's TLS port | Same pattern, federated per cluster | Same zone vault | Same zone certificate | Zone's volumes under the zone's own key |
+| Platform team | Read-only everywhere; writes only through Git | Management VNet → API servers | None standing; PIM | None standing; PIM on the vaults, alerted | None standing | None |
+| AI agents | `AKS RBAC Reader` (no `Secret`s) | Management VNet → API servers, model endpoint, Git | Read-only Azure roles | Metadata only (security agent) | None | None |
+| Deployment identities (IaC, Flux, stateful pipeline) | Write, scoped to platform and application namespaces; Flux cluster-wide in its cell | ACR private endpoint | Create and assign identities (IaC only) | Assign roles (IaC only), never read values | Create placeholders (IaC), issue (renewal job) | None |
+| Break-glass (PIM) | Cluster admin for the activation, logged and alerted | Management VNet | Owner for the activation | Read with alert | Read with alert | Through the resources, with alert |
+
+A compromised application pod therefore reaches its own namespace, its own zone's declared destinations and its
+own PaaS resources, and nothing else; a compromised ESO controller reaches one zone's secrets; a compromised
+cluster administrator reaches one cell. Country separation inside one cluster rests on these controls, not on a
+separate control plane; whether that is enough for the regulation the organisation is under is a sign-off
+([decision D01](decisions.md#decision-matrix)).
+
 ---
 
 [Back to contents](../README.md) · Previous: [4. Node pools](04-node-pools.md) · Next: [6. Workload identity first, Key Vault secrets only when needed](06-workload-identity-and-secrets.md)

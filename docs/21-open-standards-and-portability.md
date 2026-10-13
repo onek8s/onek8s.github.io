@@ -83,8 +83,8 @@ Azure specifics that are accepted on purpose, and what replaces them in another 
   Gatekeeper: the constraint templates (Rego, CEL) and mutation objects (`Assign`, `AssignMetadata`) of
   [section 14](14-policy-enforcement.md) live in the IaC repository and are not Azure-only code. EKS and GKE have no Azure Policy, so another cloud runs either **open-source
   Gatekeeper** with the same templates, delivered by Flux, or the clusters are connected with **Azure Arc** so that
-  Azure Policy keeps being the one engine and compliance view across clouds. The choice is an
-  [open question](open-questions.md); either way, CI already tests the templates with `gator verify` outside any cluster.
+  Azure Policy keeps being the one engine and compliance view across clouds. The default is Gatekeeper, confirmed when the
+  second cloud starts ([decision D39](decisions.md#decision-matrix)); either way, CI already tests the templates with `gator verify` outside any cluster.
 - **FQDN egress** needs Cilium's DNS-aware policies in every cloud. EKS can run Cilium as its CNI instead of the
   default VPC CNI; GKE Dataplane V2 is Cilium-based but has its own FQDN policy object. A second cloud must therefore
   prove R20 with its own data plane before it is accepted, and may need a generated translation of the `egress`
@@ -104,7 +104,7 @@ management and business continuity. This design contributes:
 | Requirement | Where the design meets it |
 |---|---|
 | Recovery from the loss of a region, tested | Immutable backups in the paired region, drill every six months ([section 20](20-backup-and-region-recovery.md)) |
-| Defined RTO and RPO | Measured in the drills; the business targets are still [open](open-questions.md) |
+| Defined RTO and RPO | Measured in the drills; the business targets are a [sign-off](decisions.md#human-sign-offs-still-needed) (H04) |
 | Exit from the cloud provider | Applications and their deployment do not change between clouds (this section); data uses open protocols |
 | Control of keys | Customer-managed keys for etcd, node disks and persistent volumes; crypto-shredding by disabling a key ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)) |
 | Data residency | Isolation zones per country (R3); primary and paired regions chosen inside the EU, covered by the EU Data Boundary |
@@ -123,7 +123,7 @@ listed so they can be judged together, not one by one:
 
 Whether the exit strategy must also include a **European provider** – one with managed Kubernetes and managed
 PostgreSQL, Redis-compatible and Kafka services, so that "another implementation of the same platform" stays possible
-outside US jurisdiction – is an [open question](open-questions.md). Nothing in the application contract prevents it.
+outside US jurisdiction – is a legal sign-off ([H13](decisions.md#human-sign-offs-still-needed)). Nothing in the application contract prevents it.
 
 ## Adding a cloud
 
@@ -145,4 +145,4 @@ global DNS, as `hello.onek8s.lol` already runs across two clusters.
 
 ---
 
-[Back to contents](../README.md) · Previous: [20. Backup and region recovery](20-backup-and-region-recovery.md) · Next: [Open questions](open-questions.md)
+[Back to contents](../README.md) · Previous: [20. Backup and region recovery](20-backup-and-region-recovery.md) · Next: [Decisions](decisions.md)

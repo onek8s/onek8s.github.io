@@ -54,7 +54,7 @@ Rules that keep the build tenant from drifting away from what will be deployed l
 | Phase | Goal | Exit criterion |
 |---|---|---|
 | 1. Foundation | Build tenant, management and hub, `sub-aks-dev`, pipelines and OIDC, Azure Policy in audit, the client VNet | A stateless cell can be created and deleted by the pipeline |
-| 2. Rapid prototyping | Build → test → change until the design meets every requirement; [open questions](open-questions.md) answered by experiments (NAP with custom subnets, eBPF host routing with VNet encryption, Key Vault ABAC, ExternalDNS with a shared owner across cells, VPA in-place resize with NAP and HPA, pod-level in-place resize, …); AI agents built with full permissions | Every requirement R1–R20 has at least one automated test that passes; design documents updated to what was built; agent roles and risk tiers derived from the logged agent actions |
+| 2. Rapid prototyping | Build → test → change until the design meets every requirement; the assumptions of the [capability matrix](decisions.md#azure-capability-and-verification-matrix) proven by experiments (NAP with custom subnets, eBPF host routing with VNet encryption, Key Vault ABAC, ExternalDNS with a shared owner across cells, VPA in-place resize with NAP and HPA, pod-level in-place resize, …); AI agents built with full permissions | Every requirement R1–R20 has at least one automated test that passes; design documents updated to what was built; agent roles and risk tiers derived from the logged agent actions |
 | 3. Acceptance testing in dev | Prove performance, HA, zero-downtime upgrades, recovery and operability with **all policies switched to `deny`** and the AI agents on their least-privilege identities | All tests in the tables below pass, results recorded |
 | 4. Security reviews | Independent review of the built platform | No open critical or high findings; medium findings have an owner and a date |
 | Connection readiness gate | Platform owner, security and network team approve connecting | Checklist [below](#connection-readiness-gate) complete |
@@ -107,7 +107,7 @@ Each check names the requirement it covers. A forbidden manifest refused by a ru
 | In-place right-sizing under load | Reference application with the default VPA (`InPlaceOrRecreate`) and requests set 4× too high, then 4× too low for memory; a resize that cannot fit its node (`Deferred`) and one that never fits (`Infeasible`); a multi-container pod with a pod-level budget resized in place; a second application with `platform/rightsizing: off` | VPA converges within its bounds without errors beyond the budget; the opted-out application is never resized; CPU resizes cause no container restarts; deferred resizes end in an eviction and a NAP node, infeasible ones raise the right-sizing alert; HPA and VPA do not oscillate; the right-sizing agent's pull requests pass the gate as tier low |
 | Soak | 72 hours at 60 % of peak | No growth of memory, connections, SNAT port use or latency |
 | Network dataplane | Pod-to-pod, pod-to-ILB and pod-to-PaaS throughput and latency (`netperf` / `iperf3`) with eBPF host routing and VNet encryption | Recorded as baseline; no regression later without an explanation |
-| FQDN egress | Requests per second through the ACNS DNS proxy for the busiest reference workload | Meets the busiest expected application, or the exception is documented ([open question](open-questions.md)) |
+| FQDN egress | Requests per second through the ACNS DNS proxy for the busiest reference workload | Meets the busiest expected application, or the exception is documented ([verification V04](decisions.md#azure-capability-and-verification-matrix)) |
 | DNS | CoreDNS query rate and latency at peak, with FQDN policies active | No `SERVFAIL` / timeouts; CoreDNS sizing set |
 | Control plane | Flux reconciling all zones and many application namespaces; Azure Policy admission latency; API server request latency | Reconcile time and admission latency within targets; no API throttling |
 | Stateful cluster (if built) | Disk IOPS / latency on ZRS storage for the reference StatefulSet | Meets the workload's requirement |
@@ -119,7 +119,7 @@ and Kubernetes chaos experiments, every one under load. Each experiment must als
 Chaos Studio's AKS faults run through Chaos Mesh, which installs a privileged daemon on every node. In dev of the
 build tenant it is installed only for the duration of the tests, in a platform namespace with a time-limited
 exemption ([section 14](14-policy-enforcement.md)); whether its network faults work with eBPF host routing and a
-private cluster is checked first ([open questions](open-questions.md)). VM- and zone-level faults (stop VMSS
+private cluster is checked first ([verification V18](decisions.md#azure-capability-and-verification-matrix)). VM- and zone-level faults (stop VMSS
 instances, zone down) need no in-cluster agent.
 
 | Fault | Pass criterion |

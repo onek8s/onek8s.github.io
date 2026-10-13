@@ -167,7 +167,7 @@ that are in Git).
   node. `maxAllowed` must therefore fit the largest allowed VM size, and many deferred resizes in a zone are a
   capacity signal for the capacity agent.
 - Resizes are admitted against the namespace `ResourceQuota`: `maxAllowed` × `maxReplicas` must fit it. The design
-  does not count on Azure Policy (Gatekeeper) seeing the `pods/resize` subresource ([open question](open-questions.md)),
+  does not count on Azure Policy (Gatekeeper) seeing the `pods/resize` subresource ([verification V09](decisions.md#azure-capability-and-verification-matrix)),
   so `maxAllowed`, quota and node allocatable are the bounds of an in-place resize, not the admission policies of
   [section 14](14-policy-enforcement.md).
 - An in-place resize changes the pod, not the Deployment: Flux sees no drift. New pods start from the requests the

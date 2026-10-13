@@ -87,6 +87,11 @@ better, and the Internet-less cluster runs one component less.
 - **Order inside an environment**: the release pipeline runs the **stateful stage before the cells** –
   providers before consumers. Stateful changes must be backwards compatible with the running stateless version anyway
   (expand → migrate → contract).
+- **Platform changes that touch both cluster types stay in lock-step** because there is one artifact: a new Cilium
+  policy template, a shared CRD or an operator version in `infrastructure/base` is in the same `fleet:<git-sha>`
+  that the stateful stage applies first and the cells then follow tag by tag. The stateful pipeline refuses an
+  artifact whose `base` differs from the one the cells of the environment run, and the cells cannot move to a tag
+  whose stateful stage has not completed, so the two never diverge by more than one release train.
 - **Drift**: there is no reconcile loop, so a scheduled run (nightly) does steps 1–3 only and alerts on any
   difference. With read-only human access, drift can only come from break-glass actions.
 

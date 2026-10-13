@@ -61,7 +61,7 @@ What eBPF host routing changes for the rest of the design:
   rules, and they would be bypassed anyway. Nothing in this design needs them: applications may not use
   `hostNetwork` or privileged pods, and every platform DaemonSet (CSI drivers, Grafana Alloy, Defender sensor) is
   checked for host iptables use before it is added. The standard **NodeLocal DNS** setup relies on host iptables rules
-  and is therefore not used; DNS stays on CoreDNS (see [open questions](open-questions.md)).
+  and is therefore not used; DNS stays on CoreDNS ([decision D03](decisions.md#decision-matrix)).
 - **SNAT moves to eBPF.** In the stateless clusters Cilium masquerades pod traffic with BPF instead of
   `ip-masq-agent`'s iptables rules; the Firewall still sees the node IP, so zone rules do not change. The stateful
   cluster does not masquerade (VNet-routable pod IPs) and keeps it that way.

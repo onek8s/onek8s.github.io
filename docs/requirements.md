@@ -1,5 +1,10 @@
 # Requirements
 
+Every requirement below has a test: the isolation and requirement tests of
+[section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) are tagged with the
+requirement number they cover and run after every change of a cell. Why the design meets a requirement the way it
+does, and which choices still wait for a human, is in the [decision log](decisions.md).
+
 | # | Requirement | How the design meets it |
 |---|---|---|
 | R1 | Control plane in a dedicated network | Private, VNet-integrated API server in its own delegated subnet; admin access only via Private Link from a separate management VNet ([picture 3](03-control-plane.md)) |
@@ -13,13 +18,13 @@
 | R7b | Applications never read Key Vault directly; External Secrets Operator is mandatory for them | One ESO controller per zone reads Key Vault on behalf of the applications; the zone's gateway uses ESO like an application; other platform components may use Key Vault directly with their own workload identity and narrow roles; the Secrets Store CSI driver add-on is disabled; application identities have no Key Vault role, application pods cannot use the reader identity or reach a vault, and only ESO may write Secrets in application namespaces ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)) |
 | R8 | Two cluster types: stateless and stateful | Stateless clusters in the frontend network, one optional stateful cluster in the backend network, built only when a workload requires it ([picture 8](08-cluster-types-stateless-and-stateful.md)) |
 | R8a | Stateful cluster is the last option | Placement order stateless cluster → Azure PaaS → stateful cluster; the stateful cluster needs a documented exception ([where does a workload run](08-cluster-types-stateless-and-stateful.md#where-does-a-workload-run)) |
-| R9 | Stateful cluster exists at most once, in the backend network with the Azure PaaS services, no Internet connectivity at all | Backend spoke with PaaS private endpoints; network isolated AKS (outbound type `none`), no public IPs, Firewall deny-all for backend prefixes |
+| R9 | Stateful cluster exists at most once, in the backend network with the Azure PaaS services, **no Internet egress and no public endpoints**; the only outbound destinations outside Private Link are allow-listed Microsoft control-plane endpoints that have no Private Link (Entra ID for workload identity, the Azure Policy add-on) | Backend spoke with PaaS private endpoints; network isolated AKS (outbound type `none`), no public IPs, Firewall deny-all for backend prefixes except the two allow-listed destinations, tested from the cluster and by Resource Graph ([flows](08-cluster-types-stateless-and-stateful.md#flows-between-frontend-and-backend), [decision D09](decisions.md#decision-matrix)) |
 | R9a | Stateful cluster: VNet-integrated CNI, no Gateway API implementation (and no Ingress), applications handle TLS | Azure CNI (VNet, dynamic pod IP allocation) powered by Cilium with ACNS; applications are published with internal `LoadBalancer` Services and terminate TLS themselves ([section 13](13-encryption-in-transit-and-tls.md)) |
 | R9b | Stateless clusters: overlay CNI, no service mesh / mTLS / application TLS, TLS-only Gateway API (no Kubernetes Ingress) | Azure CNI Overlay powered by Cilium with ACNS and eBPF host routing, Azure Virtual Network encryption between nodes, AKS App Routing's Gateway API implementation (`approuting-istio`, sidecar-less Istio control plane, not a mesh) with Let's Encrypt certificates for internal DNS names, distributed through Key Vault, and HTTPS-only listeners ([section 13](13-encryption-in-transit-and-tls.md)) |
 | R10 | Stateful cluster spread over availability zones and running AKS LTS | Fixed-size node pools per AZ 1/2/3 (no autoscaling), ZRS storage, Premium tier with Long Term Support |
 | R11 | Stateless: separate cluster per availability zone (at least two), ≥ 2 copies of every application, scaled on load | `sl-az1`, `sl-az2` (+ optional `sl-az3`); external applications in every cell behind a zone-redundant traffic layer, internal applications in one home cell each, migrated to another cell on failure; policy-enforced replicas ≥ 2, HPA/KEDA, VPA in-place right-sizing ([section 4](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)), [node auto provisioning](https://learn.microsoft.com/en-us/azure/aks/node-autoprovision) (NAP) |
 | R12 | Fully automated zero-downtime upgrades of applications and clusters | Policy-enforced rollout guardrails, releases one cell at a time with DNS affinity (external zones), zero-downtime migration of internal applications between cells, pipeline-driven stateful rollout, drain-and-upgrade per stateless cluster, PDB-guarded per-AZ upgrade of the stateful cluster ([section 11](11-zero-downtime-application-upgrades.md), [section 12](12-zero-downtime-cluster-upgrades.md)) |
-| R12a | Update policy: stateful cluster only when absolutely necessary, stateless clusters at two speeds | Every cluster starts on 1.36, the platform floor. Stateful: created on the second latest GA minor (N-1), then kept on that minor with LTS until 6 months before its end of LTS support, existing nodes patched instead of replaced where possible. Stateless: `sl-az1` on the second latest minor with patches after 1 week per environment, `sl-az2` one minor behind with 1 month per environment ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)) |
+| R12a | Update policy: stateful cluster only when absolutely necessary, stateless clusters at two speeds | Every cluster starts on 1.36, the platform floor. Stateful: created on the second latest GA minor (N-1), then kept on that minor with LTS until 6 months before its end of LTS support, existing nodes patched instead of replaced where possible. Stateless: `sl-az1` on the second latest minor with patches after 1 week per environment, `sl-az2` one minor behind with 3 weeks per environment (shortened from 1 month because NAP forces node images older than 90 days, [decision D11](decisions.md#decision-matrix)); node images pinned per cell ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)) |
 | R13 | dev, acc and prd environments kept in sync | 3 × 2 = 6 clusters (3 × 3 = 9 with the stateful cluster) from the same IaC modules, all in-cluster state from one Git repository: FluxCD in the stateless clusters, CI/CD pipeline in the stateful cluster ([picture 9](09-environments.md), [picture 10](10-keeping-clusters-in-sync.md)) |
 | R14 | One policy engine | Azure Policy add-on for AKS in every cluster, assigned per environment subscription; the same Azure Policy also governs the Azure resources ([section 14](14-policy-enforcement.md)) |
 | R15 | Certificates distributed through Key Vault, shared by all clusters | One shared **platform Key Vault per environment** (`kv-<env>-platform`) holds all certificates of that environment; a renewal job per environment issues one certificate per zone into it, and External Secrets Operator in every cluster of the environment reads it with plain Azure RBAC scoped to the individual certificate ([section 13](13-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)) |
@@ -77,6 +82,16 @@ Two differences from the classic cell-based architecture:
   releases, not data. Data changes therefore follow the [compatibility rule](11-zero-downtime-application-upgrades.md).
 
 In this document "zone" means an isolation zone, unless it says availability zone (AZ) or zone-redundant.
+The canonical names are: a cell is `sl-az<N>` in prose and `aks-<env>-sl-az<N>` where the cluster resource is
+meant; the stateful cluster is `sf` / `aks-<env>-sf`; zones are `int-fi`, `ext-se`, and so on.
+
+**If cells ever had to be partitioned by country.** Today every cell holds every isolation zone, and a cell is an
+availability zone. Should a country need its own blast radius for releases and upgrades as well, the zones are
+already the partition key: a country gets its own set of cells (`aks-<env>-fi-az1`, …) holding only its two zones,
+with its own Traffic Manager profiles, Private DNS zones and fleet tags. The address plan does not change (the
+country's `/16` already summarises its zones), nor do the applications, their manifests or the policies; what
+changes is the cluster IaC loop and the release train, which then runs per country. Nothing in the design has to be
+undone for that, which is why it is not built now ([decision D01](decisions.md#decision-matrix)).
 
 ---
 

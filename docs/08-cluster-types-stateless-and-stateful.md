@@ -12,10 +12,13 @@ Data does not belong in Kubernetes by default. Every workload is placed by going
 first option that fits:
 
 1. **Stateless cluster** – all application code. Its state lives in the options below.
-2. **Azure PaaS service in the backend network** (Azure SQL / PostgreSQL, Storage, Service Bus, Event Hubs, Cosmos DB,
-   Cache for Redis, …) reached through private endpoints from the stateless clusters. Zone redundancy, backups,
+2. **Azure PaaS service in the backend network** (PostgreSQL, MySQL, Managed Redis, Cosmos DB for MongoDB, Event
+   Hubs with Kafka, Blob Storage, …) reached through private endpoints from the stateless clusters. Zone redundancy, backups,
    patching and upgrades are Microsoft's job; the immutable copies in the paired region are the platform's
-   ([section 20](20-backup-and-region-recovery.md)).
+   ([section 20](20-backup-and-region-recovery.md)). Services with no equivalent in the other clouds (Azure SQL,
+   Service Bus, Cosmos DB's NoSQL API) are allowed only as a documented cloud-pinning exception at onboarding
+   ([section 21](21-open-standards-and-portability.md#data-in-paas-services-that-every-cloud-offers)); where this
+   document names them, it describes the Azure implementation of such an exception.
 3. **Stateful cluster – last option**, only when
    - no Azure PaaS service provides the capability (e.g. a product that is only shipped as a container or operator), or
    - a special use case requires it (e.g. a licence, a latency requirement to data that only the cluster can meet,
@@ -32,7 +35,7 @@ stateful cluster runs, the smaller its blast radius and upgrade risk.
 | | Stateless (`aks-<env>-sl-az<N>`) | Stateful (`aks-<env>-sf`) |
 |---|---|---|
 | Runs | Frontends, APIs, workers – anything that can be killed and recreated; state in Azure PaaS | Only approved exceptions: workloads that own data on disks (StatefulSets, operators) for which no PaaS service fits |
-| Count per environment | One per availability zone: `sl-az1`, `sl-az2` mandatory, `sl-az3` optional (recommended for prd) | Zero or one – built only when the first approved workload needs it |
+| Count per environment | One per availability zone: `sl-az1`, `sl-az2` in dev and acc; `sl-az1`, `sl-az2`, `sl-az3` in prd ([section 9](09-environments.md), [decision D08](decisions.md#decision-matrix)) | Zero or one – built only when the first approved workload needs it |
 | Availability zones | All nodes of a cluster in its AZ (system pool `--zones <N>`, NAP `NodePool`s by zone requirement); the cluster is the unit of failure | Every isolation zone has one node pool per AZ (`intfiz1`, `intfiz2`, `intfiz3`, …); system pool spread over AZ 1–3 |
 | Nodes | [Node auto provisioning](https://learn.microsoft.com/en-us/azure/aks/node-autoprovision): one Karpenter `NodePool` per isolation zone, VM size chosen per workload ([section 4](04-node-pools.md)) | Classic AKS node pools with a fixed VM size and node count |
 | Network | Frontend spoke `vnet-<env>-sl-az<N>`, peered to the hub | Backend spoke `vnet-<env>-sf`, peered to the hub, together with the PaaS private endpoints |
@@ -120,15 +123,26 @@ Limits of DNS affinity, accepted in this design:
 
 - **Resolvers**: clients behind a large shared resolver (a public DNS service without client subnet) land on the
   same cell, so the load is less even than with per-request routing. The cells are sized N+1 anyway; the block
-  assignment is rebalanced from the access logs when needed (outside releases, because it moves clients).
+  assignment is rebalanced from the access logs when needed (outside releases, because it moves clients). The cell
+  dashboards show the request share per cell and zone, and an alert fires when one cell carries more than its N+1
+  share for an hour, so skew from large NAT pools is seen before it matters.
 - **Cached answers**: a client or resolver that ignores the TTL keeps using a drained cell longer. The drain timeout
   of a cell (section 12) is chosen with that in mind, and a failed cell's clients retry until their cache expires.
 - **Changing networks**: a mobile client that switches networks may change cells. During a release it can then see
   the other version, which the [compatibility rule](11-zero-downtime-application-upgrades.md) covers.
 - **No WAF in the traffic layer.** Traffic Manager only answers DNS; HTTP reaches the zone's gateway unfiltered.
   There are no gateway rate limits or request size limits either, and no WAF in the gateway: App Routing's Gateway
-  API implementation supports none of them. Protection for the external zones would be Application Gateway WAF v2 per zone (or
-  another WAF in front) – an [open question](open-questions.md).
+  API implementation supports none of them. The design launches without a WAF, with DDoS protection, the 443-only
+  NSG, the gateway's TLS termination, Cilium ingress rules and the applications' own input validation and rate
+  limiting as the controls, and keeps the layout ready for one ([decision D04](decisions.md#decision-matrix), the
+  security team's sign-off):
+  - **The defined add-on is Application Gateway WAF v2 per external zone and cell**, zonal like the cell, in its own
+    subnet `snet-<zone>-waf` of the zone's address space. It becomes the Traffic Manager endpoint of that cell,
+    terminates TLS with the zone's certificate from the platform Key Vault (Application Gateway's own Key Vault
+    integration, through a private endpoint), runs the OWASP core rule set in prevention mode and re-encrypts to the
+    gateway's load balancer, which then listens only to the WAF subnet. The gateway reads the client address from
+    `X-Forwarded-For` of that one trusted hop. Applications, routes and certificates do not change; switching a zone
+    over is an IaC change per zone and cell, rolled out cell by cell.
 
 **Real client IP**: the zone's gateway `Service` uses `externalTrafficPolicy: Local` (set through the Gateway's
 `parametersRef` ConfigMap), so the gateway's Envoy sees the client's own
@@ -141,8 +155,8 @@ tests on it, through the cell's real TLS path, before the cell gets user traffic
 the same names are the Traffic Manager endpoints.
 
 The external zones' gateways are the only public addresses of the platform: one Azure Standard public load balancer
-IP per external zone and cell, created by the gateway's `Service` in `<zone>-gateway`, protected by Azure DDoS
-Network Protection on the cell VNets. The NSG of `snet-ext-<country>-nodes` allows TCP 443 from the Internet and
+IP per external zone and cell, created by the gateway's `Service` in `<zone>-gateway`, protected by one Azure DDoS
+Network Protection plan for the whole tenant, attached to every cell VNet ([decision D32](decisions.md#decision-matrix)). The NSG of `snet-ext-<country>-nodes` allows TCP 443 from the Internet and
 nothing else from outside the VNet. This traffic does not pass the hub Firewall; the NSG, the zone's gateway and the
 application's Cilium ingress (only from the zone's gateway) are its controls.
 
@@ -319,12 +333,36 @@ the full load of the environment (N+1). Only the stateful spoke has pod subnets.
 | Stateful cluster | Internet | – | **Blocked** – no route, no outbound IP, Firewall deny-all |
 | Management VNet pipeline agents | Stateful API server (Private Link) | TCP 443 | Deployments to the stateful cluster ([section 10](10-keeping-clusters-in-sync.md)) |
 | All nodes of the environment (Grafana Alloy) | Grafana Cloud private endpoint in the hub | TCP 443 | Telemetry through Azure Private Link, so the stateful cluster still has no Internet ([section 19](19-observability-with-grafana-cloud.md#network-grafana-cloud-through-private-link)) |
-| Stateful nodes / pods | Microsoft Entra ID (`AzureActiveDirectory` service tag) | TCP 443 | Exception, needed for workload identity token exchange because Entra ID has no Private Link for sign-in – see open questions |
+| Stateful nodes / pods | Microsoft Entra ID (`AzureActiveDirectory` service tag) | TCP 443 | Exception, needed for workload identity token exchange because Entra ID has no Private Link for sign-in ([decision D09](decisions.md#decision-matrix)) |
 | Stateful nodes (Azure Policy add-on) | `data.policy.core.windows.net`, `store.policy.core.windows.net`, `dc.services.visualstudio.com` | TCP 443 | Exception, Firewall application rules for these FQDNs only; the add-on has no Private Link ([section 14](14-policy-enforcement.md)) |
 
 Telemetry goes to Grafana Cloud through Private Link; the AKS monitoring add-on is not enabled
 ([section 19](19-observability-with-grafana-cloud.md)). Other AKS add-ons that need public Azure
 endpoints are not enabled in the stateful cluster; the Azure Policy add-on is the one accepted exception ([section 14](14-policy-enforcement.md)).
+These two destinations (Entra ID, Azure Policy) are the whole list of public endpoints the stateful cluster may
+reach; the Firewall application rules are the inventory, and the isolation tests prove from inside the cluster
+that nothing else answers ([decision D09](decisions.md#decision-matrix)).
+
+## Shared tier failure domains
+
+Cells isolate compute and releases. The shared tier is not split into cells, so each of its parts is a failure
+domain of its own: zone-redundant where Azure offers it, and with a known effect when it is lost anyway. The fault
+table of [section 17](17-implementation-project-and-acceptance-testing.md#high-availability-and-resilience) injects
+each of these.
+
+| Shared component | Redundancy | If it fails | Effect on running traffic | Recovery |
+|---|---|---|---|---|
+| Azure Traffic Manager | Global DNS service, outside the region | DNS answers stop or go stale | Clients keep cached answers for the TTL; new clients cannot resolve external names | Microsoft; the per-cell host names still resolve through public DNS as a manual bypass |
+| Hub Azure Firewall | Zone-redundant | Egress from every cell and the corporate path to internal zones stop | External zones keep serving (their ingress does not pass the Firewall); workload identity token refresh and PaaS calls fail once cached tokens and connections expire | Microsoft; nothing in the cells changes |
+| Hub Private DNS and resolvers | Zone-redundant service | Internal names and PaaS private endpoint names stop resolving for new connections | Cells keep established connections; Cilium's cached FQDN answers keep policies working until their TTL | Microsoft; IaC recreates the zones in a region recovery |
+| Microsoft Entra ID | Global, multi-region | No new workload identity tokens, no human sign-in | Pods keep running on tokens already issued (up to their lifetime); ESO keeps the `Secret`s it synced; new pods of workload-identity applications start but cannot call Azure until Entra ID returns | Microsoft; this is why secrets are delivered as `Secret`s and not fetched at start |
+| Azure Policy endpoints | Public endpoints, global | The add-on cannot fetch new assignments; admission keeps the constraints it has (fails closed on webhook errors as configured) | None for running pods; rollouts continue with the last synced policies, bootstrap of a new cell waits | Microsoft |
+| Azure Key Vault (zone or platform) | Zone-redundant, geo-replicated within the region pair | ESO syncs fail and alert; KMS cannot decrypt new etcd reads if the KMS key is unreachable for long | Existing `Secret`s stay usable; pods keep running; a long KMS outage degrades the API server of every cluster | Microsoft; Key Vault is the single most important shared dependency, which is why nothing fetches from it at request time |
+| ACR | Zone-redundant Premium, prd geo-replicated to the paired region | No image pulls, no Flux artifacts | Running pods unaffected (images cached on nodes); scale-out onto fresh nodes and rollouts stall | Microsoft; releases are halted by the operations agent |
+| PaaS data services | Zone-redundant per service, one per zone and application | Only that application's data store | Only that application, in every cell at once (data is shared) | PaaS failover; point-in-time or geo-restore ([section 20](20-backup-and-region-recovery.md)) |
+| Stateful cluster | Zone-redundant control plane, node pools per AZ | Only the applications with a stateful exception, and their consumers | Consumers in every cell at once | In-place recovery, PDB-guarded; restore from the vault tier |
+| Grafana Cloud and its Private Link | Outside the region | No new telemetry, no SLO gates | None for traffic; releases and upgrades stop at their gates (no data means no promotion); Alloy buffers on the nodes | Grafana Labs; the watchdog alert fires from outside the region |
+| GitHub | Outside Azure | No merges, no Flux source | None for traffic; Flux keeps the last applied state; safe runbook actions still run from the runbooks repository mirror in the management VNet | GitHub; a region recovery does not depend on the lost region, but it does depend on GitHub |
 
 ---
 

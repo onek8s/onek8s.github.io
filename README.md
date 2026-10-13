@@ -12,8 +12,8 @@ implementation: a large Azure Kubernetes Service (AKS) platform with strong isol
 **internal / external** workloads and between **countries**, plus application multi-tenancy inside each isolation zone.
 
 The platform runs **two types of clusters** – zonal **stateless** clusters in the frontend network and an
-**optional** zone-redundant **stateful** cluster in the Internet-less backend network – in **dev, acc and prd**, i.e. six
-clusters (nine with the stateful cluster) kept in sync from one Git repository – the stateless clusters with **FluxCD**, the stateful cluster
+**optional** zone-redundant **stateful** cluster in the Internet-less backend network – in **dev, acc and prd**, i.e. seven
+clusters (ten with the stateful cluster) kept in sync from one Git repository – the stateless clusters with **FluxCD**, the stateful cluster
 with **CI/CD pipelines** – with fully automated zero-downtime upgrades of applications and clusters.
 Data belongs in **Azure PaaS services**; the stateful cluster is the *last option*, used only when no suitable PaaS
 service exists or a special use case requires it, and it is **not built at all until the first such workload is
@@ -71,6 +71,7 @@ adapters, and the PaaS services every cloud offers.
 - [19. Observability with Grafana Cloud](docs/19-observability-with-grafana-cloud.md)
 - [20. Backup and region recovery](docs/20-backup-and-region-recovery.md)
 - [21. Open standards and portability](docs/21-open-standards-and-portability.md)
+- [Decisions](docs/decisions.md)
 - [Open questions](docs/open-questions.md)
 - [Comparison with Wolkwacht](docs/wolkwacht-comparison.md)
 - [Editing the pictures](docs/editing-the-pictures.md)

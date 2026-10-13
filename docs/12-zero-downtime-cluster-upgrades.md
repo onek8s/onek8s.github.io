@@ -17,9 +17,10 @@ with data on disks) are harder to move and test.
 | | Stateless, fast speed: `sl-az1` | Stateless, slow speed: `sl-az2` (and `sl-az3`) | Stateful: `sf` |
 |---|---|---|---|
 | Kubernetes minor | **N-1**: the second latest GA minor in AKS | **One minor behind `sl-az1`** (N-2) – always a minor that `sl-az1` has already run in prd | **N-1 when the cluster is created** (the same minor as `sl-az1`), then kept on that minor as long as it has Long Term Support |
-| Patches (Kubernetes patch versions, node images) | dev **1 week** after AKS releases them, acc 1 week after dev, prd 1 week after acc (prd ≈ 3 weeks after release) | dev **1 month** after release, acc 1 month after dev, prd 1 month after acc (prd ≈ 3 months after release) | **Only when absolutely necessary** (see below) |
-| Minor upgrades | When a new minor becomes GA, to the new N-1, with the same 1-week steps | To the minor `sl-az1` leaves, with the same 1-month steps | Within the **last 6 months of LTS support** of the current minor: dev first, then acc, then prd |
+| Patches (Kubernetes patch versions, node images) | dev **1 week** after AKS releases them, acc 1 week after dev, prd 1 week after acc (prd ≈ 3 weeks after release) | dev **3 weeks** after release, acc 3 weeks after dev, prd 3 weeks after acc (prd ≈ 9 weeks after release) | **Only when absolutely necessary** (see below) |
+| Minor upgrades | When a new minor becomes GA, to the new N-1, with the same 1-week steps | To the minor `sl-az1` leaves, with the same 3-week steps | Within the **last 6 months of LTS support** of the current minor: dev first, then acc, then prd |
 | How nodes are updated | Cell drained, control plane + system pool upgraded, NAP replaces the zone nodes ([below](#stateless-clusters)) | Same | **Patched in place** where possible; nodes replaced only when a change requires it ([below](#stateful-cluster)) |
+| Node image of new nodes | Pinned per cell: `imageVersion` in every zone `AKSNodeClass`, set from `cluster-vars` by the version pipeline, so a node created during scale-out runs the cell's current image, not the newest | Same | Classic pools: the pool's node image version |
 | AKS auto-upgrade channels | `none` – the version pipeline decides | `none` | Cluster `none`; node OS channel for in-place patches ([below](#stateful-cluster)) |
 
 **Starting point: Kubernetes 1.36.** The platform is new, so every cluster – both stateless speeds and the stateful
@@ -49,7 +50,12 @@ for minor upgrades. Rules:
   met during the wait).
 - `sl-az2` runs the oldest minor in AKS standard support. Its minor upgrade is scheduled so that prd is upgraded
   before that minor's end of support in the [AKS Kubernetes release calendar](https://learn.microsoft.com/en-us/azure/aks/supported-kubernetes-versions#aks-kubernetes-release-calendar);
-  if the calendar leaves less than 1 month per step, the steps are shortened.
+  if the calendar leaves less than 3 weeks per step, the steps are shortened.
+- **Why the slow speed is 3 weeks and not a month** ([decision D11](decisions.md#decision-matrix)): NAP forces a
+  node whose image is older than 90 days onto the newest image, outside any maintenance window. A month per step
+  would put prd's slow cell on an image that is already three months old, so the forced update would take the
+  pinning away. Three weeks per step keeps every cell's image younger than 90 days with a margin, and still a full
+  release cycle behind `sl-az1`.
 - **Emergency fast track**: a fix for an actively exploited vulnerability can skip the waiting times for both speeds
   with the platform owner's approval – still dev → acc → prd and still one cell at a time.
 - `sl-az3` (prd only) follows the slow speed, so that two of three cells run the proven version.
@@ -64,7 +70,8 @@ for minor upgrades. Rules:
 3. **A bug** that affects the stateful workloads and is fixed in a newer patch.
 4. **Supportability**: AKS no longer supports the running patch version or node image.
 
-When a change is needed, the smallest one is chosen: an **in-place OS patch of the existing nodes** before a node image
+When a change is needed, the smallest one is chosen: an **in-place OS security patch of the existing nodes**
+(`SecurityPatch` channel, [below](#stateful-cluster)) before a node image
 upgrade, a **control-plane-only** patch upgrade (`az aks upgrade --control-plane-only`; kubelets may lag behind the
 API server within the Kubernetes version skew policy) before replacing nodes, and node replacement only when the change
 cannot be made otherwise (e.g. a new Kubernetes minor).
@@ -109,10 +116,13 @@ There is only one stateful cluster, so it is upgraded **in place** and protected
   Cluster auto-upgrade channel `none`; Kubernetes patch versions are applied only for one of the listed reasons, by the
   pipeline, dev → acc → prd, preferably control plane only.
 - **OS patches in place**: security patches are applied to the **existing nodes** instead of replacing them – node OS
-  channel `Unmanaged` (the OS's own unattended upgrades) with reboots coordinated one node at a time (kured), only inside
-  the planned maintenance window (`aksManagedNodeOSUpgradeSchedule`), dev a week before acc and two weeks before prd,
-  respecting the PDBs. A node is reimaged with a new node image only when an in-place patch is not possible or AKS
-  support requires it. Because these nodes live long, **Image Cleaner** (`--enable-image-cleaner`, daily) removes
+  channel **`SecurityPatch`** ([decision D10](decisions.md#decision-matrix)): AKS applies the security-only patches of
+  the image maintainer to the running nodes in place where that is possible, and only for patches that cannot be
+  applied live (kernel updates) reimages the nodes one at a time onto the patched image, both only inside the planned
+  maintenance window (`aksManagedNodeOSUpgradeSchedule`), dev a week before acc and two weeks before prd, respecting
+  the surge settings and the PDBs. The channel is AKS-managed and supports network isolated clusters, so the
+  Internet-less cluster needs no package mirror and no reboot daemon. A node is reimaged with a whole new node image
+  only when AKS support requires it. Because these nodes live long, **Image Cleaner** (`--enable-image-cleaner`, daily) removes
   unused, vulnerable images from them. The stateless cells do not need it: their NAP nodes are replaced regularly
   (`expireAfter`, drift, cell rebuilds).
 - **Control plane**: zone-redundant (Premium tier); upgrading it does not restart workloads.

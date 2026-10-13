@@ -31,7 +31,7 @@ can get is:
   `int-fi` data unreadable and leaves the other zones alone.
 
 If AKS later supports a disk encryption set per node pool or per `AKSNodeClass`, the OS-disk key can be split per
-zone the same way ([open questions](open-questions.md)).
+zone the same way ([verification V15](decisions.md#azure-capability-and-verification-matrix)).
 
 ## Control plane: KMS etcd encryption
 
@@ -94,6 +94,9 @@ zone the same way ([open questions](open-questions.md)).
 | Disk keys (`*-disk`, `key-sf-pv-*`) | Key Vault rotation policy, new version every 12 months | Disk encryption sets with automatic key rotation pick up the new version within an hour. Managed disks are re-wrapped online; ephemeral OS disks get it when the node is recreated (node image upgrade, NAP `expireAfter`, cell rebuild) |
 | KMS keys (`*-kms`) | Same rotation policy; a scheduled pipeline per environment then rolls the new version out cluster by cluster, dev → acc → prd | `az aks update --azure-keyvault-kms-key-id <new version>` then re-writes all Secrets (`kubectl get secrets -A -o json \| kubectl replace -f -`). KMS keeps the previous version cached, so the older one is disabled only after the next rotation |
 
+- **HSM-protected keys.** The platform vault is Key Vault **Premium** and every customer-managed key is an RSA-HSM
+  key (FIPS 140-3 Level 3 validated HSMs), the Azure security baseline for customer-managed keys at a cost of cents
+  per key; a Managed HSM pool is not needed for this assurance level ([decision D21](decisions.md#decision-matrix)).
 - **No expiry date on any key version.** An expired or deleted KMS key stops the API server, and the encrypted
   Secrets cannot be recovered; an expired disk key stops VMs from starting. Rotation policies only create new
   versions. Old versions are disabled by the rotation pipeline once nothing uses them.
@@ -122,7 +125,7 @@ The design keeps the keys in the platform vault as decided, and limits the impac
   another cluster's key.
 
 If this is not acceptable, the keys move to a separate `kv-<env>-keys` vault per environment with the same layout
-([open questions](open-questions.md)).
+([decision D20](decisions.md#decision-matrix)).
 
 ---
 
