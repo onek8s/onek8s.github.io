@@ -22,7 +22,8 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
   `kubernetesGateway` provider enabled (the `kubernetesIngress` and `kubernetesCRD`/`IngressRoute` providers are off and
   their CRDs are not installed), and Azure Policy rejects `Ingress` objects.
 - **Traefik is the Gateway API implementation**, one instance per isolation zone in the platform namespace
-  `<zone>-gateway` (a reserved application name) on the zone's nodes, behind an internal load balancer in
+  `<zone>-gateway` (a reserved application name) on the system pool (so that a zone without applications has no
+  nodes, [section 4](04-node-pools.md#zone-nodes-only-for-applications)), behind an internal load balancer in
   `snet-<zone>-ilb` (an external zone's: a public load balancer, see
   [incoming traffic](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)). The platform owns the `GatewayClass` and one `Gateway` per zone; application teams own only
   `HTTPRoute`s in their namespaces – the Gateway API role split between cluster operator and application developer. `allowedRoutes` selects namespaces with `platform/zone=<zone>`, so a route
