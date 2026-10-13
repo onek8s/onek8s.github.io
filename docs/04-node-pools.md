@@ -29,7 +29,7 @@ and its nodes change only in planned upgrades – never because an autoscaler de
 ### Zone nodes only for applications
 
 In the stateless clusters a zone's nodes exist only while the zone has application pods. The zone's platform
-components – its Traefik gateway (`<zone>-gateway`, [section 13](13-encryption-in-transit-and-tls.md)) and its External
+components – its gateway (`<zone>-gateway`, [section 13](13-encryption-in-transit-and-tls.md)) and its External
 Secrets Operator (`<zone>-secrets`, [section 6](06-workload-identity-and-secrets.md)) – run on the system pool next to
 the platform's own controllers, so they never hold a zone node. A zone that no application uses yet, or no longer,
 costs no VMs: NAP creates the first node when an application pod of the zone is pending and consolidates the last
@@ -37,7 +37,9 @@ one away when it is empty. The zone's separation does not depend on where these 
 load balancer is still the zone's own, in the zone's subnet, its routes are still limited to the zone's namespaces,
 the ESO still reaches only the zone's vault, and Cilium policies still separate both from every other zone. What the
 system pool loses is node-level separation between the zones' gateways, which share the platform's nodes; it is
-sized for them (one replica per zone and cell in dev, more in prd).
+sized for them (at least two Envoy replicas per zone and cell, the minimum of App Routing's HPA). The gateways also
+share one control plane per cell, App Routing's istiod ([section 13](13-encryption-in-transit-and-tls.md)): the data
+plane is per zone, the control plane is not.
 
 NAP details in the stateless clusters:
 

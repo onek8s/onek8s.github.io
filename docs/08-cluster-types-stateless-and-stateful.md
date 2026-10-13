@@ -39,8 +39,8 @@ stateful cluster runs, the smaller its blast radius and upgrade risk.
 | Internet | Egress only via Azure Firewall FQDN allow-list (outbound type `userDefinedRouting`); inbound only via the traffic layer | **None.** [Network isolated cluster](https://learn.microsoft.com/en-us/azure/aks/concepts-network-isolated) (outbound type `none`, bootstrap artifacts from the private ACR cache), no public IPs, UDR `0.0.0.0/0` → Firewall which denies all Internet for backend prefixes |
 | CNI | [Azure CNI Overlay](https://learn.microsoft.com/en-us/azure/aks/concepts-network-azure-cni-overlay) powered by Cilium | Azure CNI (VNet-integrated, dynamic pod IP allocation) powered by Cilium |
 | Advanced networking | ACNS with eBPF host routing and FQDN egress policies ([section 16](16-advanced-networking-and-fqdn-egress.md)) | Same |
-| Incoming HTTP(S) | [Gateway API](https://gateway-api.sigs.k8s.io/) with Traefik as the implementation, one `Gateway` per isolation zone, HTTPS only; the Kubernetes Ingress API is not used | **No Gateway API implementation and no Ingress.** Applications are published with internal `LoadBalancer` Services (L4) |
-| TLS | Terminated by Traefik with Let's Encrypt certificates for internal DNS names; applications serve plain HTTP inside the cluster | **Terminated by the application itself** – a hard onboarding requirement |
+| Incoming HTTP(S) | [Gateway API](https://gateway-api.sigs.k8s.io/) with AKS App Routing (`approuting-istio`) as the implementation, one `Gateway` per isolation zone, HTTPS only; the Kubernetes Ingress API is not used | **No Gateway API implementation and no Ingress.** Applications are published with internal `LoadBalancer` Services (L4) |
+| TLS | Terminated by the zone's gateway with Let's Encrypt certificates for internal DNS names; applications serve plain HTTP inside the cluster | **Terminated by the application itself** – a hard onboarding requirement |
 | Node-to-node encryption | [Azure Virtual Network encryption](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-encryption-overview) – no service mesh, no mTLS | Application TLS (VNet encryption may be enabled as defence in depth but is not relied on) |
 | Kubernetes version | Standard support, two speeds: `sl-az1` on the second latest GA minor (N-1), `sl-az2` (and `sl-az3`) one minor behind (N-2), never older than 1.36 ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)) | [Long Term Support](https://learn.microsoft.com/en-us/azure/aks/long-term-support) (`--tier premium --k8s-support-plan AKSLongTermSupport`): created on the second latest GA minor (N-1), then kept on that minor until 6 months before its LTS ends |
 | Tier | Standard | Premium (required for LTS) |
@@ -63,7 +63,7 @@ platform. The two kinds of zones use the cells differently, because their availa
   Traffic Manager, the cell router) outside the cells answers each client's DNS query with one cell, chosen by the
   client's network, and leaves a failed or drained cell out of its answers.
 - **Internal zones (`int-*`): every application runs in one cell, its home cell.** The application team chooses the
-  cell; its DNS name points straight to the Traefik gateway of that cell, maintained by ExternalDNS. A **migration
+  cell; its DNS name points straight to the zone's gateway in that cell, maintained by ExternalDNS. A **migration
   workflow** moves an application to another cell without downtime – on request, around cluster upgrades, and after
   a cell failure. A cell failure therefore costs the internal applications of that cell a short outage until they
   are migrated (recovery time target *TBD*, minutes) – accepted because internal applications have lower
@@ -71,11 +71,11 @@ platform. The two kinds of zones use the cells differently, because their availa
 
 | Source | Entry point | Path to the cells |
 |---|---|---|
-| Internet (external zones `ext-*`) | **Azure Traffic Manager**: public DNS name of the application → CNAME to the zone's Traffic Manager profile, which answers with one cell | The public load balancer of the zone's Traefik gateway in **every** cell: one public IP per external zone and cell, HTTPS (443) only |
-| Corporate network (internal zones `int-*`) | **The zone's Traefik gateway in the application's home cell**: `<app>.int-fi.prd.example.com` resolves in the hub Private DNS to the Traefik internal load balancer IP of zone `int-fi` in that cell | On-premises → ExpressRoute/VPN → hub Firewall → Traefik internal load balancer of the zone in the home cell |
+| Internet (external zones `ext-*`) | **Azure Traffic Manager**: public DNS name of the application → CNAME to the zone's Traffic Manager profile, which answers with one cell | The public load balancer of the zone's gateway in **every** cell: one public IP per external zone and cell, HTTPS (443) only |
+| Corporate network (internal zones `int-*`) | **The zone's gateway in the application's home cell**: `<app>.int-fi.prd.example.com` resolves in the hub Private DNS to the gateway's internal load balancer IP of zone `int-fi` in that cell | On-premises → ExpressRoute/VPN → hub Firewall → the gateway's internal load balancer of the zone in the home cell |
 | Other Azure workloads (other spokes) | Same as the corporate network | Same as above; a Firewall rule per source |
 | Applications in the same zone and cell | Kubernetes Service (`<app>.<zone>-<app>.svc`) | Stays inside the cell and its availability zone; never goes through the traffic layer or to another cell |
-| Applications in the same internal zone, other cell | The application's DNS name, like any internal client | Hub Firewall → Traefik of the zone in the other cell (one Firewall rule per zone: zone prefix → zone prefix) |
+| Applications in the same internal zone, other cell | The application's DNS name, like any internal client | Hub Firewall → the zone's gateway in the other cell (one Firewall rule per zone: zone prefix → zone prefix) |
 | Applications in another zone | Not allowed (R5). If a business flow needs it, the caller is treated like any other client: it goes through the target zone's entry point and needs an explicit Firewall rule | – |
 
 No component in front of a cell keeps state about the client: sessions and caches belong in Azure PaaS (e.g. Azure
@@ -86,8 +86,8 @@ one by one ([releases cell by cell](11-zero-downtime-application-upgrades.md#rel
 ### External zones: active-active with DNS affinity
 
 **The traffic layer is DNS.** An external application's public name is a CNAME to the zone's **Azure Traffic
-Manager** profile, which answers every DNS query with the public address of the zone's Traefik gateway in one cell.
-The client then connects straight to that cell: **its TLS session ends at the zone's Traefik** in the cell, with the
+Manager** profile, which answers every DNS query with the public address of the zone's gateway in one cell.
+The client then connects straight to that cell: **its TLS session ends at the zone's gateway** in the cell, with the
 zone's certificate – end to end, nothing in between decrypts it. All cells carry external traffic all the time, and
 every client is mapped to one cell **by its network**, so it keeps using the same cell across requests, TLS sessions
 and reconnects – also clients that do not support cookies (API clients, mobile apps, other systems):
@@ -125,11 +125,13 @@ Limits of DNS affinity, accepted in this design:
   of a cell (section 12) is chosen with that in mind, and a failed cell's clients retry until their cache expires.
 - **Changing networks**: a mobile client that switches networks may change cells. During a release it can then see
   the other version, which the [compatibility rule](11-zero-downtime-application-upgrades.md) covers.
-- **No WAF in the traffic layer.** Traffic Manager only answers DNS; HTTP reaches Traefik unfiltered. Rate limits
-  and request limits are Traefik middlewares of the zone; a web application firewall in front of the external zones
-  is an [open question](open-questions.md).
+- **No WAF in the traffic layer.** Traffic Manager only answers DNS; HTTP reaches the zone's gateway unfiltered.
+  There are no gateway rate limits or request size limits either, and no WAF in the gateway: App Routing's Gateway
+  API implementation supports none of them. Protection for the external zones would be Application Gateway WAF v2 per zone (or
+  another WAF in front) – an [open question](open-questions.md).
 
-**Real client IP**: the zone's Traefik `Service` uses `externalTrafficPolicy: Local`, so Traefik sees the client's own
+**Real client IP**: the zone's gateway `Service` uses `externalTrafficPolicy: Local` (set through the Gateway's
+`parametersRef` ConfigMap), so the gateway's Envoy sees the client's own
 address; there is no proxy whose `X-Forwarded-For` it would have to trust.
 
 Every external application also has a **per-cell host name** (e.g. `<app>-<cluster>.ext-fi.prd.example.com`, an A
@@ -139,9 +141,9 @@ tests on it, through the cell's real TLS path, before the cell gets user traffic
 the same names are the Traffic Manager endpoints.
 
 The external zones' gateways are the only public addresses of the platform: one Azure Standard public load balancer
-IP per external zone and cell, created by the Traefik `Service` in `<zone>-gateway`, protected by Azure DDoS
+IP per external zone and cell, created by the gateway's `Service` in `<zone>-gateway`, protected by Azure DDoS
 Network Protection on the cell VNets. The NSG of `snet-ext-<country>-nodes` allows TCP 443 from the Internet and
-nothing else from outside the VNet. This traffic does not pass the hub Firewall; the NSG, Traefik and the
+nothing else from outside the VNet. This traffic does not pass the hub Firewall; the NSG, the zone's gateway and the
 application's Cilium ingress (only from the zone's gateway) are its controls.
 
 ### Internal zones: one home cell per application, moved by migration
@@ -161,8 +163,9 @@ namespace `infra-dns`, with:
 - provider `azure-private-dns`, a workload identity with *Private DNS Zone Contributor* on the internal zones'
   Private DNS zones only, and `management.azure.com` on the Firewall allow-list;
 - source `gateway-httproute`: the A record of each hostname of an `HTTPRoute` points to the address of the zone's
-  Traefik `Gateway` in that cell – a **static IP** per zone and cell, set on the Traefik internal load balancer
-  (`service.beta.kubernetes.io/azure-load-balancer-ipv4`) and kept in `cluster-vars`;
+  `Gateway` in that cell – a **static IP** per zone and cell, set on the gateway's internal load balancer
+  (`service.beta.kubernetes.io/azure-load-balancer-ipv4`, a Service annotation in the Gateway's `parametersRef`
+  ConfigMap) and kept in `cluster-vars`;
 - annotation filter `platform/dns-publish=true`: only the cell that serves the application publishes it. The
   placement artifact sets the annotation (through Flux variable substitution), so exactly one cell publishes each
   name, and Azure Policy rejects the annotation in application manifests;
@@ -175,11 +178,11 @@ namespace `infra-dns`, with:
 
 1. **Deploy to the target**: the placement adds the target cell without `platform/dns-publish`; Flux deploys the
    application there (NAP adds nodes if needed). Wait until its Kustomization is `Ready`.
-2. **Test**: smoke tests against the target cell's Traefik IP with the application's real host name
+2. **Test**: smoke tests against the target cell's gateway IP with the application's real host name
    (`curl --resolve`), over the real TLS path.
 3. **Switch DNS**: the placement moves `platform/dns-publish` to the target cell. Its ExternalDNS overwrites the A
    record within a minute.
-4. **Drain the source**: wait for the TTL and until the source cell's Traefik sees no more requests for the
+4. **Drain the source**: wait for the TTL and until the source cell's gateway sees no more requests for the
    application (or a maximum, e.g. 15 min, for clients that cache DNS too long); long-lived connections are closed
    and reconnect to the target.
 5. **Remove from the source**: the placement drops the source cell; Flux prunes the application there.
@@ -187,7 +190,7 @@ namespace `infra-dns`, with:
 Until step 5, the migration is rolled back by moving `platform/dns-publish` back. Planned migrations are
 zero-downtime. Teams start one by a pull request that changes their `placement.yaml`.
 
-**Cell failure.** An alert on the cell's health (Traefik health routes probed by Grafana Cloud synthetic monitoring, AKS and VM
+**Cell failure.** An alert on the cell's health (gateway health routes probed by Grafana Cloud synthetic monitoring, AKS and VM
 health) dispatches the **failover**: the migration workflow for all internal applications of the failed cell, with
 step 4 skipped and step 5 deferred until the cell is back (a safe action,
 [section 15](15-ai-driven-day-2-operations.md#safe-actions-without-a-pull-request)). Their recovery time is alert +
@@ -196,9 +199,9 @@ applications stay in their new cell; the team or the platform moves them back by
 
 **Consequences:**
 
-- **TLS ends at Traefik.** Internal clients connect to the Traefik gateway directly with the zone's certificate
+- **TLS ends at the zone's gateway.** Internal clients connect to it directly with the zone's certificate
   ([section 13](13-encryption-in-transit-and-tls.md)); there is no WAF in front of internal zones.
-- **Real client IP**: Traefik sees it directly, because its `Service` uses `externalTrafficPolicy: Local` and the hub
+- **Real client IP**: the gateway sees it directly, because its `Service` uses `externalTrafficPolicy: Local` and the hub
   Firewall allows the flow with network rules (no SNAT to private destinations).
 - **One version at a time.** An internal application runs in one cell, so its clients see one version, apart from
   the few minutes of a rolling update, which the [compatibility rule](11-zero-downtime-application-upgrades.md)
@@ -293,10 +296,10 @@ dev → acc → prd, and the existing zones only get new routes and Firewall rul
 6. **Nodes:** in the stateless clusters, NAP `NodePool`s and `AKSNodeClass`es `intxx` / `extxx` for the new subnets
    (Flux, with the new subnet IDs in `cluster-vars`); in the stateful cluster, node pools `intxxz1`–`z3` /
    `extxxz1`–`z3` (`--vnet-subnet-id`, `--pod-subnet-id`, fixed node count). Neither restarts existing nodes.
-7. **Policies and Git:** the zone's Azure Policy mutation and validation, Traefik gateway and namespaces through
+7. **Policies and Git:** the zone's Azure Policy mutation and validation, the zone's `Gateway` and namespaces through
    Flux and the stateful pipeline.
 8. **Entry points:** the internal zone's Private DNS zone in the hub (with ExternalDNS's role on it) and a static
-   Traefik IP per cell in `cluster-vars`; the external zone's Traffic Manager profiles (the parent with its block
+   gateway IP per cell in `cluster-vars`; the external zone's Traffic Manager profiles (the parent with its block
    mapping, a child per cell) and the public DNS CNAMEs of its applications. Existing zones' entry
    points do not change.
 

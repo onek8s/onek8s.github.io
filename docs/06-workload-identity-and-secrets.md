@@ -114,11 +114,12 @@ directly with **its own workload identity**, with a data-plane role scoped as na
 certificate or secret where possible), declared in the IaC module and reviewed with the platform change, and with the
 vault in its namespace's platform-owned egress policy. The Secrets Store CSI driver stays disabled for them too.
 
-- **Traefik uses ESO exactly like an application.** `<zone>-gateway` has the standard `secrets-reader`
+- **The zone's gateway uses ESO exactly like an application.** `<zone>-gateway` has the standard `secrets-reader`
   ServiceAccount, federated to the reader identity `id-<zone>-gateway-secrets`, which has **Key Vault Secrets User**
   on the zone certificate `kv-<env>-platform/secrets/cert-<zone>-wildcard` only
   ([section 13](13-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
-  Traefik's own identity has no Key Vault role, its egress policy names no vault, and the ESO rules of
+  The gateway pods have no Azure identity at all (istiod hands them the Secret; App Routing's own Key Vault
+  integration through the Secrets Store CSI driver is not used), their egress policy names no vault, and the ESO rules of
   [section 14](14-policy-enforcement.md) apply to `<zone>-gateway` as to any application namespace.
 - **External Secrets Operator** itself, Flux and the monitoring components follow the rules above: own identity, own
   narrow roles, egress policy owned by the platform.
@@ -132,7 +133,7 @@ Trade-offs of delivering secrets as Kubernetes `Secret`s instead of CSI file mou
   ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)), and readable by anyone with `get secrets` in
   the namespace: only the application team in its own namespaces, the platform team through PIM; the AI agents'
   `Azure Kubernetes Service RBAC Reader` role does not include `Secret`s.
-- **ESO becomes a critical platform component** (one controller per zone and cluster, upgraded like Traefik). In
+- **ESO becomes a critical platform component** (one controller per zone and cluster, upgraded by the platform). In
   return a Key Vault or Entra ID outage no longer stops pods from starting – the `Secret` is already in the
   cluster, whereas a CSI mount fails at pod start.
 

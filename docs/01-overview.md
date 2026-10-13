@@ -10,7 +10,7 @@ Every cluster of the fleet – stateless or stateful – has this same inner lay
 the frontend and backend networks is shown in [picture 8](08-cluster-types-stateless-and-stateful.md).
 External zones receive Internet traffic on a public load balancer of the zone's gateway in every cell, with Azure
 Traffic Manager choosing the cell by DNS;
-internal zones are reached only from the corporate network through the firewall, directly at the Traefik gateway of the cell that hosts the application (private DNS kept up to date by ExternalDNS). In both cases the traffic ends at the zone's Traefik gateway
+internal zones are reached only from the corporate network through the firewall, directly at the zone's gateway in the cell that hosts the application (private DNS kept up to date by ExternalDNS). In both cases the traffic ends at the zone's gateway (AKS App Routing)
 in a stateless cluster – the stateful cluster is never reached from outside the platform.
 
 ---

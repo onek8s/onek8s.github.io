@@ -17,7 +17,7 @@ existing ones never change. Whether the zone also has a pod subnet depends on th
 | Pod traffic leaving the cluster | Keeps the pod IP | SNAT to the node IP (eBPF masquerading), so NSGs and the firewall see the zone's `snet-<zone>-nodes` |
 | Which application may leave the cluster | Cilium FQDN policy per application ([section 16](16-advanced-networking-and-fqdn-egress.md)) | Same – the firewall sees only the zone, so the per-application control is in Cilium |
 | `snet-<zone>-pods` | Yes | Not needed |
-| `snet-<zone>-ilb` | Internal load balancers of the applications' `LoadBalancer` Services | Internal load balancer of the zone's Traefik gateway (internal zones; an external zone's gateway has a public load balancer, [section 8](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)) |
+| `snet-<zone>-ilb` | Internal load balancers of the applications' `LoadBalancer` Services | Internal load balancer of the zone's gateway (internal zones; an external zone's gateway has a public load balancer, [section 8](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)) |
 
 Zone isolation works the same with both CNIs because every zone has its own nodes in its own node subnet (a NAP
 `NodePool` whose `AKSNodeClass` points at the zone's subnet, or AKS node pools in the stateful cluster): a packet from

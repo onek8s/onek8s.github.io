@@ -7,12 +7,12 @@ flowchart TB
     subgraph EDGE["Entry points – outside the cells"]
         direction LR
         waf["Azure Traffic Manager<br/>external zones · <b>active-active</b><br/>client network blocks → cell (Subnet routing)<br/>endpoints: the zone gateways' public LBs"]
-        agw_in["Hub Private DNS · internal zones<br/>&lt;app&gt;.int-fi.&lt;env&gt;.example.com → Traefik IP of its <b>home cell</b><br/>records kept by ExternalDNS in the cells<br/>migration workflow moves apps between cells"]
+        agw_in["Hub Private DNS · internal zones<br/>&lt;app&gt;.int-fi.&lt;env&gt;.example.com → zone gateway IP of its <b>home cell</b><br/>records kept by ExternalDNS in the cells<br/>migration workflow moves apps between cells"]
     end
 
     subgraph FRONT["Frontend network – stateless clusters, one per availability zone"]
         direction LR
-        sl1["<b>aks-&lt;env&gt;-sl-az1</b><br/>vnet-&lt;env&gt;-sl-az1 (VNet encryption)<br/>all nodes in AZ 1<br/>zones int-fi, int-se, ext-fi, ext-se<br/>Azure CNI Overlay · Traefik Gateway API (HTTPS only)<br/>≥ 2 replicas per app · HPA / KEDA<br/>node auto provisioning (NAP)"]
+        sl1["<b>aks-&lt;env&gt;-sl-az1</b><br/>vnet-&lt;env&gt;-sl-az1 (VNet encryption)<br/>all nodes in AZ 1<br/>zones int-fi, int-se, ext-fi, ext-se<br/>Azure CNI Overlay · App Routing Gateway API (HTTPS only)<br/>≥ 2 replicas per app · HPA / KEDA<br/>node auto provisioning (NAP)"]
         sl2["<b>aks-&lt;env&gt;-sl-az2</b><br/>vnet-&lt;env&gt;-sl-az2 (VNet encryption)<br/>all nodes in AZ 2<br/>identical apps and config<br/>≥ 2 replicas per app · HPA / KEDA<br/>node auto provisioning (NAP)"]
         sl3["<b>aks-&lt;env&gt;-sl-az3</b> (optional)<br/>vnet-&lt;env&gt;-sl-az3<br/>all nodes in AZ 3"]
         sl1 ~~~ sl2 ~~~ sl3
@@ -36,7 +36,7 @@ flowchart TB
 
     internet ==>|"DNS"| waf
     corp ==> agw_in
-    EDGE ==>|"HTTPS to the Traefik of the zone (TLS ends at Traefik)<br/>external: every cell, Traffic Manager answers each client network with one cell, failure or drain moves its clients<br/>internal: straight to the app's home cell (ILB), moved by migration"| FRONT
+    EDGE ==>|"HTTPS to the zone gateway (TLS ends there)<br/>external: every cell, Traffic Manager answers each client network with one cell, failure or drain moves its clients<br/>internal: straight to the app's home cell (ILB), moved by migration"| FRONT
     FRONT -->|"egress + east-west"| fw
     fw -->|"TLS only: PaaS private endpoints (preferred),<br/>stateful app internal LBs"| BACK
     sf --> PAAS

@@ -6,7 +6,7 @@ flowchart TB
         direction TB
         app["Applications<br/>OCI images · 12-factor config · no cloud SDKs"]
         team["Team repositories<br/>Deployment · Service · HTTPRoute · ExternalSecret"]
-        plat["Platform repository<br/>Flux · Helm · Gateway API · Traefik · External Secrets ·<br/>external-dns · NetworkPolicy · Pod Security · OpenTelemetry"]
+        plat["Platform repository<br/>Flux · Helm · Gateway API · External Secrets ·<br/>external-dns · NetworkPolicy · Pod Security · OpenTelemetry"]
         proto["Open protocols to data services<br/>PostgreSQL · MySQL · Redis / Valkey · MongoDB wire ·<br/>Kafka · AMQP · S3 API · OIDC"]
     end
 
@@ -15,7 +15,7 @@ flowchart TB
         a_id["Workload identity<br/>OIDC federation"]
         a_sec["Secret store<br/>ESO provider"]
         a_dns["DNS<br/>external-dns provider"]
-        a_lb["Load balancer<br/>Service annotations"]
+        a_lb["Gateway and load balancer<br/>GatewayClass · Service annotations"]
         a_disk["Storage<br/>CSI StorageClass"]
         a_reg["Registry<br/>OCI"]
         a_id ~~~ a_sec ~~~ a_dns ~~~ a_lb ~~~ a_disk ~~~ a_reg
@@ -23,7 +23,7 @@ flowchart TB
 
     subgraph CLOUDS["Cloud-specific IaC - one repository per cloud"]
         direction LR
-        az["Azure (today)<br/>azure-landing-zone · aks-terraform<br/>AKS · Key Vault · Azure DNS · ACR ·<br/>Azure Database for PostgreSQL · Azure Managed Redis ·<br/>Cosmos DB for MongoDB"]
+        az["Azure (today)<br/>azure-landing-zone · aks-terraform<br/>AKS · App Routing · Key Vault · Azure DNS · ACR ·<br/>Azure Database for PostgreSQL · Azure Managed Redis ·<br/>Cosmos DB for MongoDB"]
         aws["AWS (target)<br/>landing zone · eks-terraform<br/>EKS · Secrets Manager · Route 53 · ECR ·<br/>RDS / Aurora PostgreSQL · ElastiCache · DocumentDB"]
         gcp["Google Cloud (target)<br/>landing zone · gke-terraform<br/>GKE · Secret Manager · Cloud DNS · Artifact Registry ·<br/>Cloud SQL / AlloyDB · Memorystore · Firestore (MongoDB compat.)"]
     end

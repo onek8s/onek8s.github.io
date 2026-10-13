@@ -126,8 +126,8 @@ instances, zone down) need no in-cluster agent.
 |---|---|
 | Loss of a whole cell (stop all nodes of `sl-az1`, then `sl-az2`) | Traffic Manager moves external traffic to the remaining cells within the target (*TBD*, probe interval + TTL); the alert-driven failover migrates the stopped cell's internal applications to another cell within the internal recovery time target (*TBD*); errors within budget; the surviving cell carries 100 % |
 | AZ outage (Chaos Studio zone-down on all VMSS of one AZ, stateless and stateful) | Same as above for stateless; the stateful cluster keeps quorum and serves from two AZs |
-| Node failures: kill system pool node, application node, the node of a Traefik replica | No user-visible errors beyond budget; PDBs respected |
-| Platform components: restart Cilium agents, ACNS security agent, CoreDNS, Traefik, Flux, the Azure Policy add-on | FQDN policies stay enforced during Cilium restarts; traffic continues; admission fails closed as designed |
+| Node failures: kill system pool node, application node, the node of a gateway replica | No user-visible errors beyond budget; PDBs respected |
+| Platform components: restart Cilium agents, ACNS security agent, CoreDNS, App Routing's istiod and the gateway pods, Flux, the Azure Policy add-on | FQDN policies stay enforced during Cilium restarts; traffic continues; admission fails closed as designed |
 | Dependency loss: PaaS failover (zone-redundant database), Key Vault unavailable for External Secrets Operator, ESO controller of a zone stopped, Entra ID token endpoint slow | Applications keep running and new pods start with cached credentials and the Secrets already in the cluster; failed syncs alert; recovery without manual steps |
 | Traffic layer and placement: disable a cell's Traffic Manager endpoint; migrate internal applications back and forth under load; stop ExternalDNS in one cell during a migration | Failover within target; cell affinity re-established; planned migrations without failed requests; DNS records always point to a cell that serves the application |
 | Firewall rule mistake (block a platform FQDN in one cell) | Detected by monitoring, contained to one cell |
@@ -142,7 +142,7 @@ criterion for all is **no errors beyond the budget at the load generators**.
 - Kubernetes minor upgrade of `sl-az2` and of `sl-az1` (drain → upgrade → return), and a node image upgrade.
 - A cell **deleted and rebuilt** from IaC and Flux while the others carry the traffic.
 - Stateful cluster (if built): node image and patch upgrade one AZ at a time.
-- Certificate renewal and rotation in Traefik ([section 13](13-encryption-in-transit-and-tls.md)).
+- Certificate renewal and rotation in the zone's gateway ([section 13](13-encryption-in-transit-and-tls.md)).
 - Azure Policy definition change rolled out audit → deny.
 - **Adding a country online** (two new zones, [R16](08-cluster-types-stateless-and-stateful.md#adding-a-country-online)).
 - An AI agent change through every risk tier, and the kill switch ([section 15](15-ai-driven-day-2-operations.md)).
@@ -167,7 +167,7 @@ criterion for all is **no errors beyond the budget at the load generators**.
   runbook linked from the alert worked.
 - Telemetry: metrics, logs (including Hubble flow logs) and traces of every cluster arrive in the environment's
   Grafana Cloud stack through Private Link, also from the stateful cluster; a trace of the reference application
-  links Traefik, the application and its logs; the absent-data alert fires when a cluster's Alloy is stopped
+  links the gateway, the application and its logs; the absent-data alert fires when a cluster's Alloy is stopped
   ([section 19](19-observability-with-grafana-cloud.md)).
 - Logs: Kubernetes audit logs, Activity Log, Firewall and Traffic Manager logs arrive in the Log Analytics
   workspace with the agreed retention and can be queried from Grafana.
@@ -190,7 +190,7 @@ in the build tenant with all policies in `deny`.
 | Cloud configuration | Defender for Cloud secure score and recommendations, the corporate Azure Policy initiatives in `deny` with zero non-compliant resources (or approved exemptions), CIS AKS benchmark, IaC scanning in CI | Security team |
 | Identity and access | All role assignments in all subscriptions, PIM settings and break-glass accounts, no standing write access; workload identity federated credentials (issuer, subject per ServiceAccount); GitHub OIDC subjects per environment; AI agent identities read-only, full prototyping permissions removed and the derived roles compared with the logged actions | Security team + identity team |
 | Network | NSG and Firewall rule sets against [section 5](05-allowed-and-blocked-flows.md), FQDN allow-lists per zone, WAF policies, no unexpected public endpoints, the stateful cluster's "no Internet" exceptions | Network + security teams |
-| Penetration test | External: Internet → the `ext-*` zones' gateways (the addresses Traffic Manager hands out). Internal: client VNet → Traefik of the `int-*` zones. **Assumed breach**: a compromised pod in each zone tries container escape, IMDS / token theft, lateral movement to other zones, cells, Key Vaults, the API server and the stateful cluster | Independent party |
+| Penetration test | External: Internet → the `ext-*` zones' gateways (the addresses Traffic Manager hands out). Internal: client VNet → the gateways of the `int-*` zones. **Assumed breach**: a compromised pod in each zone tries container escape, IMDS / token theft, lateral movement to other zones, cells, Key Vaults, the API server and the stateful cluster | Independent party |
 | Supply chain | Image sources and ACR import path, vulnerability scanning, image signatures / digests, Flux source verification, branch protection and required reviews, secret scanning of all repositories | Security team |
 | Data protection | Encryption in transit verified (VNet encryption on the node links, TLS-only listeners), encryption at rest with customer-managed keys verified per cluster and zone ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)): KMS and disk encryption set on every cluster, encryption at host on every node, per-zone StorageClasses only; a key rotation and a key revocation (disable, recover) rehearsed in dev; data residency per country zone | Security + privacy |
 | Detection and response | Defender for Containers and Defender for Cloud alerts reach the SOC tooling; the pen test's activity was detected | SOC |

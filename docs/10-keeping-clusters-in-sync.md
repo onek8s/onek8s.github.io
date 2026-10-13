@@ -13,7 +13,7 @@ fleet/
 │   └── prd/{sl-az1,sl-az2,sl-az3}/
 ├── infrastructure/
 │   ├── base/                      # Cilium baseline policies + FQDN egress presets, External Secrets Operator per zone, Grafana Alloy
-│   ├── stateless/                 # NAP NodePool + AKSNodeClass per zone, Traefik + Gateways + certificate ExternalSecret per zone, KEDA, ExternalDNS
+│   ├── stateless/                 # NAP NodePool + AKSNodeClass per zone, Gateway + parameters ConfigMap + certificate ExternalSecret per zone, KEDA, ExternalDNS
 │   └── stateful/                  # storage classes (ZRS), operators (no Gateway API) – applied by the pipeline
 └── apps/
     └── <app>/
