@@ -5,7 +5,7 @@
 Every hop is encrypted, but each cluster type does it in the way that costs the applications least. Encryption at
 rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-customer-managed-keys.md).
 
-## Stateless clusters: VNet encryption + TLS-only Traefik gateway
+## Stateless clusters: VNet encryption + TLS-only zone gateway
 
 - **No service mesh, no mTLS, no TLS configuration in the applications.** Applications listen on plain HTTP inside the
   cluster. Traffic between pods on the same node never leaves the host; traffic between nodes is encrypted by
@@ -18,28 +18,49 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
     (to Azure Firewall, the stateful cluster, PaaS, Internet) is TLS anyway – see below.
 - **Gateway API only, no Ingress.** HTTP traffic into a cell is configured exclusively with the Kubernetes
   [Gateway API](https://gateway-api.sigs.k8s.io/) (`GatewayClass`, `Gateway`, `HTTPRoute`; `GRPCRoute` where needed),
-  standard channel only. The Kubernetes Ingress API is not used anywhere: Traefik runs with only its
-  `kubernetesGateway` provider enabled (the `kubernetesIngress` and `kubernetesCRD`/`IngressRoute` providers are off and
-  their CRDs are not installed), and Azure Policy rejects `Ingress` objects.
-- **Traefik is the Gateway API implementation**, one instance per isolation zone in the platform namespace
-  `<zone>-gateway` (a reserved application name) on the system pool (so that a zone without applications has no
-  nodes, [section 4](04-node-pools.md#zone-nodes-only-for-applications)), behind an internal load balancer in
-  `snet-<zone>-ilb` (an external zone's: a public load balancer, see
-  [incoming traffic](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)). The platform owns the `GatewayClass` and one `Gateway` per zone; application teams own only
-  `HTTPRoute`s in their namespaces – the Gateway API role split between cluster operator and application developer. `allowedRoutes` selects namespaces with `platform/zone=<zone>`, so a route
-  can never attach to another zone's gateway.
+  standard channel only. The Kubernetes Ingress API is not used anywhere: no Ingress controller is installed (the
+  managed NGINX of App Routing is not enabled), and Azure Policy rejects `Ingress` objects.
+- **AKS App Routing's [Gateway API implementation](https://learn.microsoft.com/azure/aks/app-routing-gateway-api)**
+  is the gateway – the Azure standard offering and the recommended default ingress on AKS (the successor of the
+  managed NGINX, whose support ends in November 2026). AKS runs a sidecar-less Istio control plane (`istiod` in
+  `aks-istio-system`) that serves the `GatewayClass` `approuting-istio`. It is **not a service mesh**: no sidecars,
+  no Istio CRDs, no mTLS. AKS upgrades it in place with the cluster (no canary revisions); it cannot run together with
+  the Istio service mesh add-on.
+  - For each `Gateway`, istiod creates in the Gateway's namespace an Envoy Deployment `<gateway>-approuting-istio`, a
+    `LoadBalancer` Service, an HPA (at least 2 replicas; it cannot go lower) and a PodDisruptionBudget. The platform
+    shapes them through a ConfigMap referenced by the Gateway's `spec.infrastructure.parametersRef` (only allow-listed
+    fields: node selector, tolerations, resources, Service annotations, `externalTrafficPolicy`, ...).
+  - One `Gateway` per isolation zone in the platform namespace `<zone>-gateway` (a reserved application name), its
+    Envoy pods on the system pool (so that a zone without applications has no nodes,
+    [section 4](04-node-pools.md#zone-nodes-only-for-applications)), behind an internal load balancer in
+    `snet-<zone>-ilb` (an external zone's: a public load balancer, see
+    [incoming traffic](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)). The platform owns the `GatewayClass` and one `Gateway` per zone; application teams own only
+    `HTTPRoute`s in their namespaces – the Gateway API role split between cluster operator and application developer. `allowedRoutes` selects namespaces with `platform/zone=<zone>`, so a route
+    can never attach to another zone's gateway.
+  - **One control plane for all zones of a cell.** The data plane (Envoy pods, load balancer) is per zone, but every
+    zone's gateway depends on the cell's one istiod: if it fails, the running gateways keep serving their last
+    configuration, but no route or certificate change reaches them until it is back. The cell is the bulkhead for
+    this, not the zone.
+  - What the implementation does **not** offer: rate limits, request size limits, `EnvoyFilter` and an in-gateway WAF
+    (e.g. Coraza). There are no gateway rate limits; protection of the external zones is discussed in
+    [section 8](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity).
+  - App Routing's own Key Vault (Secrets Store CSI) and DNS integration is not used: the certificate comes through
+    ESO ([below](#certificates-issued-centrally-distributed-through-the-platform-key-vault)) and the DNS records from
+    ExternalDNS.
 - **DNS names with Let's Encrypt certificates.** Each zone has its own DNS name space, e.g.
   `*.int-fi.prd.example.com`; an internal zone's names are resolved only by its Private DNS zone in the hub (split
-  horizon: the name has no public A record), an external zone's are public. Traefik serves the zone's wildcard
+  horizon: the name has no public A record), an external zone's are public. The zone's gateway serves the zone's wildcard
   certificate from the platform Key Vault
   ([below](#certificates-issued-centrally-distributed-through-the-platform-key-vault)). Because the certificate is publicly
   trusted, Internet clients and clients inside the corporate network need no private CA.
-- **No non-TLS traffic.** Traefik has only the `websecure` entry point on 443; port 80 is not exposed at all (no
+- **No non-TLS traffic.** The zone's `Gateway` has only an HTTPS listener on 443; port 80 is not exposed at all (no
   HTTP→HTTPS redirect listener either), the internal load balancer has only port 443, and the NSG on `snet-<zone>-ilb`
   allows only TCP 443. Azure Policy rejects `Gateway` listeners with protocol `HTTP`, `HTTPRoute`s that do not attach to
   the HTTPS listener, hostnames outside the zone's domain, `Ingress` objects, and `LoadBalancer` / `NodePort` Services
-  outside `<zone>-gateway`. Traefik adds HSTS to every response. Every client - external ones through the
-  address Traffic Manager gives them, internal ones directly - connects to the zone's Traefik, so the client's TLS
+  outside `<zone>-gateway`. The gateway does not add HSTS by itself: applications add the `Strict-Transport-Security`
+  header with a `ResponseHeaderModifier` filter on their `HTTPRoute` (the platform may later require it with Azure
+  Policy). Every client - external ones through the
+  address Traffic Manager gives them, internal ones directly - connects to the zone's gateway, so the client's TLS
   session ends there and nothing in between decrypts it.
 
 ## Stateful cluster: the application terminates TLS
@@ -55,7 +76,7 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
 - **The application handles TLS itself** (TLS 1.2+), which is an onboarding requirement for the stateful cluster: it
   terminates TLS on its listener and reloads the certificate on rotation. Most products that end up here (databases,
   brokers, search engines) support this natively.
-- The application uses the **same zone certificate from the platform Key Vault** as Traefik (see below), delivered by
+- The application uses the **same zone certificate from the platform Key Vault** as the zone's gateway (see below), delivered by
   External Secrets Operator as a `kubernetes.io/tls` Secret and mounted as PEM files; it is reached under a name in the zone's domain, e.g.
   `app-x.int-fi.prd.example.com`.
 - Clients in the stateless clusters connect with TLS and verify the name; plain-text ports are not allowed by the
@@ -92,16 +113,16 @@ Internet access to Let's Encrypt or write access to DNS.
   change any other record) and **imports** the result into the platform vault as Key Vault certificates. It renews
   30 days before expiry; Key Vault `CertificateNearExpiry` events alert the platform team if renewal fails. The jobs
   are rolled out dev → acc → prd like any other platform change.
-- **All clusters of an environment use the same certificate**: Traefik in `sl-az1`, `sl-az2`, `sl-az3` and the
+- **All clusters of an environment use the same certificate**: the zone gateways in `sl-az1`, `sl-az2`, `sl-az3` and the
   TLS-terminating applications in `sf`. A rebuilt cluster needs no new certificate, and Let's Encrypt rate limits are
   never an issue (a handful of certificates per environment).
 - **Access with plain Azure RBAC, no ABAC.** Key Vault RBAC roles can be assigned on a single certificate (its secret
   object) instead of the whole vault. The secret reader identity ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator))
-  of every namespace that needs a certificate – `<zone>-gateway` for the zone's Traefik (`id-<zone>-gateway-secrets`),
+  of every namespace that needs a certificate – `<zone>-gateway` for the zone's gateway (`id-<zone>-gateway-secrets`),
   stateful applications, any application with a client or server certificate – gets **Key Vault Secrets User** scoped
   to `kv-<env>-platform/secrets/cert-<zone>-…` of *its own zone*; only External Secrets Operator uses it. Key Vault
   exposes a certificate together with its private key as a secret of the same name, which is what ESO reads. Neither
-  Traefik nor any application calls Key Vault itself. No identity has a data-plane role on
+  the gateway nor any application calls Key Vault itself. No identity has a data-plane role on
   the vault scope except the renewal job and the platform team (PIM); the clusters' control plane identities have Key
   Vault Contributor (management plane only) for KMS ([section 18](18-encryption-at-rest-and-customer-managed-keys.md#trade-off-cluster-identities-on-the-shared-platform-vault)). The role assignments are created by the
   environment IaC module from the application onboarding (a "needs certificate" flag), so a certificate must exist
@@ -111,8 +132,8 @@ Internet access to Let's Encrypt or write access to DNS.
   an `ExternalSecret` reads the certificate's secret object (PEM content type) through the namespace's platform-vault
   `SecretStore` and its template writes a `kubernetes.io/tls` Secret (`tls.crt` with the chain, `tls.key`). The
   refresh interval is 1 hour – a renewed certificate is in every cluster well within the 30-day renewal margin.
-  - Traefik: the `ExternalSecret` in `<zone>-gateway` writes the Secret that the zone's `Gateway` listener
-    references; Traefik reloads it when the Secret changes.
+  - The zone's gateway: the `ExternalSecret` in `<zone>-gateway` writes the Secret that the zone's `Gateway` listener
+    references; istiod hands the changed Secret to the gateway's Envoy pods, which reload it without a restart.
   - Applications: the Secret is mounted as PEM files (no `subPath`) and the application reloads them on change.
 - Things to be aware of:
   - The parent domain must be a **registered public domain** – suffixes like `.internal`, `.local` or `.corp` cannot

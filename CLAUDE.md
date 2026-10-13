@@ -8,4 +8,5 @@ This repo is the design, published with GitHub Pages (`docs/01-...21-*.md`, `req
 When an implementation decision changes the design, update the affected sections here in the same
 round. Decisions already reflected: Traffic Manager instead of Front Door; public API server as a dev
 lab exception; zone gateways and ESOs on the system pool so zone nodes scale to zero; spot and
-architecture chosen per application with on-demand fallback.
+architecture chosen per application with on-demand fallback; App Routing's Gateway API (`approuting-istio`)
+instead of Traefik.

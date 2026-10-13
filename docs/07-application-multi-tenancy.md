@@ -6,7 +6,8 @@ Each application gets its own namespace(s) inside a zone, with a baseline policy
 
 1. default deny for inbound and outbound traffic;
 2. allow DNS to CoreDNS in `kube-system`;
-3. allow inbound traffic only from the zone's Traefik gateway namespace (stateless clusters) or, in the stateful cluster,
+3. allow inbound traffic only from the zone's gateway pods (stateless clusters; label
+   `gateway.networking.k8s.io/gateway-name: <zone>` in `<zone>-gateway`) or, in the stateful cluster,
    only from the node subnets of the same zone in the stateless clusters (Cilium CIDR policy; the applications'
    `LoadBalancer` Services use `externalTrafficPolicy: Local` so the client IP is preserved);
 4. allow traffic within the namespace;

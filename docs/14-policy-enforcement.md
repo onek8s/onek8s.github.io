@@ -30,9 +30,12 @@ No Gatekeeper is installed by Flux.
   because new minors can change defaults.
 - **Platform namespaces**: `kube-system` and `gatekeeper-system` are excluded by the add-on; `flux-system` and other
   platform namespaces are excluded from application rules through the definitions' namespace exclusion parameters.
-  The zones' own platform namespaces, `<zone>-gateway` (Traefik) and `<zone>-secrets` (External Secrets Operator),
-  run on the system pool so that a zone without applications has no nodes ([section 4](04-node-pools.md)); they are
-  excluded from zone pinning and the other application rules, and their policies are the platform's own.
+  The zones' own platform namespaces, `<zone>-gateway` (the zone's App Routing gateway) and `<zone>-secrets`
+  (External Secrets Operator), run on the system pool so that a zone without applications has no nodes
+  ([section 4](04-node-pools.md)); they are excluded from zone pinning and the other application rules, and their
+  policies are the platform's own. The `<zone>-gateway` namespaces enforce the Pod Security Standard *baseline* and
+  only audit and warn on *restricted*: App Routing's gateway pods set no seccomp profile, and their `securityContext`
+  cannot be customised.
 - **Mutations fill in, validations decide.** A mutation only adds what a pod leaves out, so a pod that states its
   placement differently is not changed but reported (audit) or refused (deny) by the matching validation. A
   recorded exception is visible the same way: a pod labelled `platform/zone-placement: "off"` is skipped by the

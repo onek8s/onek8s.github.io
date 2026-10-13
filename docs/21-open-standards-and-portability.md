@@ -18,7 +18,7 @@ of that cloud, and a handful of values per cluster (`cluster-settings`) that the
 | Container images | [OCI image and distribution specs](https://opencontainers.org/) | Every app is an OCI image; every cloud registry (ACR, ECR, Artifact Registry) serves the same image |
 | Cluster API | Kubernetes, [CNCF certified](https://www.cncf.io/training/certification/software-conformance/) on AKS, EKS and GKE | Manifests use only GA Kubernetes APIs; no cloud CRDs in team repositories |
 | Delivery | [Flux](https://fluxcd.io/) (CNCF graduated), Kustomize, Helm | The same Git repositories and Kustomizations reconcile every cluster ([section 10](10-keeping-clusters-in-sync.md)) |
-| Ingress | [Gateway API](https://gateway-api.sigs.k8s.io/) with Traefik Proxy | Teams write `HTTPRoute`s; the Gateway, its listeners and TLS are the platform's ([section 13](13-encryption-in-transit-and-tls.md)) |
+| Ingress | [Gateway API](https://gateway-api.sigs.k8s.io/), implemented on AKS by App Routing's sidecar-less Istio (open-source Istio, which other clouds also offer) | Teams write `HTTPRoute`s; the Gateway, its listeners and TLS are the platform's ([section 13](13-encryption-in-transit-and-tls.md)), and the implementation behind them is the cloud's ([below](#what-stays-cloud-specific)) |
 | Secrets | [External Secrets Operator](https://external-secrets.io/) | Teams write `ExternalSecret`s against a `SecretStore` named `key-vault`; only the store's provider is cloud-specific ([section 6](06-workload-identity-and-secrets.md)) |
 | Identity | OIDC workload identity federation | Pods get cloud tokens through a Kubernetes service account – Entra Workload ID, EKS Pod Identity / IRSA, GKE Workload Identity Federation – never stored keys |
 | DNS | [external-dns](https://kubernetes-sigs.github.io/external-dns/) | Publishes listener hostnames in Azure DNS, Route 53 or Cloud DNS – one provider flag |
@@ -69,7 +69,7 @@ extensions), MongoDB feature coverage and Redis modules differ. So:
 | Tenant, accounts / subscriptions, policy, hub network | Landing zone repository | [azure-landing-zone](https://github.com/onek8s/azure-landing-zone) (ALZ accelerator) |
 | Clusters and what an environment's clusters share: network, secret store, registry, DNS, global traffic manager | Cluster IaC repository | [aks-terraform](https://github.com/onek8s/aks-terraform) |
 | The few facts the cluster needs about its cloud: secret store URL, identities' client IDs, DNS zone, load balancer annotations, StorageClass | `cluster-settings` of each cluster, filled in by the IaC | `clusters/<cluster>/cluster-settings.yaml` in [aks-fluxcd-platform](https://github.com/onek8s/aks-fluxcd-platform) |
-| Providers of a few platform components | Platform repository, per cloud overlay | External Secrets `azurekv`, external-dns `azure`, Azure load balancer annotations on Traefik |
+| Providers of a few platform components | Platform repository, per cloud overlay | External Secrets `azurekv`, external-dns `azure`, the Gateway API implementation (`GatewayClass` `approuting-istio` and its parameters ConfigMap with the Azure load balancer annotations) |
 | Day-2 tools that read the cloud | [aks-ai-agents](https://github.com/onek8s/aks-ai-agents) | Azure tools behind a cloud-neutral tool interface |
 | How the admission policies reach the cluster | Cluster IaC (policy assignments) | Azure Policy add-on (Gatekeeper managed by AKS), assigned per environment subscription |
 | The data plane that enforces FQDN egress | Cluster IaC (CNI choice) | Azure CNI powered by Cilium with ACNS |
@@ -89,6 +89,9 @@ Azure specifics that are accepted on purpose, and what replaces them in another 
   default VPC CNI; GKE Dataplane V2 is Cilium-based but has its own FQDN policy object. A second cloud must therefore
   prove R20 with its own data plane before it is accepted, and may need a generated translation of the `egress`
   policies – the application team still writes only the list of names.
+- **The Gateway API implementation** is AKS App Routing, managed by AKS (`approuting-istio`). Another cloud's overlay
+  sets the `GatewayClass` to that cloud's managed implementation or to open-source Istio, with its own load balancer
+  settings; the `Gateway`s change only in their class and parameters, and the teams' `HTTPRoute`s not at all.
 - **Identity for humans** stays Entra ID: EKS and GKE both accept an external OIDC identity provider for cluster
   sign-in, so the same groups and PIM activation apply; the cloud's own IAM is used only to manage its resources.
 
@@ -131,8 +134,8 @@ Adding AWS or Google Cloud is a defined amount of work, and none of it touches a
 2. **Cluster IaC** (`eks-terraform`, `gke-terraform`): the same inputs as aks-terraform – clusters, shared network,
    secret store, registry, DNS zone, workload identities per namespace, global traffic steering – and the same
    outputs into `cluster-settings`.
-3. **Platform overlay**: the cloud's provider for External Secrets and external-dns, load balancer annotations for
-   Traefik, the StorageClass of portable disks.
+3. **Platform overlay**: the cloud's provider for External Secrets and external-dns, the Gateway API
+   implementation and its load balancer settings, the StorageClass of portable disks.
 4. **Clusters directory** per new cluster in the platform repository, and the team namespaces in the cluster IaC.
 5. **Acceptance**: the reference application and aks-hello deploy unchanged from the same commits, and the same
    tests pass ([section 17](17-implementation-project-and-acceptance-testing.md)).

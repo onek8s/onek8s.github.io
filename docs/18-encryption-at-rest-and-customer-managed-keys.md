@@ -51,7 +51,7 @@ zone the same way ([open questions](open-questions.md)).
   when it is GA.
 - Everything that ends up in etcd is encrypted with the cluster's key: the application secrets and certificates
   delivered as Kubernetes Secrets by External Secrets Operator ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)),
-  the Traefik certificate, Flux and platform Secrets.
+  the zone gateways' certificates, Flux and platform Secrets.
 
 ## Nodes: disk encryption set per cluster
 

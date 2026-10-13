@@ -1,4 +1,4 @@
-%% Encryption in transit. Stateless: TLS ends at the zone's Traefik gateway (Let's Encrypt certificate for an internal
+%% Encryption in transit. Stateless: TLS ends at the zone's gateway (App Routing) (Let's Encrypt certificate for an internal
 %% name), node-to-node traffic is protected by Azure VNet encryption, so apps need no TLS, mTLS or service mesh.
 %% Stateful: no Gateway API and no Ingress at all, the application terminates TLS on its own internal load balancer.
 %% Certificates are issued once per zone and environment by a job per environment into the environment's single platform
@@ -14,12 +14,12 @@ flowchart LR
     kv["Platform Key Vault kv-&lt;env&gt;-platform<br/>(once per environment)<br/>cert-ext-fi-wildcard<br/>*.ext-fi.&lt;env&gt;.example.com<br/>+ cert-int-fi-…, cert-*-se-…"]
 
     subgraph EDGE["Traffic layer"]
-        agw["Traffic Manager (external zones)<br/>DNS only: picks the cell<br/>internal clients connect to Traefik directly"]
+        agw["Traffic Manager (external zones)<br/>DNS only: picks the cell<br/>internal clients connect to the gateway directly"]
     end
 
     subgraph SL["Stateless clusters sl-az1/2/3 · Azure CNI Overlay · VNet encryption between nodes"]
         direction TB
-        tr["Traefik Gateway (zone ext-fi)<br/>websecure :443 only<br/>HSTS · no :80<br/>cert Secret written by ESO"]
+        tr["Gateway (App Routing, zone ext-fi)<br/>listener HTTPS :443 only<br/>no :80<br/>cert Secret written by ESO"]
         subgraph N1["node A"]
             app1["app-a pod<br/>plain HTTP"]
         end

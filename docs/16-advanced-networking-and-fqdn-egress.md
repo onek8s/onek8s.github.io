@@ -169,8 +169,9 @@ on its own; together with Cilium's default deny that is enough to make FQDN poli
 
 Platform namespaces (`<zone>-gateway`, `<zone>-secrets` with External Secrets Operator, `flux-system`, `infra-observability`) have
 platform-owned egress policies built the same way – FQDNs wherever the destination has a name – and are reviewed
-with the platform change. They are the only egress policies that may name a Key Vault; `<zone>-gateway` does not – Traefik gets its
-certificate from External Secrets Operator. `kube-system` and node (host network) traffic – kubelet, image pulls, AKS-required FQDNs –
+with the platform change. They are the only egress policies that may name a Key Vault; `<zone>-gateway` does not – the gateway gets its
+certificate from External Secrets Operator. The gateway pods' egress goes to App Routing's istiod in `aks-istio-system`
+(TCP 15012) and to the zone's application pods; they do not call the API server. `kube-system` and node (host network) traffic – kubelet, image pulls, AKS-required FQDNs –
 are not pod traffic; they are controlled by the Firewall allow-list as before.
 
 ## Observing and troubleshooting

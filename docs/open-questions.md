@@ -7,9 +7,9 @@
 - Is CoreDNS on the shared system pool acceptable, or should each zone run its own CoreDNS? (The standard NodeLocal
   DNS setup needs host iptables rules and does not fit eBPF host routing, see [section 16](16-advanced-networking-and-fqdn-egress.md).)
 - Web application firewall for the external zones: Azure Traffic Manager (current draft) is DNS only, so HTTP reaches
-  the zone's Traefik unfiltered. Is that acceptable with rate limits in Traefik, or is a WAF needed – a WAF
-  middleware in the zone's Traefik (Coraza, the same in every cloud), or Application Gateway WAF v2 per zone and
-  cell in front of it?
+  the zone's gateway unfiltered, and App Routing's Gateway API implementation has no rate limits, no request size
+  limits and no in-gateway WAF. Is that acceptable, or is a WAF needed – Application Gateway WAF v2 per zone and cell
+  in front of the gateway, or another WAF in front?
 - Release cadence: is one fleet release train per environment and day (or a few) fast enough, given that each cell
   costs a drain, rollout, tests and a return ramp? Which applications need a faster path?
 - DNS affinity (external zones, Traffic Manager *Subnet* routing): how much traffic comes through large shared
@@ -130,7 +130,8 @@ Raised by the [comparison with Wolkwacht](wolkwacht-comparison.md):
   traffic between nodes is encrypted by VNet encryption, not mTLS. Do some applications need service-to-service
   authorisation by workload identity and HTTP method / path (for example payments)? If so, is Azure Kubernetes
   Application Network (managed Istio ambient) an option once it is GA – does it work with eBPF host routing, a private
-  cluster, Traefik's own Gateway API CRDs and the "no service mesh" rule of R9b?
+  cluster and the "no service mesh" rule of R9b, and can it run beside App Routing's Istio control plane (App Routing's
+  Gateway API and the Istio service mesh add-on are mutually exclusive)?
 - Second cloud ([section 21](21-open-standards-and-portability.md#what-stays-cloud-specific)): open-source Gatekeeper
   with the same templates, or Azure Arc-enabled Kubernetes so that Azure Policy stays the one engine (R14) across
   clouds? Which Cilium-based data plane proves R20 on EKS and on GKE?

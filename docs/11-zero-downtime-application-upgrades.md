@@ -45,7 +45,7 @@ Either way, every interactive user switches from the old to the new version **ex
    pipeline waits until all Kustomizations are `Ready`. No external traffic reaches the cell during the rolling
    update; the internal applications of the cell are updated **in place** by their zero-downtime rolling update –
    this is the moment their users switch to the new version.
-4. **Test** through the per-cell test host names (external zones) and against the cell's Traefik IPs with the
+4. **Test** through the per-cell test host names (external zones) and against the cell's gateway IPs with the
    applications' real host names (internal zones): smoke and synthetic tests over the real TLS path.
 5. **Return** the cell to Traffic Manager: its external clients come back in steps, a quarter of its address blocks at a time,
    and this is the moment they switch to the new version. The pipeline watches the error-rate and latency SLOs per cell in Grafana Cloud ([SLO gates](19-observability-with-grafana-cloud.md#what-grafana-cloud-does));
@@ -74,7 +74,7 @@ Consequences:
   sizing as for cluster upgrades).
 - **The first cell is the canary** for external users; for internal applications the canary is the first cell
   that is home to some of them, so placing a few low-risk internal applications in every cell makes sense.
-  In-cell progressive delivery (Flagger with `HTTPRoute` weights on the Traefik gateway) is not used for
+  In-cell progressive delivery (Flagger with `HTTPRoute` weights on the zone's gateway) is not used for
   interactive applications: it splits requests inside the cell, so their clients would jump between versions again. It stays an option for back-end APIs that are strictly backwards compatible.
 
 ---

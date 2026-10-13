@@ -1,5 +1,5 @@
 %% Application multi-tenancy inside one zone of a stateless cluster: namespace per application, default-deny
-%% network policies, Traefik as the zone's Gateway API implementation (HTTPS only).
+%% network policies, AKS App Routing (approuting-istio) as the zone's Gateway API implementation (HTTPS only).
 flowchart LR
     client(("Clients<br/>(Internet for ext-*,<br/>corporate for int-*)"))
 
@@ -7,7 +7,7 @@ flowchart LR
         direction LR
         appgw["Traffic Manager picks the cell (ext) /<br/>direct from corporate network (int)<br/>HTTPS only"]
         subgraph ING["ns: ext-fi-gateway (platform)"]
-            ic["Traefik · Gateway ext-fi<br/>listener HTTPS :443 only<br/>*.ext-fi.&lt;env&gt;.example.com<br/>(Let's Encrypt, from Key Vault via ESO)"]
+            ic["Gateway ext-fi (App Routing)<br/>listener HTTPS :443 only<br/>*.ext-fi.&lt;env&gt;.example.com<br/>(Let's Encrypt, from Key Vault via ESO)"]
         end
         subgraph A["ns: ext-fi-app-a"]
             ra["HTTPRoute app-a"]
@@ -25,7 +25,7 @@ flowchart LR
 
     http["Plain HTTP :80"]:::off
 
-    client -->|"DNS"| appgw -->|"HTTPS (TLS ends at Traefik)"| ic
+    client -->|"DNS"| appgw -->|"HTTPS (TLS ends at the zone gateway)"| ic
     ic -->|"HTTP, allowed by policy"| a1
     ic -->|"HTTP, allowed by policy"| b1
     a1 & a2 & b1 -->|"DNS allowed"| dns
