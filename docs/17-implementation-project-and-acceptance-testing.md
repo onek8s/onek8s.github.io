@@ -122,7 +122,7 @@ result per recommendation are kept for every run, and a drop raises an alert to 
 | | Score | Result |
 |---|---|---|
 | First run | 55 % (23 of 42 automated) | Every node check (section 3) passes. 19 failures: no audit logs (2.1.1); the lab's public API server (5.4.1, 5.4.2) and Defender for Containers off (5.1.1); RBAC of AKS, the Flux extension and External Secrets Operator (4.1.x); default service accounts that mount tokens, and platform namespaces without a network policy or restricted Pod Security (4.1.5, 4.2.8, 4.4.2); Kubescape's security-context control, which fails every workload (4.7.2); what Kubernetes puts into `default` (4.7.3) |
-| After the first round | CIS_AFTER | CIS_AFTER_DETAIL |
+| After the first round | 59 % (24 of 41 automated; 4.7.1, a list of every namespace to review, counted as manual) | Audit logs pass (2.1.1); no unaccepted failure. Objects failing an accepted recommendation down from 22 to 6 (4.1.5, only Kubernetes' empty namespaces and AKS's), 12 to 9 (4.2.8) and 8 to 2 (4.4.2, the AKS add-on namespaces). Isolation tests unchanged and green |
 
 Improvements made in the first round: Kubernetes audit logs (`kube-audit-admin`, `guard`) of every cluster to the
 environment's Log Analytics workspace ([section 19](19-observability-with-grafana-cloud.md)); Cilium policies for the
