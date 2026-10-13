@@ -72,7 +72,8 @@ Azure Policy denies enabling it, its CRDs are not installed, and admission rejec
 `secrets-store.csi.k8s.io` volumes ([section 14](14-policy-enforcement.md)).
 
 - **One ESO controller per isolation zone**, in the platform namespace `<zone>-secrets` (a reserved application
-  name, like `<zone>-gateway`), pinned to the zone's nodes like every other workload of the zone and deployed by
+  name, like `<zone>-gateway`), on the system pool – so that a zone without applications has no nodes
+  ([section 4](04-node-pools.md#zone-nodes-only-for-applications)) – and deployed by
   Flux (stateless) or the pipeline (stateful). Each instance has its own `controllerClass` (`<zone>`) and reconciles
   only the stores of its zone; the CRDs and the conversion webhook are installed once per cluster. Its path to Key
   Vault is the zone's own flow ⑤ (⑤b to the platform vault, [section 5](05-allowed-and-blocked-flows.md)), so a

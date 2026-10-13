@@ -13,7 +13,7 @@ run different kinds of workloads:
 | Availability zone | `NodePool` requirement `topology.kubernetes.io/zone In [<region>-<N>]` – the cell's AZ | `--zones 1` / `2` / `3`, one pool per AZ |
 | VM sizes | Chosen by NAP for the pending pods from an allow-list of several VNet-encryption-capable SKU families in the `NodePool` requirements, **amd64 and arm64** | One fixed size per pool, chosen when the workload's exception is onboarded; amd64 |
 | Capacity type | On-demand and **spot**, chosen per application ([below](#cpu-architecture-and-spot-chosen-by-the-application)) | On-demand only |
-| Scaling | Nodes are created for pending pods and removed or consolidated when they are empty or under-used; the `NodePool` `limits` (CPU, memory) are the upper bound, sized for N+1 | **No autoscaling.** Fixed node count per pool, set in IaC; capacity changes are planned changes |
+| Scaling | Nodes are created for pending pods and removed or consolidated when they are empty or under-used, **down to zero**: a zone without application pods has no nodes, because the zone's gateway and ESO run on the system pool ([below](#zone-nodes-only-for-applications)); the `NodePool` `limits` (CPU, memory) are the upper bound, sized for N+1 | **No autoscaling.** Fixed node count per pool, set in IaC; capacity changes are planned changes |
 | Node replacement | Drift (new node image or Kubernetes version), consolidation and `expireAfter`, limited by the `NodePool` disruption budgets; PDBs are respected | Surge upgrade per pool, one AZ at a time ([section 12](12-zero-downtime-cluster-upgrades.md#stateful-cluster)) |
 | Defined by | Flux, in `infrastructure/stateless` (subnet IDs and AZ from the `cluster-vars` ConfigMap), applied before anything that runs on zone nodes | Cluster IaC |
 | Disk encryption | Cluster's disk encryption set (`key-<cluster>-disk`) on the ephemeral OS disks; `security.encryptionAtHost: true` in every `AKSNodeClass` | Cluster's disk encryption set on the OS disks, `--enable-encryption-at-host`; persistent volumes with the zone's own key ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)) |
@@ -25,6 +25,19 @@ does not maintain a node pool per zone × VM size or plan the capacity of a fres
 runs a few approved StatefulSets and operators that are sized when they are onboarded and do not scale on load;
 every node change moves a replica and re-attaches its disks. Fixed-size node pools keep its capacity predictable,
 and its nodes change only in planned upgrades – never because an autoscaler decided to consolidate.
+
+### Zone nodes only for applications
+
+In the stateless clusters a zone's nodes exist only while the zone has application pods. The zone's platform
+components – its Traefik gateway (`<zone>-gateway`, [section 13](13-encryption-in-transit-and-tls.md)) and its External
+Secrets Operator (`<zone>-secrets`, [section 6](06-workload-identity-and-secrets.md)) – run on the system pool next to
+the platform's own controllers, so they never hold a zone node. A zone that no application uses yet, or no longer,
+costs no VMs: NAP creates the first node when an application pod of the zone is pending and consolidates the last
+one away when it is empty. The zone's separation does not depend on where these two components run: the gateway's
+load balancer is still the zone's own, in the zone's subnet, its routes are still limited to the zone's namespaces,
+the ESO still reaches only the zone's vault, and Cilium policies still separate both from every other zone. What the
+system pool loses is node-level separation between the zones' gateways, which share the platform's nodes; it is
+sized for them (one replica per zone and cell in dev, more in prd).
 
 NAP details in the stateless clusters:
 
