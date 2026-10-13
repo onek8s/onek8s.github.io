@@ -29,14 +29,15 @@ diagnosing problems fast. The access rule decides who gets into a stack, and the
 
   | Token | Scopes | Stored in | Used by |
   |---|---|---|---|
-  | `grafana-<env>-write` | `metrics:write`, `logs:write`, `traces:write` on its own stack, and `metrics:read` for OpenCost | `kv-<env>-platform` | Alloy and OpenCost in every cluster of the environment |
+  | `grafana-<env>-write` | Fleet Management, `metrics:write`, `logs:write`, `traces:write` on its own stack | `kv-<env>-platform` | Alloy in every cluster of the environment |
+  | `grafana-<env>-opencost` | `metrics:read`, limited by a label-based access policy to the cluster's own series | `kv-<env>-platform` | OpenCost in every cluster of the environment |
   | `grafana-<env>-read-<agent>` | Viewer service account | The agent's own secret store | One per AI agent and environment ([section 15](15-ai-driven-day-2-operations.md#identities-and-access-rights)) |
   | `grafana-<env>-gate` | `metrics:read` | GitHub environment secret | Release and upgrade pipelines (SLO gates) |
   | `grafana-<env>-iac` | Stack administration | GitHub environment secret, `main` only | The Terraform pipeline that applies dashboards, alerts and SLOs |
 
-  Tokens expire after 90 days and are rotated by the IaC pipeline. The cluster token's only read scope is
-  `metrics:read`, which OpenCost needs; a label-based access policy limits it to the cluster's own series
-  (`cluster="<cluster>"`), so a compromised cluster cannot read another cluster's telemetry through it.
+  Tokens expire after 90 days and are rotated by the IaC pipeline. The only read token in a cluster is
+  OpenCost's, limited by a label-based access policy to the cluster's own series (`cluster="<cluster>"`), so a
+  compromised cluster cannot read another cluster's telemetry through it.
 - **Everything is code.** Data sources, folders, dashboards, alert rules, contact points, notification policies,
   SLOs, synthetic checks and IRM schedules are managed by the `grafana` Terraform provider. The platform's resources
   live in the IaC repository. An application team's dashboards, alerts and SLOs live in
@@ -46,7 +47,10 @@ diagnosing problems fast. The access rule decides who gets into a stack, and the
 ## Collection: Grafana Alloy, node-local
 
 The [`k8s-monitoring` Helm chart](https://github.com/grafana/k8s-monitoring-helm) installs Alloy in the platform
-namespace `infra-observability`. Flux installs it in the stateless clusters and the pipeline in the stateful
+namespace `infra-observability`, configured from the stack with **Grafana Cloud Fleet Management** (remote
+configuration, [decision D48](decisions.md#decision-matrix)): the chart's values only start the collectors and
+point them at Fleet Management; their pipelines – what is collected, how it is labelled and where it goes – are
+managed there by the platform team. Flux installs it in the stateless clusters and the pipeline in the stateful
 cluster, from `infrastructure/base` ([section 10](10-keeping-clusters-in-sync.md)). **Every collector works only on
 its own node**, so telemetry never crosses from one isolation zone to another inside the cluster. A zone's data
 leaves the cluster from that zone's own nodes, through the Firewall rule of that zone:
@@ -66,9 +70,12 @@ leaves the cluster from that zone's own nodes, through the Firewall rule of that
 - **Common labels** on every series, log line and span: `env`, `cluster`, `cell` (`sl-az<N>` or `sf`), `zone`
   (from the namespace's `platform/zone` label), `namespace`, `app` and `team` (from the namespace labels set at
   onboarding). Alerts are routed and costs are attributed by these labels, not by access.
-- **Platform rules for Alloy**: no `hostNetwork`, no privileged containers, no host iptables rules (eBPF host routing,
-  [section 16](16-advanced-networking-and-fqdn-egress.md)). The only `hostPath` volumes are read-only log
-  directories. `infra-observability` is a platform namespace with a platform-owned egress policy (Grafana Cloud ingest
+- **Platform rules for Alloy** ([decision D48](decisions.md#decision-matrix)): Alloy and node-exporter run as Grafana's
+  Fleet Management presets set them – privileged, on the host network and PID namespace, with the node's logs,
+  cgroups and storage – so Alloy can instrument applications with eBPF (Beyla) and read the node; still no host
+  iptables rules (eBPF host routing, [section 16](16-advanced-networking-and-fqdn-egress.md)). Being on the host
+  network, they are outside Cilium's pod policies; the namespace's other pods (kube-state-metrics, Beyla's cache,
+  OpenCost) keep a platform-owned policy. `infra-observability` is a platform namespace with a platform-owned egress policy (Grafana Cloud ingest
   host names only).
 - **Write token**: an `ExternalSecret` in `infra-observability` reads `grafana-<env>-write` from `kv-<env>-platform`.
   It is reconciled by the platform's own External Secrets Operator controller in `platform-secrets`, which serves
@@ -80,13 +87,12 @@ leaves the cluster from that zone's own nodes, through the Firewall rule of that
   and splits each cell's cost by namespace and pod; kube-state-metrics exports the namespaces' `platform/team`,
   `platform/cost-center` and `platform/zone` labels, so cost is reported per team and cost centre
   ([section 7](07-application-multi-tenancy.md#ownership-and-cost), [decision D46](decisions.md#decision-matrix)).
-  OpenCost reads the cluster's usage back from the stack's Prometheus API, so the cluster's token also has
-  `metrics:read` (the chart uses one credential for both).
+  OpenCost reads the cluster's usage back from the stack's Prometheus API with a token of its own that has only
+  `metrics:read`.
 - **Dev lab, today** (aks-fluxcd-platform `infrastructure/observability`, chart 4.5.2): the stack is reached over the
-  Internet (`*.grafana.net`, no Private Link in the build tenant); `alloy-metrics` runs as a clustered StatefulSet on
-  the system pool and scrapes every node's kubelet and cAdvisor, rather than node-locally; the stack's endpoints and
-  token are one platform-vault secret in flux-system's share (`flux-system--grafana-cloud`), which the HelmRelease
-  reads through ESO, and the token is the environment's, not yet limited to the cluster's own series. The log collector is node-local as designed.
+  Internet (no Private Link in the build tenant); the Fleet Management URL, user and token are one platform-vault
+  secret in flux-system's share (`flux-system--grafana-cloud`), which the HelmRelease reads through ESO; OpenCost
+  runs once that secret also carries a `metrics:read` token, since the Fleet Management token cannot read metrics.
 - **Not used**: the AKS monitoring add-on (Container Insights), the AKS cost analysis add-on and Azure Monitor
   managed service for Prometheus are not enabled, so nothing is collected twice. The Defender for Containers sensor is a security tool, not
   observability, and stays as it is.
