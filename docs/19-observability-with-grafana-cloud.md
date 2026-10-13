@@ -29,13 +29,14 @@ diagnosing problems fast. The access rule decides who gets into a stack, and the
 
   | Token | Scopes | Stored in | Used by |
   |---|---|---|---|
-  | `grafana-<env>-write` | `metrics:write`, `logs:write`, `traces:write` on its own stack | `kv-<env>-platform` | Alloy in every cluster of the environment |
+  | `grafana-<env>-write` | `metrics:write`, `logs:write`, `traces:write` on its own stack, and `metrics:read` for OpenCost | `kv-<env>-platform` | Alloy and OpenCost in every cluster of the environment |
   | `grafana-<env>-read-<agent>` | Viewer service account | The agent's own secret store | One per AI agent and environment ([section 15](15-ai-driven-day-2-operations.md#identities-and-access-rights)) |
   | `grafana-<env>-gate` | `metrics:read` | GitHub environment secret | Release and upgrade pipelines (SLO gates) |
   | `grafana-<env>-iac` | Stack administration | GitHub environment secret, `main` only | The Terraform pipeline that applies dashboards, alerts and SLOs |
 
-  Tokens expire after 90 days and are rotated by the IaC pipeline. A write token can only write, so a compromised
-  cluster cannot read another cluster's telemetry through it.
+  Tokens expire after 90 days and are rotated by the IaC pipeline. The cluster token's only read scope is
+  `metrics:read`, which OpenCost needs; a label-based access policy limits it to the cluster's own series
+  (`cluster="<cluster>"`), so a compromised cluster cannot read another cluster's telemetry through it.
 - **Everything is code.** Data sources, folders, dashboards, alert rules, contact points, notification policies,
   SLOs, synthetic checks and IRM schedules are managed by the `grafana` Terraform provider. The platform's resources
   live in the IaC repository. An application team's dashboards, alerts and SLOs live in
@@ -75,8 +76,19 @@ leaves the cluster from that zone's own nodes, through the Firewall rule of that
   ([section 6](06-workload-identity-and-secrets.md#platform-components-may-use-key-vault-directly)).
 - **Buffering**: Alloy keeps a write-ahead log on the node (an `emptyDir`), so a short Grafana Cloud or Private Link
   outage loses no data. A longer outage drops the oldest data first, and it never blocks the applications.
-- **Not used**: the AKS monitoring add-on (Container Insights) and Azure Monitor managed service for Prometheus are
-  not enabled, so nothing is collected twice. The Defender for Containers sensor is a security tool, not
+- **OpenCost**, part of the same chart, prices every node from Azure's retail prices (spot nodes at the spot price)
+  and splits each cell's cost by namespace and pod; kube-state-metrics exports the namespaces' `platform/team`,
+  `platform/cost-center` and `platform/zone` labels, so cost is reported per team and cost centre
+  ([section 7](07-application-multi-tenancy.md#ownership-and-cost), [decision D46](decisions.md#decision-matrix)).
+  OpenCost reads the cluster's usage back from the stack's Prometheus API, so the cluster's token also has
+  `metrics:read` (the chart uses one credential for both).
+- **Dev lab, today** (aks-fluxcd-platform `infrastructure/observability`, chart 4.5.2): the stack is reached over the
+  Internet (`*.grafana.net`, no Private Link in the build tenant); `alloy-metrics` runs as a clustered StatefulSet on
+  the system pool and scrapes every node's kubelet and cAdvisor, rather than node-locally; the stack's endpoints and
+  token are one platform-vault secret in flux-system's share (`flux-system--grafana-cloud`), which the HelmRelease
+  reads through ESO, and the token is the environment's, not yet limited to the cluster's own series. The log collector is node-local as designed.
+- **Not used**: the AKS monitoring add-on (Container Insights), the AKS cost analysis add-on and Azure Monitor
+  managed service for Prometheus are not enabled, so nothing is collected twice. The Defender for Containers sensor is a security tool, not
   observability, and stays as it is.
 
 ## Network: Grafana Cloud through Private Link
