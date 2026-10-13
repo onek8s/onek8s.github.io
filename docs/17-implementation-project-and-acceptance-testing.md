@@ -25,7 +25,7 @@ then goes back to its own.
 | Network | Same hub-and-spoke as [picture 1](01-overview.md) with Azure Firewall, Private DNS, Bastion and the management VNet, but **no ExpressRoute / VPN gateway and no peering to the corporate hub** | The design is complete except for the one link that would connect it |
 | Corporate network | Simulated by a **client VNet** peered to the hub, routed through the Firewall like on-premises: internal test clients, load generators, a test DNS resolver forwarding to the hub Private DNS | Internal zones (`int-*`), their Private DNS records and the corporate-side Firewall rules can be tested end to end |
 | Address plan | The **real prefixes reserved from the corporate IPAM** ([address plan](08-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)), not temporary ones | Connecting later needs no re-addressing; overlaps with on-premises are found now |
-| Azure Policy | The corporate landing zone initiatives and the platform's own definitions ([section 14](14-policy-enforcement.md)) assigned at the same scopes as in the corporate tenant, **all with effect `audit` / `enforcementMode: DoNotEnforce`** | Nothing blocks a prototype, but the compliance view shows from day one what the corporate tenant would deny |
+| Azure Policy | The corporate landing zone initiatives and the platform's own definitions ([section 14](14-policy-enforcement.md)) assigned at the same scopes as in the corporate tenant, **all with effect `audit` / `enforcementMode: DoNotEnforce`** – except rules that were already enforced in another way before they became Azure Policy definitions (the stateless clusters' "no persistent storage"), which keep `deny`, and the mutations, which refuse nothing | Nothing blocks a prototype, but the compliance view shows from day one what the corporate tenant would deny |
 | DNS and certificates | A separate test domain (e.g. `example-test.com`) with its own public validation zone for Let's Encrypt | The corporate DNS zones are not touched |
 | Git and pipelines | The same repositories; a `build` target with its own GitHub environments and OIDC federated credentials to the build tenant | The code that is accepted is the code that goes to the corporate tenant |
 | AI agents | **Full permissions during phases 1 and 2**: Owner on the build tenant's subscriptions and cluster admin, so they can change Azure and the clusters directly, not only through pull requests; every action is logged (Activity Log, Entra ID sign-in logs, Kubernetes audit logs) | The agents are built in the same project, and what they really need is not known yet: their least-privilege identities, risk tiers and merge gate ([section 15](15-ai-driven-day-2-operations.md)) are derived from what they actually did; the model provider question can also be answered here with synthetic data |
@@ -79,7 +79,9 @@ that only passes in audit mode has not passed.
 
 ### Requirement and isolation tests
 
-Automated negative tests, kept from phase 2, that run as a pipeline stage:
+Automated negative tests, kept from phase 2, that run as a pipeline stage after every change of a cell and daily.
+Each check names the requirement it covers. A forbidden manifest refused by a rule that is still in `audit` is reported as
+*audit only* rather than as a pass; it becomes a failure once that rule must deny:
 
 | Test | Expected result |
 |---|---|
