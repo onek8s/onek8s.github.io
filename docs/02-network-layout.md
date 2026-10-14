@@ -36,10 +36,13 @@ Address spaces are an addressing tool, not an isolation boundary:
   *allow* rules therefore use the zone prefixes (or Application Security Groups), never `VirtualNetwork`.
 
 > **Why subnets and not separate VNets?** AKS requires all node pool subnets and the API server subnet of one
-> cluster to be in the same VNet. Within one cluster, "network per type" is therefore implemented as
-> *address space and subnets per type + NSG + UDR via firewall*. If a hard VNet boundary per country is required
-> (e.g. regulatory), switch to **one cluster per zone** – the pictures stay the same except that each zone becomes
-> its own spoke, and the address plan stays the same.
+> cluster to be in the same VNet. Within one cluster, "network per country" is therefore implemented as
+> *address space and subnets per zone + NSG + UDR via firewall*, which the security team accepts for countries.
+> Internal and external are not separated this way: they are separate clusters in separate subscriptions
+> ([decision D52](decisions.md#decision-matrix)), so the picture shows an internal cell; an external cell's VNet
+> (`vnet-prd-ext-sl-az1`) is the same with `ext-fi` and `ext-se` from the external halves of the address plan.
+> Should a hard VNet boundary per country ever be required, the same step is taken once more – **one cluster per
+> zone** – and the address plan stays the same.
 
 ---
 

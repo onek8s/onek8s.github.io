@@ -97,4 +97,4 @@ better, and the Internet-less cluster runs one component less.
 
 ---
 
-[Back to contents](../README.md) · Previous: [9. Environments (six to nine clusters)](09-environments.md) · Next: [11. Zero-downtime application upgrades](11-zero-downtime-application-upgrades.md)
+[Back to contents](../README.md) · Previous: [9. Environments (fourteen to twenty clusters)](09-environments.md) · Next: [11. Zero-downtime application upgrades](11-zero-downtime-application-upgrades.md)
