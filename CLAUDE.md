@@ -16,4 +16,7 @@ instead of the AKS cost analysis add-on (D46); namespace ownership labels (D47, 
 
 `docs/isolation-explained.md` explains the zone isolation to security reviewers (Kubernetes glossary, the five layers,
 what one cluster still shares, the cluster-per-exposure / per-country / per-zone options of D01 and the questions for
-sign-off H01). Update it in the same round when an isolation control, a zone rule in section 14 or D01 changes.
+sign-off H01). `docs/isolation-active-directory.md` maps the same isolation onto Active Directory (forest, domains, Tier 0,
+kill chain, lateral movement between and inside node pools); its picture 23 also exists as `diagrams/23-ad-analogy.drawio`
+for draw.io and Visio, kept in step with the Mermaid source by hand. Update both pages in the same round when an
+isolation control, a zone rule in section 14 or D01 changes.

@@ -37,7 +37,9 @@ one configuration database.** Everything that separates zones inside a cluster i
   placement, enforced by software that all zones share.
 
 Separate clusters move the items under (b) into (a). That is the whole difference, and the rest of this page is
-about what it is worth.
+about what it is worth. Readers who know Active Directory will recognise the rule that the forest is the security
+boundary and a domain only an administrative one: [If you know Active Directory](isolation-active-directory.md)
+maps the platform onto it, with the attacker's playbook after one compromised application.
 
 ## What an isolation zone is today
 
@@ -291,4 +293,4 @@ above, and the cluster IaC loop and the release train are the only code that cha
 
 ---
 
-[Back to contents](../README.md) · Previous: [Requirements](requirements.md) · Next: [1. Overview](01-overview.md)
+[Back to contents](../README.md) · Previous: [Requirements](requirements.md) · Next: [If you know Active Directory](isolation-active-directory.md)

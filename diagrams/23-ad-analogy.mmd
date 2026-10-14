@@ -1,0 +1,74 @@
+%% The platform's isolation explained with Active Directory concepts (an analogy, not a specification):
+%% the cluster is the forest (security boundary), the zones are child domains (administrative boundaries),
+%% Tier 0 is the control plane and the system pool. The right column is the attacker's playbook after
+%% compromising one application, and where each step is stopped. Lateral movement rows on both sides are
+%% aligned: between domains / zones, inside a domain / node pool, inside a host / node.
+%%{init: {"flowchart": {"wrappingWidth": 420, "rankSpacing": 28, "nodeSpacing": 24}}}%%
+flowchart TB
+    subgraph KC["<b>Attacker inside, after one application</b> · the same playbook, where it stops"]
+        direction TB
+        kc1["<b>1 · Foothold</b><br/>AD: a phished workstation<br/>Here: one application pod (assumed)"]:::kc
+        kc2["<b>2 · Credential harvesting</b><br/>AD: LSASS, cached logons, Kerberos tickets<br/>Here: no API token mounted, metadata service unreachable, only the pod's own short-lived token"]:::kc
+        kc3["<b>3 · Lateral movement</b><br/>AD: pass-the-hash over SMB / RDP, ride a trust<br/>Here: default deny by identity in the zone; NSG + Firewall + Cilium between zones; no path between cells"]:::kc
+        kc4["<b>4 · Privilege escalation</b><br/>AD: Kerberoasting, ACL abuse, AD CS (ESC1–8)<br/>Here: restricted pod security refuses privileged / host access; pods cannot reach the API server"]:::kc
+        kc5["<b>5 · Dominance</b><br/>AD: DCSync, golden ticket<br/>Here: cluster admin = one cell, only through PIM break-glass or a Kubernetes vulnerability"]:::kc
+        kc6["<b>6 · Persistence</b><br/>AD: GPO, SYSVOL, scheduled tasks<br/>Here: nodes replaced, pods restart from signed images, Flux reverts – persistence moves to Git and the registry"]:::kc
+        kc1 --> kc2 --> kc3 --> kc4 --> kc5 --> kc6
+    end
+
+    subgraph K8S["<b>OneK8s cell = one cluster</b> · the security boundary"]
+        direction TB
+        subgraph K0["Tier 0 – cluster-wide"]
+            direction TB
+            k_cp["API server + etcd (one KMS key)<br/>Azure Policy admission · Flux"]:::t0
+            k_sys["System pool VMs: istiod, <b>every zone's gateway and ESO</b>, CoreDNS"]:::t0
+            k_cp ~~~ k_sys
+        end
+        subgraph KZ["Isolation zones – administrative boundaries with own subnets, nodes, vault, identities"]
+            direction LR
+            k_fi["<b>int-fi</b><br/>namespaces with view / edit / admin groups<br/>zone nodes in the zone's subnet<br/>Key Vault kv-&lt;env&gt;-int-fi"]:::int
+            k_se["<b>int-se · ext-fi · ext-se</b><br/>the same, each its own"]:::ext
+            k_fi ~~~ k_se
+        end
+        k_mem["Pods: default deny, no mounted token, no cached credentials,<br/>replaced from signed images, read-only root filesystem"]:::mem
+        subgraph KL["Lateral movement is stopped …"]
+            direction TB
+            kl1["<b>Between node pools (zones)</b>: NSG and route to the Firewall – <b>Azure fabric, outside the VM</b> – plus Cilium"]:::ctl
+            kl2["<b>Inside a node pool, between namespaces</b>: Cilium eBPF <b>in the node kernel</b>, by pod identity; policies platform-owned"]:::ctl
+            kl3["<b>Inside a node, pod → host</b>: restricted pod security <b>at admission</b> + the kernel; kubelet limited to its own pods"]:::ctl
+            kl1 ~~~ kl2 ~~~ kl3
+        end
+        K0 ~~~ KZ ~~~ k_mem ~~~ KL
+    end
+
+    subgraph AD["<b>Active Directory forest</b> · the security boundary"]
+        direction TB
+        subgraph AD0["Tier 0 – forest-wide"]
+            direction TB
+            ad_dc["Domain controllers · AD CS · federation<br/>Group Policy / SYSVOL"]:::t0
+            ad_pki["One PKI and one federation service for every domain"]:::t0
+            ad_dc ~~~ ad_pki
+        end
+        subgraph ADD["Child domains – administrative boundaries"]
+            direction LR
+            ad_fi["<b>fi.corp</b><br/>OUs with delegated admins<br/>sites and subnets<br/>own service accounts"]:::int
+            ad_se["<b>se.corp</b><br/>the same, each its own"]:::ext
+            ad_fi ~~~ ad_se
+        end
+        ad_mem["Members: domain-joined, reach each other by default,<br/>cached credentials, hosts that persist for years"]:::mem
+        subgraph ADL["Lateral movement is stopped …"]
+            direction TB
+            al1["<b>Between domains and sites</b>: network firewalls, trust SID filtering, selective authentication"]:::ctl
+            al2["<b>Inside a domain</b>: host firewalls, tiering, LAPS, Protected Users"]:::ctl
+            al3["<b>Inside a host</b>: Credential Guard, LSASS protection, UAC"]:::ctl
+            al1 ~~~ al2 ~~~ al3
+        end
+        AD0 ~~~ ADD ~~~ ad_mem ~~~ ADL
+    end
+
+    classDef t0 fill:#fce4ec,stroke:#ad1457,color:#000
+    classDef int fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef mem fill:#eceff1,stroke:#455a64,color:#000
+    classDef ctl fill:#fffde7,stroke:#f9a825,color:#000
+    classDef kc fill:#ffebee,stroke:#c62828,color:#000
