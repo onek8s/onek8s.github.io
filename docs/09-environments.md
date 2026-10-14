@@ -44,7 +44,7 @@ owner's sign-off ([H05](decisions.md#human-sign-offs-still-needed)).
 
 | Part | What is in it | Scales with | Where it is capped |
 |---|---|---|---|
-| **Fixed per cell** | System pool (two nodes), App Routing istiod and the zones' Envoy pods, the zone gateways' load balancers and public IPs, private endpoints (zone vaults, platform vault, ACR), hub peering, AKS Standard tier, Defender for Containers | Number of cells and zones | IaC |
+| **Fixed per cell** | System pool (two nodes; one in the dev lab, which runs Traefik instead of App Routing's istiod and no VPA add-on – [D55](decisions.md#decision-matrix)), App Routing istiod and the zones' Envoy pods, the zone gateways' load balancers and public IPs, private endpoints (zone vaults, platform vault, ACR), hub peering, AKS Standard tier, Defender for Containers | Number of cells and zones | IaC |
 | **Fixed per environment** | Hub share (the exposure's hub and Firewall, [D53](decisions.md#decision-matrix); Private DNS, Bastion, the DDoS plan), Key Vaults, ACR Premium (and its prd replica), Traffic Manager profiles, backup vaults and storage, Grafana Cloud stack, Log Analytics, the stateful cluster's node pools and control plane if built | Number of environments, zones and stateful workloads | IaC |
 | **Variable** | NAP zone nodes (on-demand and spot), PaaS data services, Grafana Cloud ingest and retention, Firewall data processing, ACNS per node | Load, right-sizing, spot share, telemetry volume | `limits.yaml`: `NodePool` limits per zone, `maxSpotShare`, retention; budgets and quota alerts to the capacity agent |
 

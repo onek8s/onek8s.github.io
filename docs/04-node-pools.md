@@ -154,7 +154,8 @@ that are in Git).
 
 - Every cluster starts on Kubernetes **1.36** ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)), so
   container-level (GA) and pod-level (beta) in-place resize are available in every cell from day one. The VPA add-on
-  (`--enable-vpa`) is enabled by the cluster IaC in every cluster; all nodes are Azure Linux 3.0, which has the
+  (`--enable-vpa`) is enabled by the cluster IaC in every cluster – except the dev lab's cells, which leave it off to run
+  on one 8 GiB system node (lab cost exception, [D55](decisions.md#decision-matrix)); all nodes are Azure Linux 3.0, which has the
   cgroup v2 and containerd 2.0 that in-place resize needs.
 - **Every stateless Deployment is right-sized by default.** The onboarding agent creates a `VerticalPodAutoscaler` in
   the application's overlay (`apps/<app>/stateless/<env>/vpa.yaml`) with `updateMode: InPlaceOrRecreate` from the first
