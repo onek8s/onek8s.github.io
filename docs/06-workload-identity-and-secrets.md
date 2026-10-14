@@ -58,9 +58,11 @@ cluster spoke. Inside a zone's vault, applications share the vault but are separ
   `@Request[...secrets:name]` for `setSecret`; rotation is owned by the application team (expiry dates set, Event
   Grid `SecretNearExpiry` alerts).
 - The namespace's Entra ID groups ([section 7](07-application-multi-tenancy.md#who-may-work-in-a-namespace),
-  [decision D49](decisions.md#decision-matrix)) get what their Kubernetes role gets on `Secret`s: the `edit` and
-  `admin` groups **Key Vault Secrets Officer** under the same prefix conditions as the pipelines, the `view` group
-  nothing.
+  [decision D49](decisions.md#decision-matrix)) get what their Kubernetes role gets on `Secret`s: the `admin` group **Key Vault Secrets Officer** under the
+  same prefix conditions as the pipelines; the `edit` group a custom **Key Vault Secrets Editor** role
+  (`setSecret`, `update`, `readMetadata` - no `getSecret`, delete, purge or restore) under the same conditions, so
+  it creates and changes the namespace's secrets and sees their attributes but never a value
+  ([decision D51](decisions.md#decision-matrix)); the `view` group nothing.
 - The **platform viewers** ([section 7](07-application-multi-tenancy.md#platform-viewers),
   [decision D50](decisions.md#decision-matrix)) list every secret's name and attributes, never a value.
 
