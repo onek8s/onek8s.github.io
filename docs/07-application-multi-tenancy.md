@@ -30,8 +30,8 @@ user-facing roles ([decision D49](decisions.md#decision-matrix)):
 | Role | Group's members may | They may not | In the zone's Key Vault |
 |---|---|---|---|
 | `view` | Read most objects in the namespace | Read `Secret`s, roles or role bindings; write anything | Nothing |
-| `edit` | `view`, and write most objects, `Secret`s included where policy lets anyone (in a zone's namespaces only External Secrets Operator does) | Change roles or role bindings | Key Vault Secrets Officer on `<namespace>--*` only, by name – no listing |
-| `admin` | `edit`, and roles and role bindings inside the namespace | Change the namespace, its quota or its default network policies | As `edit` |
+| `edit` | `view`, and write most objects, `Secret`s included where policy lets anyone (in a zone's namespaces only External Secrets Operator does) | Change roles or role bindings | Custom Key Vault Secrets Editor on `<namespace>--*` only, by name: create and change secrets and read their attributes, never a value; no delete; no listing ([D51](decisions.md#decision-matrix)) |
+| `admin` | `edit`, and roles and role bindings inside the namespace | Change the namespace, its quota or its default network policies | Key Vault Secrets Officer on `<namespace>--*` only, by name: also read values, delete, recover and purge; no listing |
 
 None of them reaches another namespace or anything cluster-wide. The IaC (aks-terraform
 `managed_namespaces.<ns>.groups`) gives each group a `RoleBinding` `platform-<role>` in the namespace, applied by
