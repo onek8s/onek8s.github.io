@@ -22,6 +22,26 @@ Applications in the same zone therefore cannot talk to each other unless an expl
 Kubernetes RBAC is namespace-scoped (Entra ID groups per application team), plus ResourceQuota/LimitRange per
 namespace.
 
+## Who may work in a namespace
+
+The onboarding request names up to three Entra ID groups per namespace, one for each of Kubernetes' built-in
+user-facing roles ([decision D49](decisions.md#decision-matrix)):
+
+| Role | Group's members may | They may not |
+|---|---|---|
+| `view` | Read most objects in the namespace | Read `Secret`s, roles or role bindings; write anything |
+| `edit` | `view`, and write most objects, `Secret`s included where policy lets anyone (in a zone's namespaces only External Secrets Operator does) | Change roles or role bindings |
+| `admin` | `edit`, and roles and role bindings inside the namespace | Change the namespace, its quota or its default network policies |
+
+None of them reaches another namespace or anything cluster-wide. The IaC (aks-terraform
+`managed_namespaces.<ns>.groups`) gives each group a `RoleBinding` `platform-<role>` in the namespace, applied by
+Flux like everything else inside the cluster, and the Azure role `Azure Kubernetes Service Namespace User` on the
+managed namespace, so that its members can fetch a kubeconfig for that namespace alone
+(`az aks namespace get-credentials`). A role without a group gets no binding. The isolation tests
+([section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests), R6) compare
+the bindings with the IaC and check each role's rights by impersonating a member of its group and by signing in as
+a test application that is one.
+
 ## Ownership and cost
 
 Every namespace says who owns what runs in it and who pays for it (R25, [decision D47](decisions.md#decision-matrix)):

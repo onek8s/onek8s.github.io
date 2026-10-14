@@ -12,4 +12,4 @@ round. Decisions already reflected: Traffic Manager instead of Front Door; publi
 lab exception; zone gateways and ESOs on the system pool so zone nodes scale to zero; spot and
 architecture chosen per application with on-demand fallback; App Routing's Gateway API (`approuting-istio`)
 instead of Traefik; GPU NodePools per zone on request (D42); cost per team from OpenCost in Grafana's k8s-monitoring
-instead of the AKS cost analysis add-on (D46); namespace ownership labels (D47, R25).
+instead of the AKS cost analysis add-on (D46); namespace ownership labels (D47, R25); namespace access by Entra ID groups bound to `view`/`edit`/`admin` (D49).
