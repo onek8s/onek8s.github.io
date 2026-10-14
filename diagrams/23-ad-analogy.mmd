@@ -7,12 +7,12 @@
 flowchart TB
     subgraph KC["<b>Attacker inside, after one application</b> · the same playbook, where it stops"]
         direction TB
-        kc1["<b>1 · Foothold</b><br/>AD: a phished workstation<br/>Here: one application pod (assumed)"]:::kc
-        kc2["<b>2 · Credential harvesting</b><br/>AD: LSASS, cached logons, Kerberos tickets<br/>Here: no API token mounted, metadata service unreachable, only the pod's own short-lived token"]:::kc
-        kc3["<b>3 · Lateral movement</b><br/>AD: pass-the-hash over SMB / RDP, ride a trust<br/>Here: default deny by identity in the zone; NSG + Firewall + Cilium between zones; no path between cells"]:::kc
-        kc4["<b>4 · Privilege escalation</b><br/>AD: Kerberoasting, ACL abuse, AD CS (ESC1–8)<br/>Here: restricted pod security refuses privileged / host access; pods cannot reach the API server"]:::kc
-        kc5["<b>5 · Dominance</b><br/>AD: DCSync, golden ticket<br/>Here: cluster admin = one cell, only through PIM break-glass or a Kubernetes vulnerability"]:::kc
-        kc6["<b>6 · Persistence</b><br/>AD: GPO, SYSVOL, scheduled tasks<br/>Here: nodes replaced, pods restart from signed images, Flux reverts – persistence moves to Git and the registry"]:::kc
+        kc1["<b>1 · Foothold</b><br/>Windows: code execution in a web application, inside its IIS application pool<br/>Here: one application pod (assumed)"]:::kc
+        kc2["<b>2 · Credential harvesting</b><br/>Windows: web.config, machine keys, the pool identity's token, then LSASS and tickets<br/>Here: no API token mounted, metadata service unreachable, only the pod's own short-lived token"]:::kc
+        kc3["<b>3 · Lateral movement</b><br/>Windows: the other pools on the server, pass-the-hash to the next server, ride a trust<br/>Here: default deny by identity in the zone; NSG + Firewall + Cilium between zones; no path between cells"]:::kc
+        kc4["<b>4 · Privilege escalation</b><br/>Windows: pool identity → SYSTEM (SeImpersonate 'Potato'), Kerberoasting, ACL abuse, AD CS<br/>Here: restricted pod security refuses privileged / host access; pods cannot reach the API server"]:::kc
+        kc5["<b>5 · Dominance</b><br/>Windows: DCSync, golden ticket<br/>Here: cluster admin = one cell, only through PIM break-glass or a Kubernetes vulnerability"]:::kc
+        kc6["<b>6 · Persistence</b><br/>Windows: web shell, IIS module, GPO, SYSVOL, scheduled tasks<br/>Here: nodes replaced, pods restart from signed images, Flux reverts – persistence moves to Git and the registry"]:::kc
         kc1 --> kc2 --> kc3 --> kc4 --> kc5 --> kc6
     end
 
@@ -30,7 +30,7 @@ flowchart TB
             k_se["<b>int-se · ext-fi · ext-se</b><br/>the same, each its own"]:::ext
             k_fi ~~~ k_se
         end
-        k_mem["Pods: default deny, no mounted token, no cached credentials,<br/>replaced from signed images, read-only root filesystem"]:::mem
+        k_mem["Zone nodes: pods under their own identities, sharing the node's kernel and nothing else;<br/>default deny, no mounted token, no cached credentials, replaced from signed images, read-only root"]:::mem
         subgraph KL["Lateral movement is stopped …"]
             direction TB
             kl1["<b>Between node pools (zones)</b>: NSG and route to the Firewall – <b>Azure fabric, outside the VM</b> – plus Cilium"]:::ctl
@@ -55,12 +55,12 @@ flowchart TB
             ad_se["<b>se.corp</b><br/>the same, each its own"]:::ext
             ad_fi ~~~ ad_se
         end
-        ad_mem["Members: domain-joined, reach each other by default,<br/>cached credentials, hosts that persist for years"]:::mem
+        ad_mem["IIS servers: application pools (w3wp.exe) under their own identities, sharing the server's kernel and host;<br/>domain-joined, reach each other by default, cached credentials, hosts that persist for years"]:::mem
         subgraph ADL["Lateral movement is stopped …"]
             direction TB
             al1["<b>Between domains and sites</b>: network firewalls, trust SID filtering, selective authentication"]:::ctl
-            al2["<b>Inside a domain</b>: host firewalls, tiering, LAPS, Protected Users"]:::ctl
-            al3["<b>Inside a host</b>: Credential Guard, LSASS protection, UAC"]:::ctl
+            al2["<b>Between servers of a domain</b>: host firewalls, tiering, LAPS, Protected Users"]:::ctl
+            al3["<b>Inside an IIS server, between application pools and to SYSTEM</b>: process isolation, pool identities, SeImpersonate hardening, Credential Guard"]:::ctl
             al1 ~~~ al2 ~~~ al3
         end
         AD0 ~~~ ADD ~~~ ad_mem ~~~ ADL

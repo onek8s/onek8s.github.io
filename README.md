@@ -37,7 +37,7 @@ adapters, and the PaaS services every cloud offers.
 how the internal / external and country separation works inside one cluster, which hardening rules make it hold,
 what one cluster still shares, and what would change with separate clusters per exposure, per country or per zone
 (sign-off H01). [If you know Active Directory](docs/isolation-active-directory.md) maps the same isolation onto the forest,
-domains, Tier 0 and the lateral-movement playbook a security team already reasons with.
+domains, IIS application pools, Tier 0 and the lateral-movement playbook a security team already reasons with.
 
 > Status: **draft** for review. Country codes `fi` / `se` and all IP ranges are examples.
 
