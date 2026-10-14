@@ -136,7 +136,7 @@ How Traffic Manager maps a client to a cell:
 | | Traffic Manager (external zones) |
 |---|---|
 | Profiles | Per zone and environment one **parent** profile with the *Subnet* routing method, and per cell one **child** profile with the *Priority* routing method, nested as the parent's endpoints |
-| Mapping | The parent maps the IPv4 and IPv6 address space, split into blocks (e.g. 16 per family), to the cells' child profiles – the family of the *resolver's* address, not of the service: the platform answers with A records only until [D54](decisions.md#decision-matrix) switches an external zone to dual stack. Blocks are assigned by measured traffic so that the cells get similar load |
+| Mapping | The parent maps the IPv4 and IPv6 address space, split into blocks (e.g. 16 per family), to the cells' child profiles – the family of the *resolver's* address, not of the service: the platform itself answers with A records only ([D54](decisions.md#decision-matrix)). Blocks are assigned by measured traffic so that the cells get similar load |
 | Client address used | The address of the client's DNS resolver, or the client subnet it passes on (EDNS Client Subnet) – not anything the client sends in HTTP |
 | Fallback | Each child profile lists the cell's own gateway at priority 1 and the other cells at priorities 2 and 3, in the fixed order `az1` → `az2` → `az3`, so the clients of a failed cell all move to the same cell |
 | Health probe | HTTPS `GET /healthz` of an application of the zone, through each cell's gateway with the application's host name (`custom_header host`), every 30 s; a cell is left out after 2 failures |
@@ -320,12 +320,7 @@ If the corporate network cannot spare three `/12`s, the same structure works one
 country). The AKS service CIDR and the overlay pod CIDR of the stateless clusters must stay outside all of these
 prefixes and outside the on-premises ranges.
 
-**IPv6: reserved, not used** ([decision D54](decisions.md#decision-matrix)). Every environment also gets an IPv6 `/48`
-(`fd00:16::/48`, `fd00:32::/48`, `fd00:48::/48` as ULA examples; a corporate GUA block if the IPAM has one, [H02](decisions.md#human-sign-offs-still-needed)),
-every cell VNet a `/56` of it and every node subnet that may become dual stack a `/64` – the one size Azure allows
-for an IPv6 subnet. Nothing is assigned until an external cell is rebuilt dual stack; the IPv6 prefixes then appear
-only in the external cells' node subnets, their gateways' public frontends and the NSG rules – never in the
-Firewalls, the private endpoints or the internal and stateful clusters.
+**IPv6**: the platform is IPv4 only and plans no IPv6 ([decision D54](decisions.md#decision-matrix)).
 
 ## Adding a country online
 

@@ -13,7 +13,7 @@ country boundary, was answered by the security team on 2026-10-14 ([D52](decisio
 
 | # | Who | What |
 |---|---|---|
-| H02 | Network team | The platform's prefixes in the corporate IPAM: a `/12` per environment or a `/17` per country, and an IPv6 `/48` per environment, reserved already for the build tenant ([D02](decisions.md#decision-matrix), [D54](decisions.md#decision-matrix)) |
+| H02 | Network team | The platform's prefixes in the corporate IPAM: a `/12` per environment or a `/17` per country, reserved already for the build tenant ([D02](decisions.md#decision-matrix)) |
 | H03 | Security team | No WAF for the external zones at launch, or Application Gateway WAF v2 per zone and cell; ownership of the pre-approved Internet FQDN catalogue ([D04](decisions.md#decision-matrix), [D28](decisions.md#decision-matrix)) |
 | H04 | Business, application owners | Availability, latency, error budget, failover and recovery targets; RPO and RTO per data store and environment; the internal recovery time ([D44](decisions.md#decision-matrix), [D07](decisions.md#decision-matrix)) |
 | H05 | Platform owner | Budget for three cells in prd, the cells paid once per exposure ([D52](decisions.md#decision-matrix)), a second hub with its own Azure Firewall Premium for the external exposure ([D53](decisions.md#decision-matrix)), the DDoS Network Protection plan and prd's standby connectivity in the paired region; the prd cost estimate once measured ([D08](decisions.md#decision-matrix), [D32](decisions.md#decision-matrix), [D34](decisions.md#decision-matrix)) |
@@ -25,8 +25,6 @@ country boundary, was answered by the security team on 2026-10-14 ([D52](decisio
 | H11 | Security, landing zone owners | A separate build tenant without corporate connectivity and with Azure Policy in audit mode ([D30](decisions.md#decision-matrix)) |
 | H12 | Platform owner | Gatekeeper or Azure Arc as the policy engine when the second cloud starts ([D39](decisions.md#decision-matrix)) |
 | H13 | Legal, compliance | DORA and NIS2 applicability; a European provider in the exit strategy; GitHub, Grafana Cloud and the model provider under the CLOUD Act ([D43](decisions.md#decision-matrix)) |
-| H14 | Business, security, legal | Whether the external applications must be reachable over IPv6, and by when; the platform stays IPv4 until then, with the prefixes reserved and dual stack at the external edge prepared ([D54](decisions.md#decision-matrix)) |
-| H14 | Business, security, legal | Whether the external applications must be reachable over IPv6, and by when; the platform stays IPv4 until then, with the prefixes reserved and dual stack at the external edge prepared ([D54](decisions.md#decision-matrix)) |
 
 ## Assumptions still to be proven
 
@@ -36,8 +34,7 @@ fallback if it fails. The ones not yet proven at all are V02 (NAP image pinning)
 isolated cluster – whose documentation now lists only `NodeImage` and `None`), V16 (vault-tier backup with Cross Region
 Restore in the chosen regions), V17 (Grafana Cloud Private Link across regions), V18 (Chaos Mesh with eBPF host
 routing), V19 (Inspektor Gadget, kube-bench and Image Cleaner), V21 (VNet encryption on every allowed VM family in the
-region), V22 (a hub and Firewall per exposure – the lab runs without any Firewall) and V23 (dual-stack external cells,
-waiting for NAP).
+region) and V22 (a hub and Firewall per exposure – the lab runs without any Firewall).
 
 ---
 
