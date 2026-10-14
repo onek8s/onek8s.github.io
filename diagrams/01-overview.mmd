@@ -1,15 +1,21 @@
 %% High-level landing zone: hub, management network and the AKS spokes - internal and external in separate
-%% subscriptions and clusters (D52), the countries as isolation zones inside each
+%% subscriptions and clusters (D52) behind a hub and Firewall each (D53), the countries as isolation zones inside each
 flowchart TB
     internet(("Internet"))
     onprem["On-premises /<br/>corporate network"]
 
-    subgraph HUB["Hub VNet (connectivity subscription)"]
+    subgraph HUBI["Internal hub VNet (connectivity subscription)"]
         direction LR
         gw["VPN / ExpressRoute GW"]
         fw["Azure Firewall Premium<br/>egress + east-west inspection"]
         dns["Private DNS Resolver<br/>+ Private DNS zones"]
         bastion["Azure Bastion"]
+    end
+
+    subgraph HUBE["External hub VNet (connectivity subscription)"]
+        direction LR
+        fwe["Azure Firewall Premium<br/>egress inspection"]
+        dnse["Private DNS zone links"]
     end
 
     subgraph MGMT["Management VNet"]
@@ -52,9 +58,12 @@ flowchart TB
 
     onprem --- gw
     internet ---|"allow-listed FQDNs<br/>(egress)"| fw
-    HUB ===|"VNet peering"| MGMT
-    HUB ===|"VNet peering<br/>UDR 0.0.0.0/0 → Firewall<br/>from every subnet"| SPOKEI
-    HUB ===|"VNet peering<br/>UDR 0.0.0.0/0 → Firewall"| SPOKEE
+    internet ---|"allow-listed FQDNs<br/>(egress)"| fwe
+    HUBI ===|"VNet peering"| MGMT
+    HUBE ===|"VNet peering"| MGMT
+    HUBI x-.-x|"no peering, no route (D53)"| HUBE
+    HUBI ===|"VNet peering<br/>UDR 0.0.0.0/0 → internal Firewall<br/>from every subnet"| SPOKEI
+    HUBE ===|"VNet peering<br/>UDR 0.0.0.0/0 → external Firewall"| SPOKEE
     jump --> pe_api -.->|"Private Link"| api
     pe_api -.->|"Private Link"| apie
     internet ==>|"HTTPS to the cell<br/>Traffic Manager picks (DNS)"| EXT
@@ -64,7 +73,8 @@ flowchart TB
     classDef cp fill:#eceff1,stroke:#455a64,color:#000
     classDef int fill:#e3f2fd,stroke:#1565c0,color:#000
     classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000
-    class fw,dns,gw,bastion,jump,pe_api hub
+    class fw,fwe,dns,dnse,gw,bastion,jump,pe_api hub
+    linkStyle 5 stroke:#c62828,stroke-width:2px,stroke-dasharray:6 4
     class api,sys,apie,syse cp
     class intfi,intse int
     class extfi,extse ext

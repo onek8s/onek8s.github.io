@@ -38,7 +38,7 @@ stateful cluster runs, the smaller its blast radius and upgrade risk.
 | Count per environment | Per exposure (`int`, `ext`) one per availability zone: `sl-az1`, `sl-az2` in dev and acc; `sl-az1`, `sl-az2`, `sl-az3` in prd ([section 9](09-environments.md), [decisions D08, D52](decisions.md#decision-matrix)) | Zero or one per exposure – built only when the first approved workload of that exposure needs it |
 | Availability zones | All nodes of a cluster in its AZ (system pool `--zones <N>`, NAP `NodePool`s by zone requirement); the cluster is the unit of failure | Every isolation zone has one node pool per AZ (`intfiz1`, `intfiz2`, `intfiz3`, …); system pool spread over AZ 1–3 |
 | Nodes | [Node auto provisioning](https://learn.microsoft.com/en-us/azure/aks/node-autoprovision): one Karpenter `NodePool` per isolation zone, VM size chosen per workload ([section 4](04-node-pools.md)) | Classic AKS node pools with a fixed VM size and node count |
-| Network | Frontend spoke `vnet-<env>-<exposure>-sl-az<N>` in the exposure's subscription, peered to the hub | Backend spoke `vnet-<env>-<exposure>-sf` in the exposure's subscription, peered to the hub, together with the PaaS private endpoints |
+| Network | Frontend spoke `vnet-<env>-<exposure>-sl-az<N>` in the exposure's subscription, peered to the exposure's hub ([D53](decisions.md#decision-matrix)) | Backend spoke `vnet-<env>-<exposure>-sf` in the exposure's subscription, peered to the exposure's hub, together with the PaaS private endpoints |
 | Internet | Egress only via Azure Firewall FQDN allow-list (outbound type `userDefinedRouting`); inbound only via the traffic layer | **None.** [Network isolated cluster](https://learn.microsoft.com/en-us/azure/aks/concepts-network-isolated) (outbound type `none`, bootstrap artifacts from the private ACR cache), no public IPs, UDR `0.0.0.0/0` → Firewall which denies all Internet for backend prefixes |
 | CNI | [Azure CNI Overlay](https://learn.microsoft.com/en-us/azure/aks/concepts-network-azure-cni-overlay) powered by Cilium | Azure CNI (VNet-integrated, dynamic pod IP allocation) powered by Cilium |
 | Advanced networking | ACNS with eBPF host routing and FQDN egress policies ([section 16](16-advanced-networking-and-fqdn-egress.md)) | Same |
@@ -66,18 +66,21 @@ the security team's decision). Countries are separated one level lower, inside a
 |---|---|---|
 | Boundary | **Subscription and cluster**: `sub-aks-<env>-int` and `sub-aks-<env>-ext`, each with its own cells and optional stateful cluster | **Isolation zone** inside the clusters of one exposure |
 | Control plane, system pool, admission, Flux, App Routing's istiod | Separate | Shared by the exposure's zones |
-| Nodes and network | Separate spoke VNets (the hub Firewall between them) | Own NAP `NodePool`s / node pools, own address space, subnets, NSGs and route tables |
+| Nodes and network | Separate spoke VNets peered to **separate hubs with an Azure Firewall each**, no peering and no route between them ([D53](decisions.md#decision-matrix)) | Own NAP `NodePool`s / node pools, own address space, subnets, NSGs and route tables |
 | Key Vaults | Separate platform vaults (`kv-<env>-int-platform`, `kv-<env>-ext-platform`: certificates, the clusters' keys) and zone vaults | Own zone vault (`kv-<env>-<zone>`) |
 | Azure RBAC, Azure Policy, budget, quota | Per subscription | Per zone where it matters (namespaces, ABAC, policy mutations) |
 | ACR | One per exposure subscription, fed by the same promotion pipeline | Shared |
 | Entry points | External: Traffic Manager and public load balancers, only in the external subscription. Internal: hub Private DNS and internal load balancers, only in the internal one | One profile / Private DNS zone per zone |
 
 So an external cluster – the one the Internet reaches – has no internal zone, no internal identity, no role on an
-internal vault and no route to an internal subnet that the hub Firewall would not deny; a compromise of its control
-plane, nodes or subscription does not reach the internal workloads. Traffic between the two exposures is like traffic
-between two zones (R5): denied, and only possible through the target's entry point with an explicit Firewall rule.
-What the two keep in common is the source – the same IaC modules with the exposure as a parameter, the same fleet
-repository with a directory per cluster – and the hub, Entra ID, GitHub and the environment's Grafana Cloud stack.
+internal vault and no route to an internal subnet at all: its hub has neither a peering to the internal hub nor a
+gateway to the corporate network ([decision D53](decisions.md#decision-matrix)); a compromise of its control plane,
+nodes, subscription or Firewall does not reach the internal workloads. Traffic between the two exposures is like
+traffic between two zones (R5): denied. An internal application that must call an external one goes to its public
+entry point like any Internet client (an FQDN rule on the internal Firewall); an external application has no path to
+an internal one, and giving it one is a design change, not a Firewall rule. What the two keep in common is the source
+– the same IaC modules with the exposure as a parameter, the same fleet repository with a directory per cluster – and
+the management VNet, Entra ID, GitHub and the environment's Grafana Cloud stack.
 
 ## Incoming traffic: from outside and from inside
 
@@ -97,10 +100,10 @@ platform. The two kinds of zones use the cells differently, because their availa
 | Source | Entry point | Path to the cells |
 |---|---|---|
 | Internet (external zones `ext-*`) | **Azure Traffic Manager**: public DNS name of the application → CNAME to the zone's Traffic Manager profile, which answers with one cell | The public load balancer of the zone's gateway in **every** cell: one public IP per external zone and cell, HTTPS (443) only |
-| Corporate network (internal zones `int-*`) | **The zone's gateway in the application's home cell**: `<app>.int-fi.prd.example.com` resolves in the hub Private DNS to the gateway's internal load balancer IP of zone `int-fi` in that cell | On-premises → ExpressRoute/VPN → hub Firewall → the gateway's internal load balancer of the zone in the home cell |
+| Corporate network (internal zones `int-*`) | **The zone's gateway in the application's home cell**: `<app>.int-fi.prd.example.com` resolves in the hub Private DNS to the gateway's internal load balancer IP of zone `int-fi` in that cell | On-premises → ExpressRoute/VPN → the internal hub's Firewall → the gateway's internal load balancer of the zone in the home cell |
 | Other Azure workloads (other spokes) | Same as the corporate network | Same as above; a Firewall rule per source |
 | Applications in the same zone and cell | Kubernetes Service (`<app>.<zone>-<app>.svc`) | Stays inside the cell and its availability zone; never goes through the traffic layer or to another cell |
-| Applications in the same internal zone, other cell | The application's DNS name, like any internal client | Hub Firewall → the zone's gateway in the other cell (one Firewall rule per zone: zone prefix → zone prefix) |
+| Applications in the same internal zone, other cell | The application's DNS name, like any internal client | The internal hub's Firewall → the zone's gateway in the other cell (one Firewall rule per zone: zone prefix → zone prefix) |
 | Applications in another zone | Not allowed (R5). If a business flow needs it, the caller is treated like any other client: it goes through the target zone's entry point and needs an explicit Firewall rule | – |
 
 No component in front of a cell keeps state about the client: sessions and caches belong in Azure PaaS (e.g. Azure
@@ -133,7 +136,7 @@ How Traffic Manager maps a client to a cell:
 | | Traffic Manager (external zones) |
 |---|---|
 | Profiles | Per zone and environment one **parent** profile with the *Subnet* routing method, and per cell one **child** profile with the *Priority* routing method, nested as the parent's endpoints |
-| Mapping | The parent maps the IPv4 and IPv6 address space, split into blocks (e.g. 16 per family), to the cells' child profiles. Blocks are assigned by measured traffic so that the cells get similar load |
+| Mapping | The parent maps the IPv4 and IPv6 address space, split into blocks (e.g. 16 per family), to the cells' child profiles – the family of the *resolver's* address, not of the service: the platform answers with A records only until [D54](decisions.md#decision-matrix) switches an external zone to dual stack. Blocks are assigned by measured traffic so that the cells get similar load |
 | Client address used | The address of the client's DNS resolver, or the client subnet it passes on (EDNS Client Subnet) – not anything the client sends in HTTP |
 | Fallback | Each child profile lists the cell's own gateway at priority 1 and the other cells at priorities 2 and 3, in the fixed order `az1` → `az2` → `az3`, so the clients of a failed cell all move to the same cell |
 | Health probe | HTTPS `GET /healthz` of an application of the zone, through each cell's gateway with the application's host name (`custom_header host`), every 30 s; a cell is left out after 2 failures |
@@ -237,7 +240,7 @@ applications stay in their new cell; the team or the platform moves them back by
 
 - **TLS ends at the zone's gateway.** Internal clients connect to it directly with the zone's certificate
   ([section 13](13-encryption-in-transit-and-tls.md)); there is no WAF in front of internal zones.
-- **Real client IP**: the gateway sees it directly, because its `Service` uses `externalTrafficPolicy: Local` and the hub
+- **Real client IP**: the gateway sees it directly, because its `Service` uses `externalTrafficPolicy: Local` and the internal hub's
   Firewall allows the flow with network rules (no SNAT to private destinations).
 - **One version at a time.** An internal application runs in one cell, so its clients see one version, apart from
   the few minutes of a rolling update, which the [compatibility rule](11-zero-downtime-application-upgrades.md)
@@ -257,7 +260,7 @@ Why not one common VNet?
 
 | | One VNet per cluster (recommended) | One VNet per environment | One frontend VNet for all stateless clusters + backend VNet |
 |---|---|---|---|
-| Frontend/backend separation (R9) | Separate VNets, only reachable through the hub Firewall | Lost – the Internet-less backend shares a VNet with the frontend, separated only by NSG/UDR | Kept |
+| Frontend/backend separation (R9) | Separate VNets, only reachable through the exposure's hub Firewall | Lost – the Internet-less backend shares a VNet with the frontend, separated only by NSG/UDR | Kept |
 | Change one cluster at a time (R12) | Yes – a VNet change (address space, DNS servers, VNet encryption, peering) affects one cluster, and a stateless cluster can be rebuilt with a fresh VNet | No – every VNet change hits all clusters at once | No for the stateless clusters – a VNet change hits all of them at once |
 | VNet settings per cluster type | VNet encryption on the stateless VNets only, other DNS/egress settings for the backend | One setting for all | Yes |
 | One prefix per zone | Yes – from the address plan below | Yes | Yes |
@@ -265,7 +268,8 @@ Why not one common VNet?
 
 The usual reason to share a VNet – one summarisable prefix per zone – is achieved by the address plan instead, so
 the separate VNets cost almost nothing. The only real cost is that each new zone is added to 3–4 VNets instead of 1.
-A VNet is never shared between the exposures in any case: it lives in the exposure's subscription.
+A VNet is never shared between the exposures in any case: it lives in the exposure's subscription and peers to the
+exposure's hub ([decision D53](decisions.md#decision-matrix)).
 
 **Address plan (example).** Every environment gets a `/12`, every country a `/16` of it, and every isolation zone
 a `/17` (internal first half, external second half). Inside a zone's `/17` the frontend (stateless clusters) uses the first `/18` and the stateful cluster the second `/18`, one `/20` each. That `/20` is added as an address space
@@ -316,6 +320,13 @@ If the corporate network cannot spare three `/12`s, the same structure works one
 country). The AKS service CIDR and the overlay pod CIDR of the stateless clusters must stay outside all of these
 prefixes and outside the on-premises ranges.
 
+**IPv6: reserved, not used** ([decision D54](decisions.md#decision-matrix)). Every environment also gets an IPv6 `/48`
+(`fd00:16::/48`, `fd00:32::/48`, `fd00:48::/48` as ULA examples; a corporate GUA block if the IPAM has one, [H02](decisions.md#human-sign-offs-still-needed)),
+every cell VNet a `/56` of it and every node subnet that may become dual stack a `/64` – the one size Azure allows
+for an IPv6 subnet. Nothing is assigned until an external cell is rebuilt dual stack; the IPv6 prefixes then appear
+only in the external cells' node subnets, their gateways' public frontends and the NSG rules – never in the
+Firewalls, the private endpoints or the internal and stateful clusters.
+
 ## Adding a country online
 
 A new country is two new zones. It is added cluster by cluster in the order
@@ -354,7 +365,7 @@ the full load of the environment (N+1). Only the stateful spoke has pod subnets.
 | Stateless zone *X* nodes (pod traffic SNATed by the overlay) | Stateful zone *X* application internal LBs | Application TLS port (e.g. TCP 443) | Same isolation zone only (`int-fi` → `int-fi`), via Firewall; TLS terminated by the application |
 | Stateless zone *X* nodes (pod traffic SNATed by the overlay) | Zone *X* PaaS private endpoints | TCP 443, 1433, 5432, 5671 | Same isolation zone only, via Firewall; TLS enforced by the PaaS service |
 | All nodes of the exposure | The exposure's ACR private endpoint | TCP 443 | Images, Helm charts, Flux OCI artifacts |
-| Internal clusters | External clusters, and the reverse | – | **Blocked** like any cross-zone flow (R5); a business flow goes through the target zone's entry point with an explicit Firewall rule ([D52](decisions.md#decision-matrix)) |
+| Internal clusters | External clusters, and the reverse | – | **Blocked**: no peering and no route between the two hubs ([D53](decisions.md#decision-matrix)). An internal caller reaches an external application through its public entry point like any Internet client; the reverse has no path ([D52](decisions.md#decision-matrix)) |
 | Stateful cluster | Frontend networks | – | **Blocked** – the backend never initiates connections to the frontend |
 | Stateful cluster | Internet | – | **Blocked** – no route, no outbound IP, Firewall deny-all |
 | Management VNet pipeline agents | Stateful API server (Private Link) | TCP 443 | Deployments to the stateful cluster ([section 10](10-keeping-clusters-in-sync.md)) |
@@ -379,7 +390,7 @@ each of these.
 | Shared component | Redundancy | If it fails | Effect on running traffic | Recovery |
 |---|---|---|---|---|
 | Azure Traffic Manager | Global DNS service, outside the region | DNS answers stop or go stale | Clients keep cached answers for the TTL; new clients cannot resolve external names | Microsoft; the per-cell host names still resolve through public DNS as a manual bypass |
-| Hub Azure Firewall | Zone-redundant | Egress from every cell and the corporate path to internal zones stop | External zones keep serving (their ingress does not pass the Firewall); workload identity token refresh and PaaS calls fail once cached tokens and connections expire | Microsoft; nothing in the cells changes |
+| Hub Azure Firewall (one per exposure, [D53](decisions.md#decision-matrix)) | Zone-redundant; the other exposure's Firewall is untouched | Egress from every cell of that exposure stops – and, for the internal Firewall, the corporate path to the internal zones | External zones keep serving (their ingress does not pass the Firewall); workload identity token refresh and PaaS calls fail once cached tokens and connections expire | Microsoft; nothing in the cells changes |
 | Hub Private DNS and resolvers | Zone-redundant service | Internal names and PaaS private endpoint names stop resolving for new connections | Cells keep established connections; Cilium's cached FQDN answers keep policies working until their TTL | Microsoft; IaC recreates the zones in a region recovery |
 | Microsoft Entra ID | Global, multi-region | No new workload identity tokens, no human sign-in | Pods keep running on tokens already issued (up to their lifetime); ESO keeps the `Secret`s it synced; new pods of workload-identity applications start but cannot call Azure until Entra ID returns | Microsoft; this is why secrets are delivered as `Secret`s and not fetched at start |
 | Azure Policy endpoints | Public endpoints, global | The add-on cannot fetch new assignments; admission keeps the constraints it has (fails closed on webhook errors as configured) | None for running pods; rollouts continue with the last synced policies, bootstrap of a new cell waits | Microsoft |

@@ -129,7 +129,7 @@ zone, and the rendered manifests against the same constraint templates as the cl
 
 Agents run as container jobs in the **management VNet** (management subscription), the same network as the pipeline
 agents; their only egress is the model endpoint (private endpoint), the Git platform and an allow-list of
-documentation sites, through the hub Firewall. Each agent has, **per environment, its own user-assigned managed
+documentation sites, through the internal hub's Firewall (the management VNet is peered to both hubs, [D53](decisions.md#decision-matrix)). Each agent has, **per environment, its own user-assigned managed
 identity** with workload identity federation (no client secrets) and its **own GitHub App** with short-lived
 installation tokens. The identities and their role assignments are IaC in the guardrails repository.
 

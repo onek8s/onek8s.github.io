@@ -92,7 +92,7 @@ incident runbook. No agent and no automation may start a region recovery
 environment in the paired region, prd first:
 
 1. **Bootstrap**: GitHub-hosted runners with OIDC federation to the environment subscriptions run the IaC with
-   `region=<pair>`. They create the hub, the management VNet with its pipeline agents, and the corporate
+   `region=<pair>`. They create the two hubs ([D53](decisions.md#decision-matrix)), the management VNet with its pipeline agents, and the corporate
    connectivity. For prd the ExpressRoute circuit (or VPN) in the paired region is **provisioned in advance** and only
    connected in the recovery, because ordering a circuit takes days that no prd RTO can absorb; dev and acc build
    theirs in the recovery ([decision D34](decisions.md#decision-matrix)). Once the agents are up, the pipelines run
@@ -113,7 +113,7 @@ environment in the paired region, prd first:
    applications unchanged. In dev and acc, CI builds the images of the commits that the fleet repository deploys,
    pushes them to the new ACR, and the release agent opens the pull request that moves the digests.
 7. **Traffic**: Traffic Manager is global and survives; the IaC points its endpoints at the new cells' external
-   gateways. The internal Private DNS zones are created in the new hub, and ExternalDNS fills them. Grafana Cloud
+   gateways. The internal Private DNS zones are created in the new internal hub, and ExternalDNS fills them. Grafana Cloud
    was outside the region, so the dashboards and alerts are already there.
 
 - **RTO** is measured, not assumed. It is the time of the rebuild drill below, and it is dominated by the database

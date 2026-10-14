@@ -23,8 +23,8 @@ Zone isolation works the same with both CNIs because every zone has its own node
 `NodePool` whose `AKSNodeClass` points at the zone's subnet, or AKS node pools in the stateful cluster): a packet from
 a stateless zone always carries an address of that zone's subnets.
 Every subnet has its own **NSG** (deny VNet-to-VNet by default) and each zone its own **route table** sending
-`0.0.0.0/0` *and the other zones' address spaces* to Azure Firewall, so any cross-zone packet that the NSG would allow
-is still inspected and denied by the firewall.
+`0.0.0.0/0` *and the other zones' address spaces* to the exposure's Azure Firewall ([decision D53](decisions.md#decision-matrix)),
+so any cross-zone packet that the NSG would allow is still inspected and denied by the firewall.
 
 Address spaces are an addressing tool, not an isolation boundary:
 
@@ -38,8 +38,8 @@ Address spaces are an addressing tool, not an isolation boundary:
 > **Why subnets and not separate VNets?** AKS requires all node pool subnets and the API server subnet of one
 > cluster to be in the same VNet. Within one cluster, "network per country" is therefore implemented as
 > *address space and subnets per zone + NSG + UDR via firewall*, which the security team accepts for countries.
-> Internal and external are not separated this way: they are separate clusters in separate subscriptions
-> ([decision D52](decisions.md#decision-matrix)), so the picture shows an internal cell; an external cell's VNet
+> Internal and external are not separated this way: they are separate clusters in separate subscriptions behind
+> separate hubs ([decisions D52, D53](decisions.md#decision-matrix)), so the picture shows an internal cell; an external cell's VNet
 > (`vnet-prd-ext-sl-az1`) is the same with `ext-fi` and `ext-se` from the external halves of the address plan.
 > Should a hard VNet boundary per country ever be required, the same step is taken once more – **one cluster per
 > zone** – and the address plan stays the same.
