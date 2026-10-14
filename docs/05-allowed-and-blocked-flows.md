@@ -12,7 +12,7 @@ Only the flows Kubernetes needs to function are allowed between a workload zone 
 | ④ | metrics-server (system pods) | Zone nodes | TCP 10250 | resource metrics |
 | ⑤ | The zone's External Secrets Operator (`<zone>-secrets` pods) | Own zone Key Vault PE | TCP 443 | application secrets; application pods never reach a Key Vault ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)) |
 | ⑤b | The zone's External Secrets Operator (`<zone>-secrets` pods) | Platform Key Vault PE in `snet-platform-pe` | TCP 443 | certificates for the zone gateways and TLS-terminating apps; Cilium policy allows only these pods, RBAC only their zone's certificates |
-| ⑥ | Zone nodes + pods | Azure Firewall | per FQDN | AKS required FQDNs, MCR, Entra ID (workload identity token exchange); pods only to the FQDNs of their application's egress policy |
+| ⑥ | Zone nodes + pods | The exposure's Azure Firewall ([D53](decisions.md#decision-matrix)) | per FQDN | AKS required FQDNs, MCR, Entra ID (workload identity token exchange); pods only to the FQDNs of their application's egress policy |
 | ⑥b | Zone nodes (Grafana Alloy of the node) | Grafana Cloud private endpoint in the hub, through the Firewall | TCP 443 | Metrics, logs and traces of the node's own pods; never over the Internet ([section 19](19-observability-with-grafana-cloud.md)) |
 | ⑦ | Zone nodes | All nodes | TCP 4240, ICMP | Cilium health (optional) |
 | – | AzureLoadBalancer | `snet-apiserver` | TCP 9988 | API server health probe |

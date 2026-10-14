@@ -104,12 +104,13 @@ Telemetry never goes over the Internet. This matters most for the stateful clust
 - The stacks are hosted on Azure, and Grafana Cloud accepts metrics, logs, traces and OTLP through
   **[Azure Private Link](https://grafana.com/docs/grafana-cloud/send-data/private-connectivity/azure-privatelink/)**.
   The ingest host names are shared by all stacks in the same Grafana Cloud region, so there is **one private
-  endpoint in the hub** (`snet-hub-pe`) for all environments. The stacks stay apart by tenant ID and token.
+  endpoint per hub** (`snet-hub-pe` of the internal and of the external hub, [D53](decisions.md#decision-matrix)) for
+  all environments of that exposure. The stacks stay apart by tenant ID and token.
 - **DNS**: for each ingest host name, the hub has a Private DNS zone named after the full host name (for example
   `prometheus-prod-<n>-prod-<region>.grafana.net`), with an apex A record pointing to the private endpoint. Only the
   ingest and query endpoints resolve privately. The Grafana UI (`<org>-<env>.grafana.net`) still resolves publicly.
-- **Firewall**: one network rule per environment, *all node subnets of the environment → Grafana private endpoint,
-  TCP 443*. The management VNet gets the same rule for the pipelines' SLO gate queries and the synthetic monitoring
+- **Firewall**: one network rule per environment and exposure on the exposure's Firewall, *all node subnets of the
+  environment's exposure → the hub's Grafana private endpoint, TCP 443*. The management VNet gets the same rule for the pipelines' SLO gate queries and the synthetic monitoring
   private probes. No Grafana FQDN is on any Internet allow-list.
 - **The stacks live outside the platform's region**: they are hosted in an Azure region other than the primary one
   (preferably the paired region of [section 20](20-backup-and-region-recovery.md)). The private endpoint reaches

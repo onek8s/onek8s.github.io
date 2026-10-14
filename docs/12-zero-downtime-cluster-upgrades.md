@@ -120,8 +120,10 @@ There is only one stateful cluster, so it is upgraded **in place** and protected
   the image maintainer to the running nodes in place where that is possible, and only for patches that cannot be
   applied live (kernel updates) reimages the nodes one at a time onto the patched image, both only inside the planned
   maintenance window (`aksManagedNodeOSUpgradeSchedule`), dev a week before acc and two weeks before prd, respecting
-  the surge settings and the PDBs. The channel is AKS-managed and supports network isolated clusters, so the
-  Internet-less cluster needs no package mirror and no reboot daemon. A node is reimaged with a whole new node image
+  the surge settings and the PDBs. The channel is AKS-managed and needs no package mirror and no reboot daemon in the
+  Internet-less cluster. Whether AKS accepts it on a network isolated cluster is still to be verified (V13): the network
+  isolated cluster documentation lists only `NodeImage` and `None`; if `SecurityPatch` is refused, the cluster takes
+  `NodeImage` inside the same window ([decision D10](decisions.md#decision-matrix)). A node is reimaged with a whole new node image
   only when AKS support requires it. Because these nodes live long, **Image Cleaner** (`--enable-image-cleaner`, daily) removes
   unused, vulnerable images from them. The stateless cells do not need it: their NAP nodes are replaced regularly
   (`expireAfter`, drift, cell rebuilds).

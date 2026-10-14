@@ -9,7 +9,8 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
 
 - **No service mesh, no mTLS, no TLS configuration in the applications.** Applications listen on plain HTTP inside the
   cluster. Traffic between pods on the same node never leaves the host; traffic between nodes is encrypted by
-  **Azure Virtual Network encryption**, enabled on every stateless spoke VNet (and the hub peering).
+  **Azure Virtual Network encryption**, enabled on every stateless spoke VNet (and the peering to its hub; Azure
+  Firewall Premium takes part in it, Standard does not – one reason the Firewalls are Premium, [D53](decisions.md#decision-matrix)).
   - Requires node VM sizes that support VNet encryption (accelerated networking); because the only enforcement mode is
     `AllowUnencrypted`, an unsupported VM size would silently send clear text. The allowed VM sizes are therefore
     enforced with Azure Policy – on the system pool's VM size and on the SKU requirements of the NAP `NodePool`s – and
