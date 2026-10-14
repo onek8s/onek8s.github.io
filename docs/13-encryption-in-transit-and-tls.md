@@ -48,6 +48,13 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
   - App Routing's own Key Vault (Secrets Store CSI) and DNS integration is not used: the certificate comes through
     ESO ([below](#certificates-issued-centrally-distributed-through-the-platform-key-vault)) and the DNS records from
     ExternalDNS.
+- **Traefik Proxy as the alternative implementation** ([D55](decisions.md#decision-matrix)). The cluster IaC chooses
+  per cluster (`gateway_implementation`): App Routing in acc and prd, **Traefik in the dev lab**, because istiod's
+  requests (1 CPU and 4 GiB per cell, not tunable – [Azure/AKS#5939](https://github.com/Azure/AKS/issues/5939)) cost
+  a lab cell a second system node. With Traefik each Gateway gets its own Traefik Deployment and `GatewayClass`
+  `traefik-<gateway>` on the system pool – no shared control plane, so a zone's gateway depends on nothing of another
+  zone's – reading its configuration and certificate from the API server. The Gateway, its listener on 443, its
+  certificate, the load balancer and the Cilium policies are the same for both, and so are the teams' `HTTPRoute`s.
 - **DNS names with Let's Encrypt certificates.** Each zone has its own DNS name space, e.g.
   `*.int-fi.prd.example.com`; an internal zone's names are resolved only by its Private DNS zone in the hub (split
   horizon: the name has no public A record), an external zone's are public. The zone's gateway serves the zone's wildcard
