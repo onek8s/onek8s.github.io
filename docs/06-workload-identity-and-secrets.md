@@ -57,6 +57,10 @@ cluster spoke. Inside a zone's vault, applications share the vault but are separ
 - Application pipelines get **Key Vault Secrets Officer** with the same prefix on
   `@Request[...secrets:name]` for `setSecret`; rotation is owned by the application team (expiry dates set, Event
   Grid `SecretNearExpiry` alerts).
+- The namespace's Entra ID groups ([section 7](07-application-multi-tenancy.md#who-may-work-in-a-namespace),
+  [decision D49](decisions.md#decision-matrix)) get what their Kubernetes role gets on `Secret`s: the `edit` and
+  `admin` groups **Key Vault Secrets Officer** under the same prefix conditions as the pipelines, the `view` group
+  **Key Vault Reader** – the names and attributes of the vault's secrets, never a value.
 
 Constraints to keep in mind: Key Vault ABAC is **preview**, supports **secrets only** (not keys/certificates
 operations) and only **vault name + secret name** attributes, and lowercase values. Therefore the secret naming
@@ -90,8 +94,9 @@ Azure Policy denies enabling it, its CRDs are not installed, and admission rejec
   a secret exception or a certificate. It is separate from the application's own identity and is federated (one
   credential per cluster, like above) to the ServiceAccount **`secrets-reader`** in the application's namespace. It
   is the only identity with a data-plane role on the zone vault, limited to the application's prefix by the ABAC
-  condition above. Application pods may not run as `secrets-reader` (Azure Policy), and the application teams'
-  Kubernetes RBAC does not include `serviceaccounts/token` – only the zone's ESO controller can obtain its token.
+  condition above. Application pods may not run as `secrets-reader` (Azure Policy). The teams' `edit` and `admin`
+  roles do include `serviceaccounts/token`, so their members could obtain its token – which gives them nothing they
+  do not already hold, since those groups manage the namespace's secrets in the vault themselves; no workload can.
 - **One `SecretStore` per application namespace**, generated from the onboarding by a platform preset: provider
   `azurekv`, `vaultUrl` of the own zone vault (and a second store for the platform vault where the application has
   a certificate, [section 13](13-encryption-in-transit-and-tls.md)), `authType: WorkloadIdentity` with
