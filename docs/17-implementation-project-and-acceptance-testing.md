@@ -61,6 +61,35 @@ Rules that keep the build tenant from drifting away from what will be deployed l
 | Connection readiness gate | Platform owner, security and network team approve connecting | Checklist [below](#connection-readiness-gate) complete |
 | 5. Corporate tenant | The same code deployed to the corporate landing zone: dev, then acc, then prd | Corporate integration tests in dev, application onboarding and user acceptance in acc |
 
+## Backlog, in priority order
+
+What is not built yet, as one list across the repositories (the status of what *is* built is in
+`onek8s/aks-terraform/CLAUDE.md` and `onek8s/azure-landing-zone/docs/design-mapping.md`). Order: first the security
+gaps of the running lab that are cheap to close, then what phase 2's exit criteria need, then the verifications of
+phase 3, last what only an external event triggers. **17 items** (2026-10-14).
+
+| # | Tier | Item | Why here | Repositories |
+|---|---|---|---|---|
+| 1 | A – now | Promote the remaining Azure Policy rules from audit to deny once Cluster status shows zero violations: pod security *restricted*, deployment safeguards, allowed images, automount, internal load balancers. Image Integrity stays audit while the add-on is preview; zone placement audits while aks-hello's lab patch exists | Phase 3 runs with every policy on deny; each promotion is one line after a status run ([section 14](14-policy-enforcement.md)) | azure-landing-zone (`policy.tfvars`) |
+| 2 | A – now | The external hub and its Azure Firewall in the landing zone's `firewall` mode: the cell's spoke peered to it, outbound type `userDefinedRouting`, the FQDN allow-lists, the firewall rules rewritten as a parent policy with a child per exposure and without the removed edge rules (D53, V22) | The lab enforces zone isolation with two of the three designed layers (NSG, Cilium); the Firewall is the third and the egress allow-list of R20 | azure-landing-zone, aks-terraform |
+| 3 | A – now | Private endpoints for the vaults and the ACR in the backend `snet-shared-pe`, public network access off | Every vault and the registry are reached over public endpoints today; a lab-only exposure the design never had | aks-terraform (`shared/`) |
+| 4 | A – now | Private API server with API Server VNet Integration, reached from the management VNet only; the R1 isolation test | The last lab exception of [section 3](03-control-plane.md); the public API server is accepted for prototyping only | aks-terraform, azure-landing-zone (management VNet) |
+| 5 | B – before acceptance | The version pipeline and NAP image pinning: target versions and images per cell from the update policy, applied cell by cell with the drain procedure (R12, R12a, V02, D11) | R12 has no automation yet; phase 2 exits only with a passing test per requirement | aks-ai-agents, aks-terraform, aks-fluxcd-platform |
+| 6 | B – before acceptance | Run the AI agents against the build tenant; derive their least-privilege roles and risk tiers from the logged actions (R18, [section 15](15-ai-driven-day-2-operations.md)) | Phase 2 exit criterion; phase 3 runs the agents on those identities | aks-ai-agents |
+| 7 | B – before acceptance | The internal exposure in the lab: `sub-aks-dev-int`, the internal hub (gateway-less, with the client VNet), one internal cell with `int-fi` and `int-se`, internal ExternalDNS and the migration workflow (D52, D53, V08) | Half of the design (internal zones, home cells, corporate path) has never run | azure-landing-zone, aks-terraform, aks-fluxcd-platform |
+| 8 | B – before acceptance | A second external cell running while the cross-cell tests run: Traffic Manager drain and failover, ExternalDNS record take-over, R13 sync between cells (V07, V08) | R11 and R13 are only half tested with one cell; the cell is destroyed again afterwards for cost | aks-terraform |
+| 9 | B – before acceptance | CIS follow-ups: External Secrets Operator's RBAC limited to its zone's namespaces (4.1.2, also R7's open point), network policies for the AKS add-on namespaces, restricted Pod Security for the gateway namespaces when App Routing allows it, an image vulnerability scan in the pipeline ([CIS benchmark](#cis-benchmark)) | Raises the score and closes the one cluster-wide Secret reader | aks-fluxcd-platform, aks-terraform |
+| 10 | B – before acceptance | Observability completed: OpenCost with a `metrics:read` token in the vault secret, Grafana Cloud through Private Link (V17), synthetic monitoring of the health routes and the SLO gates ([section 19](19-observability-with-grafana-cloud.md)) | Cost per team (D46) and the release and upgrade gates depend on it | aks-fluxcd-platform, aks-terraform |
+| 11 | B – before acceptance | Backups ([section 20](20-backup-and-region-recovery.md)): Key Vault key and secret backups, the immutable storage in the paired region, the PaaS backup pattern, one restore drill (V16) | The platform's keys and certificates exist only once today | aks-terraform |
+| 12 | B – before acceptance | CI checks of [section 14](14-policy-enforcement.md) on rendered manifests (a PDB and a VPA for every Deployment, egress names against the zone's allow-list) in the fleet and example repositories | Finds at review time what admission denies at deploy time; cheap | aks-fluxcd-platform, aks-fluxcd-example |
+| 13 | C – phase 3 | The verifications still open: VPA in-place resize (V09), VNet encryption on every allowed VM family (V21), Inspektor Gadget and Image Cleaner (V19), Chaos Studio faults (V18); the performance, HA, upgrade and recovery tests of this section | Acceptance itself | all |
+| 14 | C – phase 3 / 4 | Penetration test and independent security review ([security reviews](#security-reviews)) | Phase 4 exit criterion | – |
+| 15 | D – on trigger | The stateful cluster, only with the first approved exception; first thing to verify there is the node OS channel (V13: `SecurityPatch` or `NodeImage`) | Not built until needed by design (R8) | aks-terraform (`envs/dev-ext-stateful.tfvars`), aks-fluxcd-platform |
+| 16 | D – on trigger | Application Gateway WAF v2 per external zone and cell, if the security team asks for it (H03, D04) | A sign-off, not a platform decision | aks-terraform |
+| 17 | D – on trigger | Image promotion tests between registries, with the acc environment | dev has one registry; the promotion path exists only from acc on | aks-terraform |
+
+Not on the list by decision: GPU nodes in the lab (D42, the user runs none), IPv6 (D54), AKS cost analysis (D46).
+
 Phases 3 and 4 run on the same dev environment and overlap in time; any finding sends the change back to phase 2 and
 the affected tests are run again. The requirement tests of phase 2 stay in the pipelines and run after every
 platform change for the rest of the platform's life.
