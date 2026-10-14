@@ -60,17 +60,55 @@ cluster spoke. Inside a zone's vault, applications share the vault but are separ
 - The namespace's Entra ID groups ([section 7](07-application-multi-tenancy.md#who-may-work-in-a-namespace),
   [decision D49](decisions.md#decision-matrix)) get what their Kubernetes role gets on `Secret`s: the `edit` and
   `admin` groups **Key Vault Secrets Officer** under the same prefix conditions as the pipelines, the `view` group
-  **Key Vault Reader** – the names and attributes of the vault's secrets, never a value.
+  nothing.
+- The **platform viewers** ([section 7](07-application-multi-tenancy.md#platform-viewers),
+  [decision D50](decisions.md#decision-matrix)) list every secret's name and attributes, never a value.
 
 Constraints to keep in mind: Key Vault ABAC is **preview**, supports **secrets only** (not keys/certificates
 operations) and only **vault name + secret name** attributes, and lowercase values. Therefore the secret naming
-convention `<app>-<secret>` is mandatory and must be enforced by the platform. A name condition on
-`readMetadata` breaks list calls – gate `getSecret` instead. Because most applications need no secrets at all, the
+convention `<app>-<secret>` is mandatory and must be enforced by the platform. The conditions gate `readMetadata`
+as well as `getSecret`, which refuses every list call – deliberately, see *Soft multi-tenancy* below. Because most applications need no secrets at all, the
 vault stays small and the preview dependency affects only the few exceptions. ABAC is also not the only boundary
 between two applications of a zone: each has its own reader identity, its own `SecretStore`, and admission rejects
 an `ExternalSecret` that names another application's prefix ([section 14](14-policy-enforcement.md)), so a change in
 the preview cannot open a path on its own. The fallback, one vault per application with a secret exception, is a
 per-application flag in the environment IaC module ([decision D15](decisions.md#decision-matrix)).
+
+### Soft multi-tenancy
+
+A zone's applications share one vault, and the separation between them is in the data plane, not in the resource:
+this is **soft multi-tenancy**. What each tenant – a namespace, its identity and its groups – can do:
+
+| | Own secrets (`<namespace>--*`) | Another namespace's secrets | Secret names of the vault |
+|---|---|---|---|
+| Namespace identity (External Secrets Operator) | Read value and metadata, by name | Refused | Refused (no listing) |
+| `edit` / `admin` group | Create, read, change, delete, recover, purge, by name | Refused | Refused (no listing) |
+| `view` group | – | – | – |
+| Platform viewers | – (no value) | – (no value) | Listed, with attributes |
+
+The conditions cover `readMetadata` too, and Key Vault evaluates a condition on a list call against the whole
+collection, which has no name, so **no tenant can list the vault**: each works with its own secrets by name, which
+is all External Secrets Operator does, and nobody can create a secret outside the naming convention (the condition
+on a new secret is on the name in the request). Tools that browse the vault – the Azure portal among them – are for
+the platform viewers, whose role lists every name; so names must never carry secrets. The isolation tests sign in
+as a member of each group and as the namespace's identity and check every row of the table
+([section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests)). The hard
+alternative – one vault per namespace – stays a per-namespace option ([decision D15](decisions.md#decision-matrix)).
+
+**The same pattern applies to other shared PaaS services**: one instance per zone (or environment), a data-plane
+role per namespace scoped below the instance, the namespace's workload identity and groups as the only principals,
+and the names of other tenants' objects visible at most to the platform viewers:
+
+| Service | Shared instance | Per-namespace scope | How the namespace's principals are held to it |
+|---|---|---|---|
+| Azure Database for PostgreSQL flexible server | Server per zone | Database `<namespace>` (or schema) | Entra ID roles for the workload identity and groups (`pgaadauth_create_principal`), `GRANT` on its own database only, `REVOKE CONNECT ... FROM PUBLIC` on every database; other databases' names stay visible in `pg_database` |
+| Azure Cosmos DB | Account per zone | Database `<namespace>` | Cosmos DB data-plane role assignments scoped to `/dbs/<namespace>` (built-in or custom roles), local (key) auth disabled |
+| Azure Storage | Account per zone | Container `<namespace>` | Storage Blob Data roles assigned on the container, or ABAC conditions on the container name |
+| Azure Service Bus / Event Hubs | Namespace per zone | Queue, topic or event hub `<namespace>-*` | Data Sender/Receiver roles assigned on the entity |
+| Azure SQL Database | Logical server per zone | Database `<namespace>` | Contained Entra ID users per database |
+
+Where a service cannot scope its data plane below the instance, or a tenant needs its own keys, network or
+performance isolation, the namespace gets its own instance – hard multi-tenancy, a decision per onboarding.
 
 ## Delivered only by External Secrets Operator
 
