@@ -12,7 +12,7 @@ The design has chosen a default for each and is built on it; the named role conf
 
 | # | Who | What |
 |---|---|---|
-| H01 | Compliance, security | Country separation inside one cluster, or a hard VNet boundary per country ([D01](decisions.md#decision-matrix)) |
+| H01 | Compliance, security | Country separation inside one cluster, or separate clusters per exposure, country or zone ([D01](decisions.md#decision-matrix); the explanation and the questions to answer in [Isolation explained](isolation-explained.md)) |
 | H02 | Network team | The platform's prefixes in the corporate IPAM: a `/12` per environment or a `/17` per country, reserved already for the build tenant ([D02](decisions.md#decision-matrix)) |
 | H03 | Security team | No WAF for the external zones at launch, or Application Gateway WAF v2 per zone and cell; ownership of the pre-approved Internet FQDN catalogue ([D04](decisions.md#decision-matrix), [D28](decisions.md#decision-matrix)) |
 | H04 | Business, application owners | Availability, latency, error budget, failover and recovery targets; RPO and RTO per data store and environment; the internal recovery time ([D44](decisions.md#decision-matrix), [D07](decisions.md#decision-matrix)) |

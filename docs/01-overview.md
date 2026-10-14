@@ -15,4 +15,4 @@ in a stateless cluster – the stateful cluster is never reached from outside th
 
 ---
 
-[Back to contents](../README.md) · Previous: [Requirements](requirements.md) · Next: [2. Network layout](02-network-layout.md)
+[Back to contents](../README.md) · Previous: [Isolation explained](isolation-explained.md) · Next: [2. Network layout](02-network-layout.md)

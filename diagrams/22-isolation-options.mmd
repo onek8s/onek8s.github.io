@@ -1,0 +1,94 @@
+%% Isolation options for ONE cell (one availability zone of one environment): where the cluster boundary
+%% (control plane, system pool, VNet, admin, audit log, version) sits relative to the four isolation zones.
+%% Every zone keeps its own subnets, nodes, gateway, Key Vault, identities and certificate in every option,
+%% and the shared tier of the environment is the same in every option.
+%%{init: {"flowchart": {"wrappingWidth": 1100}}}%%
+flowchart LR
+    subgraph S["<b>Shared tier – the same in every option</b> (per environment, not per cluster)"]
+        direction LR
+        s1["Hub: Azure Firewall,<br/>Private DNS, Traffic Manager"]:::hub
+        s2["Entra ID: workload identities,<br/>groups, PIM break-glass"]:::id
+        s3["Key Vault per zone (secrets) ·<br/>platform Key Vault (certificates, keys)"]:::paas
+        s4["PaaS per zone · ACR ·<br/>backups per zone"]:::paas
+        s5["Grafana Cloud stack,<br/>audit log workspace, Git"]:::paas
+    end
+
+    subgraph N[" "]
+        note["Each cluster box has its own API server and database (one KMS key), system pool, VNet, Kubernetes version, cluster admin and audit log.<br/>Each zone box has its own subnets, nodes, gateway, namespaces, Key Vault, identities, certificate, PaaS and backups – the same in A, B, C and D."]:::note
+    end
+
+    subgraph D["<b>D · Cluster per zone</b> · 4 per cell, +2 per country · 28 (40)"]
+        direction LR
+        subgraph D1["aks-prd-int-fi-az1"]
+            d1["int-fi"]:::int
+        end
+        subgraph D2["aks-prd-int-se-az1"]
+            d2["int-se"]:::int
+        end
+        subgraph D3["aks-prd-ext-fi-az1"]
+            d3["ext-fi"]:::ext
+        end
+        subgraph D4["aks-prd-ext-se-az1"]
+            d4["ext-se"]:::ext
+        end
+    end
+
+    subgraph C["<b>C · Cluster per country</b> · 2 per cell, +1 per country · 14 (20)"]
+        direction LR
+        subgraph C1["aks-prd-fi-az1"]
+            direction LR
+            c1["int-fi"]:::int
+            c3["ext-fi"]:::ext
+        end
+        subgraph C2["aks-prd-se-az1"]
+            direction LR
+            c2["int-se"]:::int
+            c4["ext-se"]:::ext
+        end
+    end
+
+    subgraph B["<b>B · Cluster per exposure</b> · 2 per cell · 14 (20)"]
+        direction LR
+        subgraph B1["aks-prd-int-az1"]
+            direction LR
+            b1["int-fi"]:::int
+            b2["int-se"]:::int
+        end
+        subgraph B2["aks-prd-ext-az1"]
+            direction LR
+            b3["ext-fi"]:::ext
+            b4["ext-se"]:::ext
+        end
+    end
+
+    subgraph A["<b>A · Today (D01)</b> · one cluster per cell · 7 stateless clusters (10 with stateful)"]
+        direction LR
+        subgraph A1["aks-prd-sl-az1 · one control plane, system pool, VNet"]
+            direction LR
+            a1["int-fi"]:::int
+            a2["int-se"]:::int
+            a3["ext-fi"]:::ext
+            a4["ext-se"]:::ext
+        end
+    end
+
+    a1 ~~~ a2 ~~~ a3 ~~~ a4
+    b1 ~~~ b2
+    b3 ~~~ b4
+    B1 ~~~ B2
+    c1 ~~~ c3
+    c2 ~~~ c4
+    C1 ~~~ C2
+    D1 ~~~ D2 ~~~ D3 ~~~ D4
+    s1 ~~~ s2 ~~~ s3 ~~~ s4 ~~~ s5
+
+    classDef int fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef id fill:#e8f5e9,stroke:#2e7d32,color:#000
+    classDef paas fill:#eceff1,stroke:#455a64,color:#000
+    classDef note fill:#fffde7,stroke:#f9a825,color:#000
+    classDef blank fill:#ffffff,stroke:#ffffff,color:#ffffff
+    class N blank
+    classDef cluster fill:#e0f2f1,stroke:#00695c,color:#000
+    class A1,B1,B2,C1,C2,D1,D2,D3,D4 cluster

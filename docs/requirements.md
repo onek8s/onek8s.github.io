@@ -92,8 +92,10 @@ already the partition key: a country gets its own set of cells (`aks-<env>-fi-az
 with its own Traffic Manager profiles, Private DNS zones and fleet tags. The address plan does not change (the
 country's `/16` already summarises its zones), nor do the applications, their manifests or the policies; what
 changes is the cluster IaC loop and the release train, which then runs per country. Nothing in the design has to be
-undone for that, which is why it is not built now ([decision D01](decisions.md#decision-matrix)).
+undone for that, which is why it is not built now ([decision D01](decisions.md#decision-matrix)). What this and
+the other cluster splits change, and what stays shared, is explained for security reviewers in
+[Isolation explained](isolation-explained.md#what-changes-with-separate-clusters).
 
 ---
 
-[Back to contents](../README.md) · Next: [1. Overview](01-overview.md)
+[Back to contents](../README.md) · Next: [Isolation explained](isolation-explained.md)

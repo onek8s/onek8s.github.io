@@ -33,6 +33,11 @@ paired region**, and the clusters are rebuilt there from IaC and Git.
 Picture 21 shows what makes the platform portable: what is the same in every cloud, the thin layer of cloud
 adapters, and the PaaS services every cloud offers.
 
+[Isolation explained](docs/isolation-explained.md) is written for security reviewers who do not work with Kubernetes:
+how the internal / external and country separation works inside one cluster, which hardening rules make it hold,
+what one cluster still shares, and what would change with separate clusters per exposure, per country or per zone
+(sign-off H01).
+
 > Status: **draft** for review. Country codes `fi` / `se` and all IP ranges are examples.
 
 ## Repositories
@@ -50,6 +55,7 @@ adapters, and the PaaS services every cloud offers.
 ## Contents
 
 - [Requirements](docs/requirements.md)
+- [Isolation explained: zones inside one cluster, or a cluster per zone](docs/isolation-explained.md)
 - [1. Overview](docs/01-overview.md)
 - [2. Network layout](docs/02-network-layout.md)
 - [3. Control plane](docs/03-control-plane.md)

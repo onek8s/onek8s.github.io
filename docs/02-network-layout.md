@@ -39,7 +39,8 @@ Address spaces are an addressing tool, not an isolation boundary:
 > cluster to be in the same VNet. Within one cluster, "network per type" is therefore implemented as
 > *address space and subnets per type + NSG + UDR via firewall*. If a hard VNet boundary per country is required
 > (e.g. regulatory), switch to **one cluster per zone** – the pictures stay the same except that each zone becomes
-> its own spoke, and the address plan stays the same.
+> its own spoke, and the address plan stays the same. What such a split changes and what it does not, per exposure,
+> per country or per zone, is explained in [Isolation explained](isolation-explained.md#what-changes-with-separate-clusters).
 
 ---
 

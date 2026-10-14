@@ -49,7 +49,9 @@ A compromised application pod therefore reaches its own namespace, its own zone'
 own PaaS resources, and nothing else; a compromised ESO controller reaches one zone's secrets; a compromised
 cluster administrator reaches one cell. Country separation inside one cluster rests on these controls, not on a
 separate control plane; whether that is enough for the regulation the organisation is under is a sign-off
-([decision D01](decisions.md#decision-matrix)).
+([decision D01](decisions.md#decision-matrix)). [Isolation explained](isolation-explained.md) walks a security
+reviewer through these controls, what one cluster still shares, and what separate clusters per exposure, country
+or zone would change.
 
 ---
 
