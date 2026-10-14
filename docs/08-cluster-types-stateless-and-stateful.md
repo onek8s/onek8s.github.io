@@ -35,10 +35,10 @@ stateful cluster runs, the smaller its blast radius and upgrade risk.
 | | Stateless (`aks-<env>-sl-az<N>`) | Stateful (`aks-<env>-sf`) |
 |---|---|---|
 | Runs | Frontends, APIs, workers – anything that can be killed and recreated; state in Azure PaaS | Only approved exceptions: workloads that own data on disks (StatefulSets, operators) for which no PaaS service fits |
-| Count per environment | One per availability zone: `sl-az1`, `sl-az2` in dev and acc; `sl-az1`, `sl-az2`, `sl-az3` in prd ([section 9](09-environments.md), [decision D08](decisions.md#decision-matrix)) | Zero or one – built only when the first approved workload needs it |
+| Count per environment | Per exposure (`int`, `ext`) one per availability zone: `sl-az1`, `sl-az2` in dev and acc; `sl-az1`, `sl-az2`, `sl-az3` in prd ([section 9](09-environments.md), [decisions D08, D52](decisions.md#decision-matrix)) | Zero or one per exposure – built only when the first approved workload of that exposure needs it |
 | Availability zones | All nodes of a cluster in its AZ (system pool `--zones <N>`, NAP `NodePool`s by zone requirement); the cluster is the unit of failure | Every isolation zone has one node pool per AZ (`intfiz1`, `intfiz2`, `intfiz3`, …); system pool spread over AZ 1–3 |
 | Nodes | [Node auto provisioning](https://learn.microsoft.com/en-us/azure/aks/node-autoprovision): one Karpenter `NodePool` per isolation zone, VM size chosen per workload ([section 4](04-node-pools.md)) | Classic AKS node pools with a fixed VM size and node count |
-| Network | Frontend spoke `vnet-<env>-sl-az<N>`, peered to the hub | Backend spoke `vnet-<env>-sf`, peered to the hub, together with the PaaS private endpoints |
+| Network | Frontend spoke `vnet-<env>-<exposure>-sl-az<N>` in the exposure's subscription, peered to the hub | Backend spoke `vnet-<env>-<exposure>-sf` in the exposure's subscription, peered to the hub, together with the PaaS private endpoints |
 | Internet | Egress only via Azure Firewall FQDN allow-list (outbound type `userDefinedRouting`); inbound only via the traffic layer | **None.** [Network isolated cluster](https://learn.microsoft.com/en-us/azure/aks/concepts-network-isolated) (outbound type `none`, bootstrap artifacts from the private ACR cache), no public IPs, UDR `0.0.0.0/0` → Firewall which denies all Internet for backend prefixes |
 | CNI | [Azure CNI Overlay](https://learn.microsoft.com/en-us/azure/aks/concepts-network-azure-cni-overlay) powered by Cilium | Azure CNI (VNet-integrated, dynamic pod IP allocation) powered by Cilium |
 | Advanced networking | ACNS with eBPF host routing and FQDN egress policies ([section 16](16-advanced-networking-and-fqdn-egress.md)) | Same |
@@ -51,11 +51,33 @@ stateful cluster runs, the smaller its blast radius and upgrade risk.
 | Storage | None – admission policy rejects PersistentVolumeClaims; ephemeral OS disks | Azure Disk `Premium_ZRS` / `StandardSSD_ZRS`, Azure Files ZRS, through per-zone StorageClasses encrypted with the zone's own key ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)); prefer PaaS for databases |
 | Upgrade model | Drain from traffic, upgrade or rebuild, return ([picture 11](12-zero-downtime-cluster-upgrades.md#stateless-clusters)) | In place, one AZ at a time, PDB-protected ([picture 12](12-zero-downtime-cluster-upgrades.md#stateful-cluster)) |
 
-**Isolation zones are kept in both cluster types.** Each stateless and the stateful cluster have the nodes,
-subnets, Key Vaults and policies of zones `int-fi`, `int-se`, `ext-fi`, `ext-se` exactly as in pictures 2–7 – the data
-in the stateful cluster is what needs the country separation most. The stateful cluster has no Gateway API (and no Ingress) at all: each
-zone's applications are reachable only on their own internal load balancer IPs, and only from the same zone of the
-stateless clusters.
+**Isolation zones are kept in both cluster types.** Each stateless and stateful cluster has the nodes, subnets, Key
+Vaults and policies of the zones of its exposure – `int-fi` and `int-se` in an internal cluster, `ext-fi` and `ext-se`
+in an external one – exactly as in pictures 2–7; the data in the stateful cluster is what needs the country
+separation most. The stateful cluster has no Gateway API (and no Ingress) at all: each zone's applications are
+reachable only on their own internal load balancer IPs, and only from the same zone of the stateless clusters.
+
+## Internal and external: separate subscriptions and clusters
+
+Internal and external workloads never share a cluster or a subscription ([decision D52](decisions.md#decision-matrix),
+the security team's decision). Countries are separated one level lower, inside a cluster, by node pool and network:
+
+| Separation | Internal ↔ external (exposure) | Country ↔ country (`fi`, `se`, …) |
+|---|---|---|
+| Boundary | **Subscription and cluster**: `sub-aks-<env>-int` and `sub-aks-<env>-ext`, each with its own cells and optional stateful cluster | **Isolation zone** inside the clusters of one exposure |
+| Control plane, system pool, admission, Flux, App Routing's istiod | Separate | Shared by the exposure's zones |
+| Nodes and network | Separate spoke VNets (the hub Firewall between them) | Own NAP `NodePool`s / node pools, own address space, subnets, NSGs and route tables |
+| Key Vaults | Separate platform vaults (`kv-<env>-int-platform`, `kv-<env>-ext-platform`: certificates, the clusters' keys) and zone vaults | Own zone vault (`kv-<env>-<zone>`) |
+| Azure RBAC, Azure Policy, budget, quota | Per subscription | Per zone where it matters (namespaces, ABAC, policy mutations) |
+| ACR | One per exposure subscription, fed by the same promotion pipeline | Shared |
+| Entry points | External: Traffic Manager and public load balancers, only in the external subscription. Internal: hub Private DNS and internal load balancers, only in the internal one | One profile / Private DNS zone per zone |
+
+So an external cluster – the one the Internet reaches – has no internal zone, no internal identity, no role on an
+internal vault and no route to an internal subnet that the hub Firewall would not deny; a compromise of its control
+plane, nodes or subscription does not reach the internal workloads. Traffic between the two exposures is like traffic
+between two zones (R5): denied, and only possible through the target's entry point with an explicit Firewall rule.
+What the two keep in common is the source – the same IaC modules with the exposure as a parameter, the same fleet
+repository with a directory per cluster – and the hub, Entra ID, GitHub and the environment's Grafana Cloud stack.
 
 ## Incoming traffic: from outside and from inside
 
@@ -239,15 +261,18 @@ Why not one common VNet?
 | Change one cluster at a time (R12) | Yes – a VNet change (address space, DNS servers, VNet encryption, peering) affects one cluster, and a stateless cluster can be rebuilt with a fresh VNet | No – every VNet change hits all clusters at once | No for the stateless clusters – a VNet change hits all of them at once |
 | VNet settings per cluster type | VNet encryption on the stateless VNets only, other DNS/egress settings for the backend | One setting for all | Yes |
 | One prefix per zone | Yes – from the address plan below | Yes | Yes |
-| Extra cost | 3–4 hub peerings per environment; the address space of a new zone is added in each cluster VNet (an IaC loop) | – | – |
+| Extra cost | 3–4 hub peerings per environment and exposure; the address space of a new zone is added in each cluster VNet of its exposure (an IaC loop) | – | – |
 
 The usual reason to share a VNet – one summarisable prefix per zone – is achieved by the address plan instead, so
 the separate VNets cost almost nothing. The only real cost is that each new zone is added to 3–4 VNets instead of 1.
+A VNet is never shared between the exposures in any case: it lives in the exposure's subscription.
 
 **Address plan (example).** Every environment gets a `/12`, every country a `/16` of it, and every isolation zone
 a `/17` (internal first half, external second half). Inside a zone's `/17` the frontend (stateless clusters) uses the first `/18` and the stateful cluster the second `/18`, one `/20` each. That `/20` is added as an address space
 to the cluster's VNet, and inside it the subnet layout of [picture 2](02-network-layout.md) is reused. The platform
-`/16` holds the control plane zone of every cluster in the same way.
+`/16` holds the control plane zone of every cluster in the same way: the internal clusters' in its first `/17`, the
+external clusters' in its second. The internal/external halves of every country's `/16` therefore also are the two
+exposures' halves, which only ever appear in the VNets of their own subscription.
 
 | Prefix | dev `10.16.0.0/12` | acc `10.32.0.0/12` | prd `10.48.0.0/12` |
 |---|---|---|---|
@@ -260,20 +285,20 @@ Layout of one zone, prd `int-fi` `10.49.0.0/17` (`ext-fi` is the same from `10.4
 
 | `/20` | Use | Address space of VNet |
 |---|---|---|
-| `10.49.0.0/20` | `int-fi` in `sl-az1` | `vnet-prd-sl-az1` |
-| `10.49.16.0/20` | `int-fi` in `sl-az2` | `vnet-prd-sl-az2` |
-| `10.49.32.0/20` | `int-fi` in `sl-az3` (optional) | `vnet-prd-sl-az3` |
+| `10.49.0.0/20` | `int-fi` in `sl-az1` | `vnet-prd-int-sl-az1` |
+| `10.49.16.0/20` | `int-fi` in `sl-az2` | `vnet-prd-int-sl-az2` |
+| `10.49.32.0/20` | `int-fi` in `sl-az3` (optional) | `vnet-prd-int-sl-az3` |
 | `10.49.48.0/20` | Reserve (e.g. a fourth cell or a side-by-side rebuild) | – |
-| `10.49.64.0/20` | `int-fi` in the stateful cluster | `vnet-prd-sf` |
-| `10.49.80.0/20` – `10.49.112.0/20` | Reserve: more pod IPs for the stateful cluster (added as another address space) | `vnet-prd-sf` |
+| `10.49.64.0/20` | `int-fi` in the stateful cluster | `vnet-prd-int-sf` |
+| `10.49.80.0/20` – `10.49.112.0/20` | Reserve: more pod IPs for the stateful cluster (added as another address space) | `vnet-prd-int-sf` |
 
 A stateless cluster that is rebuilt with a fresh VNet reuses its own `/20`s: it is drained first, so the old cluster
 and VNet are deleted before the new ones are created (the other clusters carry the load, N+1). In dev and acc, which
 have no `sl-az3`, that slot can host a side-by-side rebuild instead.
 
-So `vnet-prd-sl-az1` has the address spaces `10.48.0.0/20` (control plane), `10.49.0.0/20` (`int-fi`),
-`10.49.128.0/20` (`ext-fi`), `10.50.0.0/20` (`int-se`) and `10.50.128.0/20` (`ext-se`). The prefixes summarise in
-the way the rules are written:
+So `vnet-prd-int-sl-az1` has the address spaces `10.48.0.0/20` (control plane), `10.49.0.0/20` (`int-fi`) and
+`10.50.0.0/20` (`int-se`); `vnet-prd-ext-sl-az1`, in the external subscription, `10.48.128.0/20` (control plane),
+`10.49.128.0/20` (`ext-fi`) and `10.50.128.0/20` (`ext-se`). The prefixes summarise in the way the rules are written:
 
 | Rule scope | prd prefix |
 |---|---|
@@ -328,7 +353,8 @@ the full load of the environment (N+1). Only the stateful spoke has pod subnets.
 |---|---|---|---|
 | Stateless zone *X* nodes (pod traffic SNATed by the overlay) | Stateful zone *X* application internal LBs | Application TLS port (e.g. TCP 443) | Same isolation zone only (`int-fi` → `int-fi`), via Firewall; TLS terminated by the application |
 | Stateless zone *X* nodes (pod traffic SNATed by the overlay) | Zone *X* PaaS private endpoints | TCP 443, 1433, 5432, 5671 | Same isolation zone only, via Firewall; TLS enforced by the PaaS service |
-| All nodes of the environment | ACR private endpoint | TCP 443 | Images, Helm charts, Flux OCI artifacts |
+| All nodes of the exposure | The exposure's ACR private endpoint | TCP 443 | Images, Helm charts, Flux OCI artifacts |
+| Internal clusters | External clusters, and the reverse | – | **Blocked** like any cross-zone flow (R5); a business flow goes through the target zone's entry point with an explicit Firewall rule ([D52](decisions.md#decision-matrix)) |
 | Stateful cluster | Frontend networks | – | **Blocked** – the backend never initiates connections to the frontend |
 | Stateful cluster | Internet | – | **Blocked** – no route, no outbound IP, Firewall deny-all |
 | Management VNet pipeline agents | Stateful API server (Private Link) | TCP 443 | Deployments to the stateful cluster ([section 10](10-keeping-clusters-in-sync.md)) |
@@ -366,4 +392,4 @@ each of these.
 
 ---
 
-[Back to contents](../README.md) · Previous: [7. Application multi-tenancy inside a zone](07-application-multi-tenancy.md) · Next: [9. Environments (six to nine clusters)](09-environments.md)
+[Back to contents](../README.md) · Previous: [7. Application multi-tenancy inside a zone](07-application-multi-tenancy.md) · Next: [9. Environments (fourteen to twenty clusters)](09-environments.md)

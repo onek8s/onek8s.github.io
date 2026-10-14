@@ -6,8 +6,9 @@ upgrades it, and the policies are ordinary Azure Policy definitions and assignme
 Azure resources (cluster settings, allowed VM sizes, VNet encryption, local auth disabled, private endpoints only).
 No Gatekeeper is installed by Flux.
 
-- **Assignments per environment subscription** (`sub-aks-dev`, `sub-aks-acc`, `sub-aks-prd`), so a new or rebuilt
-  cluster gets every policy automatically. Compliance of all clusters is visible in one place (Azure Policy, Defender
+- **Assignments per environment and exposure subscription** (`sub-aks-dev-int`, `sub-aks-dev-ext`, … `sub-aks-prd-ext`),
+  so a new or rebuilt cluster gets every policy automatically; the zone mutations and validations of a subscription
+  are made for its exposure's zones only ([decision D52](decisions.md#decision-matrix)). Compliance of all clusters is visible in one place (Azure Policy, Defender
   for Cloud).
 - **Built-in definitions first**: the Kubernetes pod security *restricted* initiative, allowed images, required
   probes and resource requests, and [deployment safeguards](https://learn.microsoft.com/en-us/azure/aks/deployment-safeguards).

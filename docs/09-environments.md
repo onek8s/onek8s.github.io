@@ -1,16 +1,30 @@
-# 9. Environments (six to nine clusters)
+# 9. Environments (fourteen to twenty clusters)
 
 ![Environments](../images/09-environments.svg)
 
-| Environment | Subscription | Stateless | Stateful | Clusters |
-|---|---|---|---|---|
-| dev | `sub-aks-dev` | `aks-dev-sl-az1`, `aks-dev-sl-az2` | (`aks-dev-sf`) | 2 (3) |
-| acc | `sub-aks-acc` | `aks-acc-sl-az1`, `aks-acc-sl-az2` | (`aks-acc-sf`) | 2 (3) |
-| prd | `sub-aks-prd` | `aks-prd-sl-az1`, `aks-prd-sl-az2`, `aks-prd-sl-az3` | (`aks-prd-sf`) | 3 (4) |
+Every environment has **two subscriptions, one per exposure** ([decision D52](decisions.md#decision-matrix),
+[section 8](08-cluster-types-stateless-and-stateful.md#internal-and-external-separate-subscriptions-and-clusters)),
+and each has its own cells and optional stateful cluster with the zones of that exposure:
 
-**Seven clusters**, ten with the stateful cluster. dev and acc must have the *same topology* as prd (at least two
-stateless clusters, and a three-AZ stateful cluster if prd has one), otherwise the upgrade procedures cannot be
-rehearsed there; they can use lower NAP `NodePool` limits and smaller stateful node pools.
+| Environment | Exposure | Subscription | Stateless | Stateful | Clusters |
+|---|---|---|---|---|---|
+| dev | internal | `sub-aks-dev-int` | `aks-dev-int-sl-az1`, `aks-dev-int-sl-az2` | (`aks-dev-int-sf`) | 2 (3) |
+| dev | external | `sub-aks-dev-ext` | `aks-dev-ext-sl-az1`, `aks-dev-ext-sl-az2` | (`aks-dev-ext-sf`) | 2 (3) |
+| acc | internal | `sub-aks-acc-int` | `aks-acc-int-sl-az1`, `aks-acc-int-sl-az2` | (`aks-acc-int-sf`) | 2 (3) |
+| acc | external | `sub-aks-acc-ext` | `aks-acc-ext-sl-az1`, `aks-acc-ext-sl-az2` | (`aks-acc-ext-sf`) | 2 (3) |
+| prd | internal | `sub-aks-prd-int` | `aks-prd-int-sl-az1`, `aks-prd-int-sl-az2`, `aks-prd-int-sl-az3` | (`aks-prd-int-sf`) | 3 (4) |
+| prd | external | `sub-aks-prd-ext` | `aks-prd-ext-sl-az1`, `aks-prd-ext-sl-az2`, `aks-prd-ext-sl-az3` | (`aks-prd-ext-sf`) | 3 (4) |
+
+**Fourteen clusters**, twenty with every stateful cluster. Where this document says `aks-<env>-sl-az<N>` or
+`aks-<env>-sf` without an exposure, it means the cell or stateful cluster of either exposure: everything per cell is
+the same in both. dev and acc must have the *same topology* as prd per exposure (at least two stateless clusters, and
+a three-AZ stateful cluster if prd has one), otherwise the upgrade procedures cannot be rehearsed there; they can use
+lower NAP `NodePool` limits and smaller stateful node pools.
+
+> **The build tenant's dev lab** runs one cell only, `aks-dev-ext-sl-az1` (in the implementation
+> `aks-dev-ext-stateless-az1`), in `sub-aks-dev`, which plays the role of `sub-aks-dev-ext`. The second external cell
+> stays defined but is built only on request, and the lab has no internal subscription: the internal clusters are
+> the same modules with the exposure `int` ([section 17](17-implementation-project-and-acceptance-testing.md)).
 
 **Why three cells in prd** ([decision D08](decisions.md#decision-matrix)). With two cells each must be able to carry
 100 % of the load, and losing an availability zone *while* the other cell is drained for an upgrade leaves nothing.
@@ -59,7 +73,8 @@ Capacity rules that the cost model must leave room for, all of them checked in a
 > are only created with it. The same exception review also lets the platform team remove the stateful cluster again
 > when its last workload moves to a PaaS service.
 
-- **Clusters are cattle, built by IaC.** An environment module creates what all clusters of an environment share
+- **Clusters are cattle, built by IaC.** An environment module, applied once per environment *and exposure* in that
+  exposure's subscription, creates what all clusters of the exposure share
   and what must survive a cluster rebuild: the Key Vaults per zone (with the application secrets), the platform Key
   Vault (with the environment's certificates and their role assignments), the application managed identities, the
   ACR and the Azure Policy assignments – and, in the backup subscription, the zones' immutable backup vaults and
@@ -75,8 +90,9 @@ Capacity rules that the cost model must leave room for, all of them checked in a
 - **Everything inside a cluster comes from Git** – via Flux in the stateless clusters and via the deployment pipeline
   in the stateful cluster; no manual `kubectl apply`. Human access in acc and prd is read-only Kubernetes RBAC plus
   break-glass via PIM.
-- **Every environment has its own ACR** (in its backend spoke); the promotion pipeline imports the exact image
-  digests from the previous environment's ACR (`az acr import`), so prd never pulls from the Internet. CI signs every
+- **Every environment has its own ACR per exposure** (in the exposure's backend spoke); the promotion pipeline imports
+  the exact image digests from the previous environment's ACR (`az acr import`) into the ACR of each exposure that runs
+  the image, so prd never pulls from the Internet and no cluster pulls across the exposures. CI signs every
   image it builds; promotion first verifies the signature, then copies it with the image (an OCI referrer, for
   example with `oras cp -r`). An unsigned image therefore never reaches the acc or prd registry
   ([section 14](14-policy-enforcement.md)).

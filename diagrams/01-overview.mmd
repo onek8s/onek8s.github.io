@@ -1,4 +1,5 @@
-%% High-level landing zone: hub, management network and the AKS spoke with isolation zones
+%% High-level landing zone: hub, management network and the AKS spokes - internal and external in separate
+%% subscriptions and clusters (D52), the countries as isolation zones inside each
 flowchart TB
     internet(("Internet"))
     onprem["On-premises /<br/>corporate network"]
@@ -17,30 +18,45 @@ flowchart TB
         pe_api["Private Endpoint<br/>→ API server"]
     end
 
-    subgraph SPOKE["AKS spoke VNet of one cluster (same inner layout in every stateless and stateful cluster, see picture 8)"]
-        direction LR
-        subgraph CP["Control plane zone"]
-            direction TB
-            api["API server<br/>(VNet-integrated,<br/>delegated subnet)"]
-            sys["System node pool<br/>CoreDNS, metrics-server,<br/>CSI, Cilium operator"]
+    subgraph SUBINT["Internal subscription sub-aks-&lt;env&gt;-int"]
+        subgraph SPOKEI["AKS spoke VNet of one internal cluster"]
+            direction LR
+            subgraph CPI["Control plane zone"]
+                direction TB
+                api["API server<br/>(VNet-integrated,<br/>delegated subnet)"]
+                sys["System node pool<br/>CoreDNS, metrics-server,<br/>CSI, Cilium operator"]
+            end
+            subgraph INT["Internal isolation zones"]
+                direction TB
+                intfi["int-fi<br/>subnets · nodes · Key Vault"]
+                intse["int-se<br/>subnets · nodes · Key Vault"]
+            end
         end
-        subgraph INT["Internal workloads"]
-            direction TB
-            intfi["int-fi<br/>subnets · nodes · Key Vault"]
-            intse["int-se<br/>subnets · nodes · Key Vault"]
-        end
-        subgraph EXT["External workloads"]
-            direction TB
-            extfi["ext-fi<br/>subnets · nodes · Key Vault<br/>gateway public LB"]
-            extse["ext-se<br/>subnets · nodes · Key Vault<br/>gateway public LB"]
+    end
+
+    subgraph SUBEXT["External subscription sub-aks-&lt;env&gt;-ext"]
+        subgraph SPOKEE["AKS spoke VNet of one external cluster"]
+            direction LR
+            subgraph CPE["Control plane zone"]
+                direction TB
+                apie["API server<br/>(VNet-integrated,<br/>delegated subnet)"]
+                syse["System node pool"]
+            end
+            subgraph EXT["External isolation zones"]
+                direction TB
+                extfi["ext-fi<br/>subnets · nodes · Key Vault<br/>gateway public LB"]
+                extse["ext-se<br/>subnets · nodes · Key Vault<br/>gateway public LB"]
+            end
         end
     end
 
     onprem --- gw
     internet ---|"allow-listed FQDNs<br/>(egress)"| fw
     HUB ===|"VNet peering"| MGMT
-    HUB ===|"VNet peering<br/>UDR 0.0.0.0/0 → Firewall<br/>from every subnet"| SPOKE
+    HUB ===|"VNet peering<br/>UDR 0.0.0.0/0 → Firewall<br/>from every subnet"| SPOKEI
+    HUB ===|"VNet peering<br/>UDR 0.0.0.0/0 → Firewall"| SPOKEE
     jump --> pe_api -.->|"Private Link"| api
+    pe_api -.->|"Private Link"| apie
     internet ==>|"HTTPS to the cell<br/>Traffic Manager picks (DNS)"| EXT
     fw ==>|"corporate users via Firewall<br/>→ zone gateway of the app's home cell<br/>(private DNS by ExternalDNS)"| INT
 
@@ -49,6 +65,6 @@ flowchart TB
     classDef int fill:#e3f2fd,stroke:#1565c0,color:#000
     classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000
     class fw,dns,gw,bastion,jump,pe_api hub
-    class api,sys cp
+    class api,sys,apie,syse cp
     class intfi,intse int
     class extfi,extse ext

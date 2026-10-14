@@ -8,15 +8,15 @@ read as the sign-off list for the [connection readiness gate](17-implementation-
 ## Decisions that need a human sign-off
 
 The design has chosen a default for each and is built on it; the named role confirms or overrules it
-([decision log](decisions.md#human-sign-offs-still-needed) for the defaults and the decisions behind them).
+([decision log](decisions.md#human-sign-offs-still-needed) for the defaults and the decisions behind them). H01, the
+country boundary, was answered by the security team on 2026-10-14 ([D52](decisions.md#decision-matrix)).
 
 | # | Who | What |
 |---|---|---|
-| H01 | Compliance, security | Country separation inside one cluster, or a hard VNet boundary per country ([D01](decisions.md#decision-matrix)) |
 | H02 | Network team | The platform's prefixes in the corporate IPAM: a `/12` per environment or a `/17` per country, reserved already for the build tenant ([D02](decisions.md#decision-matrix)) |
 | H03 | Security team | No WAF for the external zones at launch, or Application Gateway WAF v2 per zone and cell; ownership of the pre-approved Internet FQDN catalogue ([D04](decisions.md#decision-matrix), [D28](decisions.md#decision-matrix)) |
 | H04 | Business, application owners | Availability, latency, error budget, failover and recovery targets; RPO and RTO per data store and environment; the internal recovery time ([D44](decisions.md#decision-matrix), [D07](decisions.md#decision-matrix)) |
-| H05 | Platform owner | Budget for three cells in prd, the DDoS Network Protection plan and prd's standby connectivity in the paired region; the prd cost estimate once measured ([D08](decisions.md#decision-matrix), [D32](decisions.md#decision-matrix), [D34](decisions.md#decision-matrix)) |
+| H05 | Platform owner | Budget for three cells in prd, the cells paid once per exposure ([D52](decisions.md#decision-matrix)), the DDoS Network Protection plan and prd's standby connectivity in the paired region; the prd cost estimate once measured ([D08](decisions.md#decision-matrix), [D32](decisions.md#decision-matrix), [D34](decisions.md#decision-matrix)) |
 | H06 | Platform owner | The slow update speed shortened from 1 month to 3 weeks per step, a change to R12a ([D11](decisions.md#decision-matrix)) |
 | H07 | Security team | Risk acceptance of Key Vault ABAC in preview; the platform vault layout with Key Vault Contributor for the cluster identities; Premium HSM-protected keys with 12-month rotation; backup subscription ownership ([D15](decisions.md#decision-matrix), [D20](decisions.md#decision-matrix), [D21](decisions.md#decision-matrix), [D36](decisions.md#decision-matrix)) |
 | H08 | Platform owner | Community External Secrets Operator without commercial support ([D16](decisions.md#decision-matrix)) |

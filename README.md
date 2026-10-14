@@ -9,11 +9,12 @@ infrastructure-as-code are cloud-specific ([section 21](docs/21-open-standards-a
 
 **Azure is the first cloud implemented**; AWS and Google Cloud are the targets. This design describes the Azure
 implementation: a large Azure Kubernetes Service (AKS) platform with strong isolation between
-**internal / external** workloads and between **countries**, plus application multi-tenancy inside each isolation zone.
+**internal / external** workloads – separate subscriptions and clusters – and between **countries** – isolation zones
+with their own node pools, network and Key Vault inside a cluster – plus application multi-tenancy inside each zone.
 
 The platform runs **two types of clusters** – zonal **stateless** clusters in the frontend network and an
-**optional** zone-redundant **stateful** cluster in the Internet-less backend network – in **dev, acc and prd**, i.e. seven
-clusters (ten with the stateful cluster) kept in sync from one Git repository – the stateless clusters with **FluxCD**, the stateful cluster
+**optional** zone-redundant **stateful** cluster in the Internet-less backend network – per exposure (internal,
+external) in **dev, acc and prd**, i.e. fourteen clusters (twenty with the stateful clusters) kept in sync from one Git repository – the stateless clusters with **FluxCD**, the stateful cluster
 with **CI/CD pipelines** – with fully automated zero-downtime upgrades of applications and clusters.
 Data belongs in **Azure PaaS services**; the stateful cluster is the *last option*, used only when no suitable PaaS
 service exists or a special use case requires it, and it is **not built at all until the first such workload is
@@ -44,7 +45,7 @@ adapters, and the PaaS services every cloud offers.
 | [aks-terraform](https://github.com/onek8s/aks-terraform) | The AKS clusters and what an environment's clusters share: network, Key Vault, container registry, Traffic Manager |
 | [aks-fluxcd-platform](https://github.com/onek8s/aks-fluxcd-platform) | What Flux deploys into every cluster: the zones' Gateways (AKS App Routing), External Secrets, external-dns, policies, tenants |
 | [aks-fluxcd-example](https://github.com/onek8s/aks-fluxcd-example) | An application team's repository – cloud-neutral manifests |
-| [aks-hello](https://github.com/onek8s/aks-hello) | The example application, live at https://hello.onek8s.lol on two stateless clusters at once |
+| [aks-hello](https://github.com/onek8s/aks-hello) | The example application, live at https://hello.ext-fi.dev.onek8s.lol on the dev lab's external cell |
 | [aks-ai-agents](https://github.com/onek8s/aks-ai-agents) | AI agents for day-2 operations ([section 15](docs/15-ai-driven-day-2-operations.md)) |
 
 ## Contents
@@ -58,7 +59,7 @@ adapters, and the PaaS services every cloud offers.
 - [6. Workload identity first, Key Vault secrets only when needed](docs/06-workload-identity-and-secrets.md)
 - [7. Application multi-tenancy inside a zone](docs/07-application-multi-tenancy.md)
 - [8. Cluster types: stateless and stateful](docs/08-cluster-types-stateless-and-stateful.md)
-- [9. Environments (six to nine clusters)](docs/09-environments.md)
+- [9. Environments (fourteen to twenty clusters)](docs/09-environments.md)
 - [10. Keeping clusters in sync: Flux for stateless, pipelines for stateful](docs/10-keeping-clusters-in-sync.md)
 - [11. Zero-downtime application upgrades](docs/11-zero-downtime-application-upgrades.md)
 - [12. Zero-downtime cluster upgrades](docs/12-zero-downtime-cluster-upgrades.md)

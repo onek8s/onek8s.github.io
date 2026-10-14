@@ -32,7 +32,7 @@ The comparison falls into three groups:
 | Observability across clouds | Vendor-neutral Prometheus and Grafana instead of one cloud's monitoring ([Chronicles 11](https://wolkwacht.nl/posts/azure-kubernetes-chronicles-11-governing-the-chaos/)) | Grafana Cloud with OpenTelemetry for every cluster ([section 19](19-observability-with-grafana-cloud.md)) |
 | Backup and DR | Backups must be tested; DORA requires defined RTO / RPO and recovery tests ([Chronicles 4](https://wolkwacht.nl/posts/azure-kubernetes-chronicles-part-4/)) | Immutable copies in the paired region, region recovery drill every six months ([section 20](20-backup-and-region-recovery.md)) |
 | Chaos engineering | Azure Chaos Studio, experiments under load, tied to SLOs ([Harnessing chaos](https://wolkwacht.nl/posts/harnessing-chaos-implementing-chaos-engineering-with-azure-chaos-studio-and-gremlin-on-aks/)) | Chaos Studio in acceptance, every fault under load, each must raise its alert ([section 17](17-implementation-project-and-acceptance-testing.md#high-availability-and-resilience)) |
-| Multi-cluster is the norm | Regulation, resilience and separation of concerns lead to many clusters ([Chronicles 7](https://wolkwacht.nl/posts/azure-kubernetes-chronicles-7-the-multi-cluster-reality/)) | Six to nine clusters per platform, one cell per availability zone ([section 9](09-environments.md)) |
+| Multi-cluster is the norm | Regulation, resilience and separation of concerns lead to many clusters ([Chronicles 7](https://wolkwacht.nl/posts/azure-kubernetes-chronicles-7-the-multi-cluster-reality/)) | Fourteen to twenty clusters per platform: one cell per availability zone and exposure, internal and external in separate subscriptions ([section 9](09-environments.md)) |
 
 ## Deliberate differences
 
