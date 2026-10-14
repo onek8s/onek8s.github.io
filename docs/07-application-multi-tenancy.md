@@ -29,8 +29,8 @@ user-facing roles ([decision D49](decisions.md#decision-matrix)):
 
 | Role | Group's members may | They may not | In the zone's Key Vault |
 |---|---|---|---|
-| `view` | Read most objects in the namespace | Read `Secret`s, roles or role bindings; write anything | Key Vault Reader: the secrets' names and attributes, no value |
-| `edit` | `view`, and write most objects, `Secret`s included where policy lets anyone (in a zone's namespaces only External Secrets Operator does) | Change roles or role bindings | Key Vault Secrets Officer on `<namespace>--*` only |
+| `view` | Read most objects in the namespace | Read `Secret`s, roles or role bindings; write anything | Nothing |
+| `edit` | `view`, and write most objects, `Secret`s included where policy lets anyone (in a zone's namespaces only External Secrets Operator does) | Change roles or role bindings | Key Vault Secrets Officer on `<namespace>--*` only, by name – no listing |
 | `admin` | `edit`, and roles and role bindings inside the namespace | Change the namespace, its quota or its default network policies | As `edit` |
 
 None of them reaches another namespace or anything cluster-wide. The IaC (aks-terraform
@@ -44,6 +44,33 @@ team with `edit` changes its `Secret`s. A role without a group gets no binding a
 ([section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests), R6) compare
 the bindings with the IaC and check each role's rights – in the cluster and in the vault – by impersonating a member
 of its group and by signing in as a test application that is one.
+
+None of these groups can list the cluster's namespaces or the vault's secrets: other tenants' names stay hidden
+from them – **soft multi-tenancy**, the separation of tenants sharing one cluster and one vault in their data
+planes ([section 6](06-workload-identity-and-secrets.md#soft-multi-tenancy), which also applies the pattern to
+other PaaS services).
+
+### Platform viewers
+
+Some tools need to see what the tenants may not: the Azure portal's Kubernetes views (*Workloads*, *Services and
+ingresses*, …) start from the cluster's list of namespaces, and a vault browser from the list of secrets. The
+**platform viewers** are the Entra ID groups that may list both – names and attributes only, nothing inside a
+namespace and no secret value ([decision D50](decisions.md#decision-matrix)). A team member who is also a platform
+viewer picks the namespace in the portal and sees there what the namespace's group allows. The IaC (aks-terraform
+`shared/` `platform_viewer_group_object_ids`) grants them one custom role, **defined and assignable at the
+environment's resource group** – nothing at the subscription, so it fits a hardened corporate landing zone that keeps
+subscription-level role definitions to its platform team:
+
+| Permission | For |
+|---|---|
+| `Microsoft.ContainerService/managedClusters/read`, `.../listClusterUserCredential/action` | The clusters in the portal, a kubeconfig (Entra ID) |
+| Data action `Microsoft.ContainerService/managedClusters/namespaces/read` | Azure RBAC for Kubernetes: get, list and watch namespaces |
+| `Microsoft.KeyVault/vaults/read`, data action `Microsoft.KeyVault/vaults/secrets/readMetadata/action` | The vaults in the portal, every secret's name and attributes |
+| `Microsoft.Resources/subscriptions/resourceGroups/read` | The resource group in the portal |
+
+The isolation tests check that the role is assignable at the resource group only, and sign in as a test member: it
+lists the namespaces and every vault's secret names, and reads nothing in a namespace, no secret value, and writes
+nothing.
 
 ## Ownership and cost
 
