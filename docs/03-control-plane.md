@@ -12,10 +12,14 @@ no DNS). The system node pool (tainted `CriticalAddonsOnly`, fixed node count) r
   back door around Entra ID, PIM and the audit log. Every human, pipeline and agent signs in with Entra ID;
   break-glass is a PIM-activated Entra group, not a local credential. Azure Policy denies clusters with local
   accounts enabled.
-- **The build tenant's dev lab runs them private too** (D58): VNet-integrated in the cell's `snet-apiserver`, its public
-  FQDN resolving to the private address (no private DNS zone, since the cells resolve through the hub firewall's DNS
-  proxy), reached through the hub from the management network and the lab firewall's VPN, which the lab's
-  GitHub-hosted runners join.
+- **Open: VNet integration and VNet encryption exclude each other** (H14): Azure refuses API Server VNet Integration on
+  an encrypted virtual network with v4 and newer VM sizes, and the cells' networks are encrypted
+  ([section 13](13-encryption-in-transit-and-tls.md)); the private vault for KMS ([section 18](18-encryption-at-rest-and-customer-managed-keys.md))
+  depends on VNet integration.
+- **The build tenant's dev lab runs them private too** (D58), over Private Link (a classic private cluster, the
+  endpoint in the cell's `snet-system`), its public FQDN resolving to the private address (no private DNS zone, since
+  the cells resolve through the hub firewall's DNS proxy), reached through the hub from the management network and the
+  lab firewall's VPN, which the lab's GitHub-hosted runners join.
 - **No SSH to nodes** (`--ssh-access disabled` on every node pool): nodes are replaced, never logged into. Node-level
   diagnosis uses `kubectl debug node/…` or a kernel-level tracing tool, through break-glass only
   ([section 19](19-observability-with-grafana-cloud.md#security-detections-and-forensics)).

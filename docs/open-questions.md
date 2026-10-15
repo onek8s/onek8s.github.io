@@ -25,6 +25,7 @@ country boundary, was answered by the security team on 2026-10-14 ([D52](decisio
 | H11 | Security, landing zone owners | A separate build tenant without corporate connectivity and with Azure Policy in audit mode ([D30](decisions.md#decision-matrix)) |
 | H12 | Platform owner | Gatekeeper or Azure Arc as the policy engine when the second cloud starts ([D39](decisions.md#decision-matrix)) |
 | H13 | Legal, compliance | DORA and NIS2 applicability; a European provider in the exit strategy; GitHub, Grafana Cloud and the model provider under the CLOUD Act ([D43](decisions.md#decision-matrix)) |
+| H14 | Security team, platform architect | API Server VNet Integration ([section 3](03-control-plane.md), and with it KMS with a private vault, [section 18](18-encryption-at-rest-and-customer-managed-keys.md)) or VNet encryption between the nodes ([section 13](13-encryption-in-transit-and-tls.md)): Azure refuses the first on an encrypted network with v4+ VM sizes. Options: Private Link API servers and KMS with a public-network vault behind its firewall; VNet integration with node-to-node encryption from Cilium (WireGuard) instead; or wait for Azure. The dev lab runs Private Link ([D58](decisions.md#decision-matrix)) |
 
 ## Assumptions still to be proven
 
