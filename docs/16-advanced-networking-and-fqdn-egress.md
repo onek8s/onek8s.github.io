@@ -152,6 +152,31 @@ spec:
   [section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) check this from
   every zone.
 
+## Prototype: the hub Firewall decides egress (D59)
+
+The dev lab also runs the other way round ([decision D59](decisions.md), 2026-10-15, cell `aks-dev-int-stateless-az3`,
+Sweden's `int-se`): **no overlay network**. The cell is Azure CNI node subnet with the Cilium dataplane (node auto
+provisioning supports it; a pod subnet with dynamic IP allocation it does not), and its address space is a /16 of the
+RFC 6598 shared range 100.64.0.0/10 - a zone's node subnet is a /21, so its pods fit beside its nodes. Every pod keeps
+its own address up to the hub Firewall, so:
+
+- **Cilium decides only inside the cluster.** The zone's baseline still denies every other endpoint of the cluster;
+  a platform policy per zone (`<zone>-firewall-egress`) lets the zone's application namespaces out to the world and
+  resolve any name. Applications write no egress policy.
+- **The Firewall decides everything that leaves the cluster**, from rules per application
+  (azure-landing-zone `firewall-applications/<env>-<exposure>/<namespace>.yaml`) whose source is the application's
+  zone - the Firewall tells zones apart by their subnets, not applications within one zone.
+- **An AI egress agent proposes the rules** ([section 15](15-ai-driven-day-2-operations.md)): it reads the flows the
+  Firewall denied (Log Analytics; labfw ships its log there), finds the pod behind each source address, checks the
+  destination against the application's configuration, and opens one pull request per application with the
+  evidence. Humans of the platform and security merge it; nothing is allowed automatically.
+- **Nothing in 100.64.0.0/10 leaves the landing zone**: the Firewall Policies' SNAT private ranges are the landing
+  zone's own (10.0.0.0/16, 172.16.0.0/12, 100.64.0.0/10), so every allowed flow to the internet or the corporate
+  network is translated to the Firewall's address.
+
+The example application aks-hello shows it: from 0.4.0 it fetches a weather forecast from api.open-meteo.com, which
+the Firewall denies in `int-se` until the agent's pull request is merged.
+
 ## What Azure Policy enforces
 
 Azure Policy cannot look up other objects ([section 14](14-policy-enforcement.md)), so it validates each policy object
