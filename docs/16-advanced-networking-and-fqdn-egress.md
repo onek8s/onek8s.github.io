@@ -152,13 +152,19 @@ spec:
   [section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) check this from
   every zone.
 
-## Prototype: the hub Firewall decides egress (D59)
+## Two egress models under test (D59)
 
-The dev lab also runs the other way round ([decision D59](decisions.md), 2026-10-15, cell `aks-dev-int-stateless-az3`,
-Sweden's `int-se`): **no overlay network**. The cell is Azure CNI node subnet with the Cilium dataplane (node auto
-provisioning supports it; a pod subnet with dynamic IP allocation it does not), and its address space is a /16 of the
-RFC 6598 shared range 100.64.0.0/10 - a zone's node subnet is a /21, so its pods fit beside its nodes. Every pod keeps
-its own address up to the hub Firewall, so:
+**Not decided yet.** Besides the model above - Cilium decides each application's egress by FQDN, the hub Firewall
+holds a zone-wide allow-list behind it - the dev lab runs a second one, and the two stay configuration options under
+test because their feature sets differ and neither is better on every count ([decision D59](decisions.md), sign-off
+H15 in [open questions](open-questions.md)). The dev cell `aks-dev-int-stateless-az2` (Finland's `int-fi`) runs
+model (a), `aks-dev-int-stateless-az3` (Sweden's `int-se`) model (b).
+
+Model (b), **the hub Firewall decides**: no overlay network. The cell is Azure CNI node subnet with the Cilium
+dataplane (node auto provisioning supports it; a pod subnet with dynamic IP allocation it does not), and its address
+space is a /16 of the RFC 6598 shared range 100.64.0.0/10 - a zone's node subnet is a /21, so its pods fit beside its
+nodes. Every pod keeps its own address up to the hub Firewall (AKS's ip-masq-agent translates nothing in such a
+cell), so:
 
 - **Cilium decides only inside the cluster.** The zone's baseline still denies every other endpoint of the cluster;
   a platform policy per zone (`<zone>-firewall-egress`) lets the zone's application namespaces out to the world and
@@ -167,15 +173,27 @@ its own address up to the hub Firewall, so:
   (azure-landing-zone `firewall-applications/<env>-<exposure>/<namespace>.yaml`) whose source is the application's
   zone - the Firewall tells zones apart by their subnets, not applications within one zone.
 - **An AI egress agent proposes the rules** ([section 15](15-ai-driven-day-2-operations.md)): it reads the flows the
-  Firewall denied (Log Analytics; labfw ships its log there), finds the pod behind each source address, checks the
-  destination against the application's configuration, and opens one pull request per application with the
-  evidence. Humans of the platform and security merge it; nothing is allowed automatically.
+  Firewall denied (Log Analytics; labfw ships its log there like an Azure Firewall's diagnostic setting), finds the
+  pod behind each source address, checks the destination against the application's configuration, and opens one
+  pull request per application with the evidence. Humans of the platform and security merge it; nothing is allowed
+  automatically.
 - **Nothing in 100.64.0.0/10 leaves the landing zone**: the Firewall Policies' SNAT private ranges are the landing
   zone's own (10.0.0.0/16, 172.16.0.0/12, 100.64.0.0/10), so every allowed flow to the internet or the corporate
   network is translated to the Firewall's address.
 
-The example application aks-hello shows it: from 0.4.0 it fetches a weather forecast from api.open-meteo.com, which
-the Firewall denies in `int-se` until the agent's pull request is merged.
+| | (a) Cilium decides (overlay) | (b) The hub Firewall decides (no overlay) |
+|---|---|---|
+| Who writes an application's egress | The team, a Cilium FQDN policy in its repository, checked against the zone's allow-list | Nobody up front: the agent proposes the Firewall rule from the denied flows, a human merges it |
+| Granularity | Per pod selector, inside a zone | Per zone at the Firewall (rules are named per application, but open the destination to the zone) |
+| Where a denial shows | Cilium (Hubble, off in the dev cells - D56) | The Firewall's log, with the pod's own address |
+| Firewall features on every flow | Only on what Cilium let out | IDPS, threat intelligence, TLS inspection, one log for every flow |
+| Addresses | Pods in a cluster-internal overlay range; nodes' subnets small | A /16 of 100.64.0.0/10 per cell; pods' addresses reserved per node (110 a node) |
+| Node auto provisioning | Overlay - the recommended mode | Node subnet only (no pod subnet with dynamic IP allocation) |
+| NSGs between the zones' subnets | Tell pods (overlay range) from nodes | Cannot: pods and nodes share the subnets - Cilium alone separates zones inside the cell |
+| Day 2 | Policies change with the application | Rules follow what applications actually do; the agent and the review are the control |
+
+The example application aks-hello shows (b): from 0.4.0 it fetches a weather forecast from api.open-meteo.com, which
+the Firewall denies in `int-se` (from the pods' 100.64.32.x addresses) until the agent's pull request is merged.
 
 ## What Azure Policy enforces
 
