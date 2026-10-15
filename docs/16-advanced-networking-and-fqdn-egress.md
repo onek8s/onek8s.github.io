@@ -180,7 +180,8 @@ are not pod traffic; they are controlled by the Firewall allow-list as before.
   reason *policy denied*, plus DNS responses `REFUSED` by the DNS proxy) are collected from every node by Grafana
   Alloy into Grafana Cloud Logs, and the Cilium and Hubble metrics into Grafana Cloud Metrics
   ([section 19](19-observability-with-grafana-cloud.md)). Every user of the environment's stack, application teams
-  included, can see the flows.
+  included, can see the flows. The dev lab cells run without Hubble ([D56](decisions.md#decision-matrix)): there
+  the drops are read on the cluster, not as flow logs.
 - **In dev** the operations agent ([section 15](15-ai-driven-day-2-operations.md)) summarises drops after a
   deployment and proposes the missing FQDN as a pull request to the application – reviewed by the application team,
   plus a Firewall pull request (high tier) if the zone does not allow the name either.
