@@ -59,11 +59,10 @@ What it takes:
   zone lets the zone's application namespaces out of the cluster (today's `firewall-egress` component).
 - **eBPF host routing and Hubble go too** (both are ACNS). Pod traffic uses the default iptables path; drops are read
   from Cilium's own counters and the Firewall log.
-- **The egress agent attributes by zone and node**: a denial's source is a node address, so the agent finds the node,
+- **The egress agent attributes by zone and node** (built 2026-10-16): a denial's source is a node address, so the agent finds the node,
   lists the application pods that ran there at the time, and checks the destination against each one's configuration
   ([section 15](15-ai-driven-day-2-operations.md)). One match: a pull request in that application's name. Several or
-  none: a pull request for the zone that names the candidates, for the reviewers to settle. Today's agent ignores node
-  sources (it was written for model C) - this is its first change for model A.
+  none: a pull request for the zone that names the candidates, for the reviewers to settle.
 
 **When to choose something else**:
 
@@ -75,6 +74,12 @@ What it takes:
 
 The choice is per cell (`network_profile.network_plugin_mode` and `advanced_networking` in aks-terraform, both need a
 rebuild to change), so a fleet can run A by default and B, C or D where a zone needs it.
+
+**Built in the dev lab (2026-10-16)**: the cell `aks-dev-int-stateless-az2` (Finland's `int-fi`) runs A - rebuilt without
+ACNS, its Cilium policies at layer 4, aks-hello on the zone's nodes fetching a weather forecast. The firewall denied it from
+the zone's node addresses, and the egress agent attributed the denial to the application on that node and opened the pull
+request for `int-fi-example`. So the lab now runs A in az2 and C in az3 (`int-se`); B, the model for cells that keep ACNS, ran
+in az2 until then.
 
 ## Working with a company-wide firewall
 
