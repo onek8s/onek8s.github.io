@@ -135,7 +135,37 @@ the platform's rules have to be rule collection groups inside it. Azure document
 whole policy, which would let the platform write every group of the company's policy, not only its own - too broad
 for most security teams. Whether a role assignment scoped to a single rule collection group
 (`.../firewallPolicies/<policy>/ruleCollectionGroups/<group>`) is honoured is **not documented** and is open
-verification V24 ([decisions](decisions.md#azure-capability-and-verification-matrix)). Until it is verified, this case falls back to option 1.
+verification V23 ([decisions](decisions.md#azure-capability-and-verification-matrix)). Until it is verified, this case falls back to option 1.
+
+### 4. IP group objects in the company's rules (HTTPS only)
+
+Azure Firewall's only shared object a rule can point to is the **IP group**, and rules use it by reference: the
+firewall team writes a rule once, and whoever may change the IP group changes what the rule covers - without a
+right on the firewall policy. IP groups can be the **source** of DNAT, network and application rules and the
+**destination** of network rules only ([IP groups](https://learn.microsoft.com/en-us/azure/firewall/ip-groups)).
+There is **no FQDN group object**: an application rule's destinations (FQDNs, FQDN tags, web categories, URLs with
+TLS inspection) live in the rule itself. That decides what IP groups can delegate when the traffic is HTTPS only:
+
+| What is delegated | How | Fits |
+|---|---|---|
+| **Who may use a destination** (the source) | The firewall team owns an application rule per destination list (HTTPS 443, its FQDNs); its source is an IP group in the platform's resource group. The platform puts a zone's prefixes into the group of each list the zone's applications need | Yes. The firewall team still decides every destination, but a new cell or zone, or a zone added to a list that exists, needs no change on their side. The platform holds only write on its own IP groups (`Microsoft.Network/ipGroups/write`, a resource in its own resource group) |
+| **Where traffic may go** (the destination) | A network rule TCP 443 from the platform's zones to a destination IP group the platform fills, e.g. by resolving the applications' FQDNs | Not recommended. It is delegation to IP addresses, not names: SaaS and CDN addresses change and are shared (one CDN address opens every site behind it), a network rule sees no server name, so neither the TLS server name, TLS inspection, URL filtering nor web categories apply, and the platform could put any address on the internet into the group |
+| **Everything over HTTPS** | One application rule from the platform's IP groups to `*` on HTTPS, logged | Only with model B or D: Cilium FQDN policies decide per application, the firewall keeps IDPS, threat intelligence and a log of every TLS server name. With model A nothing would decide |
+
+So with HTTPS only, the useful pattern is the first row: **the firewall team owns the destinations, the platform
+owns the sources**. The egress agent's pull requests then go to the firewall team for a new destination list, and to
+the platform's own repository when an existing list only needs another zone. Points to agree on:
+
+- **Guard rails for the IP groups**: whoever writes an IP group decides which networks a rule lets out, so the
+  firewall team checks that the platform's groups hold only the platform's prefixes (a pipeline check or an Azure
+  Policy on `Microsoft.Network/ipGroups`), or keeps the groups and accepts pull requests for them.
+- **Propagation**: a change to an IP group updates every firewall that refers to it (the documentation gives no
+  timing; Azure updates up to 20 groups in parallel and a failed group update shows on the IP group, not on the
+  firewall). Limits: 5,000 addresses or prefixes per group, 600 groups per firewall policy, about 50 firewalls per
+  group.
+- **Referencing a group from another resource group or subscription**: IP groups are documented across regions and
+  subscriptions; the permission the firewall team's deployment needs on the platform's groups is not stated in the
+  documentation (verification V24 in the [capability matrix](decisions.md#azure-capability-and-verification-matrix)).
 
 ### What the platform needs from the firewall team, in any case
 
