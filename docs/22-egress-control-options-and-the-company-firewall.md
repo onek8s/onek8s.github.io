@@ -78,8 +78,8 @@ rebuild to change), so a fleet can run A by default and B, C or D where a zone n
 **Built in the dev lab (2026-10-16)**: the cell `aks-dev-int-stateless-az2` (Finland's `int-fi`) runs A - rebuilt without
 ACNS, its Cilium policies at layer 4, aks-hello on the zone's nodes fetching a weather forecast. The firewall denied it from
 the zone's node addresses, and the egress agent attributed the denial to the application on that node and opened the pull
-request for `int-fi-example`. So the lab now runs three models side by side: A in az2, C in az3 (`int-se`); B is the
-design's default for cells that keep ACNS.
+request for `int-fi-example`. So the lab now runs A in az2 and C in az3 (`int-se`); B, the model for cells that keep ACNS, ran
+in az2 until then.
 
 ## Working with a company-wide firewall
 
