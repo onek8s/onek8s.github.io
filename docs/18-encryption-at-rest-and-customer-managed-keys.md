@@ -48,7 +48,13 @@ zone the same way ([verification V15](decisions.md#azure-capability-and-verifica
   [KMS data encryption](https://learn.microsoft.com/en-us/azure/aks/kms-data-encryption)
   (`--kms-infrastructure-encryption`, versionless key, automatic rotation without re-encrypting the secrets) needs
   Kubernetes 1.33 or later, which every cluster already runs, but it is still preview. The platform switches to it
-  when it is GA.
+  when it is GA - **except where API Server VNet Integration is not available**: Azure refuses it on an encrypted
+  virtual network with v4+ VM sizes (H14), so the dev lab's private-link clusters (D58) run KMS data encryption
+  already (D60, 2026-10-15). It reaches a vault without public network access through the vault's trusted
+  services exception (`bypass AzureServices`) instead of a private endpoint of AKS's own, with a versionless key
+  and the same two roles. An existing classic-KMS cluster switches in two updates (KMS data encryption on with the
+  vault's mode unchanged, then `Private`); AKS rewrites every Secret as `aksService`, which the `secrets-via-eso`
+  policy exempts. Once on, it cannot be turned off.
 - Everything that ends up in etcd is encrypted with the cluster's key: the application secrets and certificates
   delivered as Kubernetes Secrets by External Secrets Operator ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)),
   the zone gateways' certificates, Flux and platform Secrets.
