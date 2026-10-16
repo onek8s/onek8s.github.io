@@ -192,6 +192,38 @@ cell), so:
 | NSGs between the zones' subnets | Tell pods (overlay range) from nodes | Cannot: pods and nodes share the subnets - Cilium alone separates zones inside the cell |
 | Day 2 | Policies change with the application | Rules follow what applications actually do; the agent and the review are the control |
 
+### Pros and cons, one choice at a time
+
+The two models bundle two independent choices: **how pods get their addresses** (overlay or not) and **who enforces
+egress** (Cilium FQDN policies of Advanced Container Networking Services, or the hub Firewall). They are compared
+separately here; the combinations follow.
+
+**Pod addressing: Azure CNI Overlay or node subnet**
+
+| | Overlay (az2) | No overlay, node subnet (az3) |
+|---|---|---|
+| Pros | Pods take addresses from a cluster-internal range (one per node block), so the VNet only holds nodes: small subnets, the same pod range in every cluster, no address planning per application. Scales to large clusters without exhausting the landing zone's address space. The recommended mode for node auto provisioning. The NSGs tell nodes (subnet) from pods (overlay range) | Every pod has a VNet address all the way to the Firewall: the Firewall log, NSG flow logs and the egress agent name the pod, not only its node. Peered networks can reach a pod directly when a design needs it. No address translation inside the landing zone, so troubleshooting sees one address end to end |
+| Cons | Traffic leaving the cluster is translated to the node's address, so anything outside the cluster (Firewall, flow logs, the other end) sees only the node - it can tell zones apart (a zone has its own node subnet) but not pods or applications. A pod cannot be addressed from outside the cluster except through a load balancer | Addresses are reserved per node for `max_pods` (110 here: a node takes 111 addresses when it starts), so cells need large subnets - hence a /16 of 100.64.0.0/10 per cell, and the VNet's limit of 65,536 addresses is the cell's ceiling. `max_pods` cannot change on a running pool. Pods and nodes share the subnets, so an NSG cannot tell them apart - Cilium alone separates what runs on one subnet. Node auto provisioning supports node subnet but not a pod subnet with dynamic allocation, so pods cannot get a subnet of their own |
+
+**Egress control: ACNS FQDN policies or the hub Firewall**
+
+| | Cilium FQDN policies (ACNS) | Hub Firewall (Azure Firewall Premium; labfw in the lab) |
+|---|---|---|
+| Pros | Per application: a policy selects the application's pods, so two applications in one zone get different destinations. Enforced at the source node - a denied flow never leaves the node. Owned by the team in its own repository (GitOps), changed with the application, checked by the `fqdn-egress` policy against the zone's allow-list. Works the same in overlay and node subnet. No central bottleneck: the rule set is spread over the clusters | One enforcement point for every flow that leaves the landing zone, from any compute (AKS, VMs, PaaS with VNet integration). Premium features on every flow: IDPS, threat intelligence, TLS inspection and URL filtering, FQDN tags. One log for security, in Log Analytics. Rules are managed and reviewed centrally; applications write no egress policy, and the egress agent proposes the rules from what applications actually do. Survives a misconfigured or compromised cluster: nothing inside the cluster can change it |
+| Cons | Needs ACNS (billed per node) and Cilium's DNS proxy - only names the pod resolved are allowed, and DNS rules must cover every search suffix (see the Cilium gotcha in aks-terraform's notes). FQDN and port only: no IDPS, threat intelligence or TLS inspection. Its denials are seen through Hubble, which the dev cells turn off (D56). Every team must write and keep a policy; a mistake shows up as a broken application. A cluster administrator can change the policies | Only as fine as the source address it sees: per zone in overlay, per pod address in node subnet - but its rules name subnets or IP groups, so it opens a destination to a whole zone, not to one application. Cost: a Firewall Premium per exposure (~1.75 USD an hour list) plus data processing per GB. One more hop, and a throughput and availability dependency for every flow. Changes go through central review, so a new dependency waits for a merge. Without TLS inspection its application rules see only the TLS server name |
+
+**Combinations**
+
+- **Overlay + Cilium FQDN + Firewall zone allow-list** - model (a), the design's default: each application's egress
+  in Cilium, the Firewall as a second, zone-wide line of defence with its IDPS and log on what Cilium let out.
+- **Node subnet + Firewall per application, Cilium inside the cluster** - model (b), az3: the Firewall decides, the
+  agent proposes its rules, Cilium keeps the zone baseline inside the cluster.
+- **Node subnet + Cilium FQDN + Firewall** - both lines per application: the Firewall sees each pod's address, so
+  its log and the agent attribute every flow while the teams' policies still decide per application. Costs the
+  address space of (b) and the policy work of (a).
+- **Overlay + Firewall only** is not offered: the Firewall would see node addresses only, so it could decide per
+  zone at best, and nothing would decide per application.
+
 The example application aks-hello shows (b): from 0.4.0 it fetches a weather forecast from api.open-meteo.com, which
 the Firewall denies in `int-se` (from the pods' 100.64.32.x addresses) until the agent's pull request is merged.
 
