@@ -33,7 +33,11 @@ upgrade still leaves one cell in traffic, and a cell failure affects a third of 
 half. What the third cell costs is its fixed part, because NAP scales the zone nodes on load in every cell: two
 system nodes, the gateways' Envoy pods and istiod, one public load balancer per external zone, the internal load
 balancers, the private endpoints to the vaults and the ACR, and a hub peering. Dev and acc rehearse the same
-procedures with two cells because the procedures are per cell, not per count.
+procedures with two cells because the procedures are per cell, not per count. One service differs by
+environment on purpose ([decision D62](decisions.md#decision-matrix)): prd's container registry is Premium with a
+private endpoint and no public network access; dev's and acc's are Basic on their public endpoint with Entra ID
+authentication only, because Azure offers private endpoints on Premium alone and the tier costs about eight times
+Basic for a few images.
 
 ## Cost and capacity model
 

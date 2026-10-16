@@ -349,7 +349,7 @@ dev → acc → prd, and the existing zones only get new routes and Firewall rul
    points do not change.
 
 In the backend spoke each isolation zone's `snet-<zone>-pe` also holds the private endpoints of that zone's PaaS
-services (SQL, Storage, Service Bus, …); a shared `snet-shared-pe` holds the ACR private endpoint used by all clusters
+services (SQL, Storage, Service Bus, …); a shared `snet-shared-pe` holds the ACR private endpoint used by all clusters (prd; dev and acc pull from a Basic registry's public endpoint through the Firewall, [D62](decisions.md#decision-matrix))
 of the environment. With the overlay CNI the stateless spokes have no pod subnets; their node subnets are sized for
 the full load of the environment (N+1). Only the stateful spoke has pod subnets.
 
