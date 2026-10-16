@@ -2,6 +2,10 @@
 
 ![eBPF host routing and FQDN egress](../images/16-fqdn-egress.svg)
 
+> Proposed since 2026-10-16 ([D61](decisions.md#decision-matrix)): the default stateless cell runs **without** ACNS,
+> with overlay and the hub Firewall deciding egress per zone ([section 22](22-egress-control-options-and-the-company-firewall.md));
+> this section describes the cells that keep ACNS for per-application FQDN egress.
+
 Every cluster enables **[Advanced Container Networking Services](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview)**
 (ACNS) on top of Azure CNI powered by Cilium, and uses two of its features:
 
@@ -221,8 +225,10 @@ separately here; the combinations follow.
 - **Node subnet + Cilium FQDN + Firewall** - both lines per application: the Firewall sees each pod's address, so
   its log and the agent attribute every flow while the teams' policies still decide per application. Costs the
   address space of (b) and the policy work of (a).
-- **Overlay + Firewall only** is not offered: the Firewall would see node addresses only, so it could decide per
-  zone at best, and nothing would decide per application.
+- **Overlay + Firewall only, without ACNS** - the Firewall sees node addresses, so it decides per zone (a zone has
+  its own node subnets), and nothing decides per application. The cheapest: no ACNS, no extra address space, no
+  egress policy in the applications' repositories - proposed as the default ([D61](decisions.md#decision-matrix),
+  [section 22](22-egress-control-options-and-the-company-firewall.md), which also covers a company-owned firewall).
 
 The example application aks-hello shows (b): from 0.4.0 it fetches a weather forecast from api.open-meteo.com, which
 the Firewall denies in `int-se` (from the pods' 100.64.32.x addresses) until the agent's pull request is merged.

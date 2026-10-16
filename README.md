@@ -72,6 +72,7 @@ adapters, and the PaaS services every cloud offers.
 - [19. Observability with Grafana Cloud](docs/19-observability-with-grafana-cloud.md)
 - [20. Backup and region recovery](docs/20-backup-and-region-recovery.md)
 - [21. Open standards and portability](docs/21-open-standards-and-portability.md)
+- [22. Egress control options and the company firewall](docs/22-egress-control-options-and-the-company-firewall.md)
 - [Decisions](docs/decisions.md)
 - [Open questions](docs/open-questions.md)
 - [Comparison with Wolkwacht](docs/wolkwacht-comparison.md)
