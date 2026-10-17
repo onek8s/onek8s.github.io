@@ -136,7 +136,3 @@ There is only one stateful cluster, so it is upgraded **in place** and protected
 - **LTS minor upgrades** (rare, once per LTS cycle, within the last 6 months of LTS support): the same procedure,
   rehearsed in dev and acc first. Alternative
   for risky jumps: add new node pools on the new version, cordon and drain the old pools AZ by AZ, delete them.
-
----
-
-[Back to contents](../README.md) · Previous: [11. Zero-downtime application upgrades](11-zero-downtime-application-upgrades.md) · Next: [13. Encryption in transit and TLS](13-encryption-in-transit-and-tls.md)

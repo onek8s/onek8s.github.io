@@ -137,7 +137,3 @@ and repeated **every six months in acc**:
   Record the RPO of every data store and the RTO end to end.
 - **Stateful volumes**: Cross Region Restore of one zone's persistent volumes into a rebuilt stateful cluster; data
   consistent, and the StatefulSets bind the restored claims.
-
----
-
-[Back to contents](../README.md) · Previous: [19. Observability with Grafana Cloud](19-observability-with-grafana-cloud.md) · Next: [21. Open standards and portability](21-open-standards-and-portability.md)

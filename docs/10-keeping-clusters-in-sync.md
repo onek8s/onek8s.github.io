@@ -94,7 +94,3 @@ better, and the Internet-less cluster runs one component less.
   whose stateful stage has not completed, so the two never diverge by more than one release train.
 - **Drift**: there is no reconcile loop, so a scheduled run (nightly) does steps 1–3 only and alerts on any
   difference. With read-only human access, drift can only come from break-glass actions.
-
----
-
-[Back to contents](../README.md) · Previous: [9. Environments (fourteen to twenty clusters)](09-environments.md) · Next: [11. Zero-downtime application upgrades](11-zero-downtime-application-upgrades.md)

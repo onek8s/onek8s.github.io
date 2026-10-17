@@ -309,7 +309,3 @@ acc and prd follow the normal promotion ([section 9](09-environments.md)); appli
 own user acceptance in acc. The build tenant is kept afterwards as the **platform lab** – policies in audit, no
 corporate connection, synthetic data – for prototyping new AKS features and the next design changes, or deleted if
 that is not needed.
-
----
-
-[Back to contents](../README.md) · Previous: [16. Advanced networking: eBPF host routing and FQDN egress](16-advanced-networking-and-fqdn-egress.md) · Next: [18. Encryption at rest with customer-managed keys](18-encryption-at-rest-and-customer-managed-keys.md)

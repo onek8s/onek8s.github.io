@@ -100,7 +100,3 @@ Capacity rules that the cost model must leave room for, all of them checked in a
   image it builds; promotion first verifies the signature, then copies it with the image (an OCI referrer, for
   example with `oras cp -r`). An unsigned image therefore never reaches the acc or prd registry
   ([section 14](14-policy-enforcement.md)).
-
----
-
-[Back to contents](../README.md) · Previous: [8. Cluster types: stateless and stateful](08-cluster-types-stateless-and-stateful.md) · Next: [10. Keeping clusters in sync: Flux for stateless, pipelines for stateful](10-keeping-clusters-in-sync.md)

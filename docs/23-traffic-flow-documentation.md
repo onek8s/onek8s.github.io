@@ -145,7 +145,3 @@ address stands for the application pods on it), and the fix was one line in the 
   three other repositories checked out.
 - **Rule garbage collection**: with the amber findings and the observed column, the egress agent gets a second job -
   proposing the removal of a rule that nothing names and nothing uses - under the same rule as today: a human merges.
-
----
-
-[Back to contents](../README.md) · Previous: [22. Egress control options and the company firewall](22-egress-control-options-and-the-company-firewall.md) · Next: [Decisions](decisions.md)

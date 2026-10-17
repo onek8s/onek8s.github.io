@@ -43,7 +43,3 @@ Address spaces are an addressing tool, not an isolation boundary:
 > (`vnet-prd-ext-sl-az1`) is the same with `ext-fi` and `ext-se` from the external halves of the address plan.
 > Should a hard VNet boundary per country ever be required, the same step is taken once more – **one cluster per
 > zone** – and the address plan stays the same.
-
----
-
-[Back to contents](../README.md) · Previous: [1. Overview](01-overview.md) · Next: [3. Control plane](03-control-plane.md)

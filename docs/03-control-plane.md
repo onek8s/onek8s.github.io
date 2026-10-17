@@ -23,7 +23,3 @@ no DNS). The system node pool (tainted `CriticalAddonsOnly`, fixed node count) r
 - **No SSH to nodes** (`--ssh-access disabled` on every node pool): nodes are replaced, never logged into. Node-level
   diagnosis uses `kubectl debug node/…` or a kernel-level tracing tool, through break-glass only
   ([section 19](19-observability-with-grafana-cloud.md#security-detections-and-forensics)).
-
----
-
-[Back to contents](../README.md) · Previous: [2. Network layout](02-network-layout.md) · Next: [4. Node pools](04-node-pools.md)

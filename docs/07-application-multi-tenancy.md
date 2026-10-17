@@ -90,7 +90,3 @@ node from Azure's retail prices and splits its cost over the namespaces by what 
 team's share of the cell, its GPU nodes included, is a query by these labels
 ([decision D46](decisions.md#decision-matrix)). A monthly budget on each environment subscription alerts the owners
 at 80 % and 100 % of the actual cost and at a forecast of 100 % ([section 9](09-environments.md#cost-and-capacity-model)).
-
----
-
-[Back to contents](../README.md) · Previous: [6. Workload identity first, Key Vault secrets only when needed](06-workload-identity-and-secrets.md) · Next: [8. Cluster types: stateless and stateful](08-cluster-types-stateless-and-stateful.md)

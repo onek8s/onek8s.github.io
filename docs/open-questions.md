@@ -37,7 +37,3 @@ isolated cluster – whose documentation now lists only `NodeImage` and `None`),
 Restore in the chosen regions), V17 (Grafana Cloud Private Link across regions), V18 (Chaos Mesh with eBPF host
 routing), V19 (Inspektor Gadget, kube-bench and Image Cleaner), V21 (VNet encryption on every allowed VM family in the
 region) and V22 (a hub and Firewall per exposure – the lab runs without any Firewall).
-
----
-
-[Back to contents](../README.md) · Previous: [Decisions](decisions.md) · Next: [Comparison with Wolkwacht](wolkwacht-comparison.md)

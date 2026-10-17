@@ -192,7 +192,3 @@ Because every stack user sees all data, **nothing may be sent that a stack user 
   the privacy sign-off [H10](decisions.md#human-sign-offs-still-needed).
 - **Retention** (example, to be agreed): metrics 13 months; logs 30 days in prd and 14 days in dev and acc; traces
   14 days. Kubernetes audit logs and Firewall logs stay in Log Analytics with the SOC's retention.
-
----
-
-[Back to contents](../README.md) · Previous: [18. Encryption at rest with customer-managed keys](18-encryption-at-rest-and-customer-managed-keys.md) · Next: [20. Backup and region recovery](20-backup-and-region-recovery.md)

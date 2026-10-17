@@ -216,7 +216,3 @@ DaemonSets (Cilium, CSI drivers, monitoring) run on all nodes.
 
 Note: the kubelet identity is cluster-wide in AKS, so it is **never** granted access to Key Vaults – workloads
 use workload identity only (picture 6).
-
----
-
-[Back to contents](../README.md) · Previous: [3. Control plane](03-control-plane.md) · Next: [5. Allowed and blocked flows](05-allowed-and-blocked-flows.md)

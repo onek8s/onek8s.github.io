@@ -395,7 +395,3 @@ each of these.
 | Stateful cluster | Zone-redundant control plane, node pools per AZ | Only the applications with a stateful exception, and their consumers | Consumers in every cell at once | In-place recovery, PDB-guarded; restore from the vault tier |
 | Grafana Cloud and its Private Link | Outside the region | No new telemetry, no SLO gates | None for traffic; releases and upgrades stop at their gates (no data means no promotion); Alloy buffers on the nodes | Grafana Labs; the watchdog alert fires from outside the region |
 | GitHub | Outside Azure | No merges, no Flux source | None for traffic; Flux keeps the last applied state; safe runbook actions still run from the runbooks repository mirror in the management VNet | GitHub; a region recovery does not depend on the lost region, but it does depend on GitHub |
-
----
-
-[Back to contents](../README.md) · Previous: [7. Application multi-tenancy inside a zone](07-application-multi-tenancy.md) · Next: [9. Environments (fourteen to twenty clusters)](09-environments.md)
