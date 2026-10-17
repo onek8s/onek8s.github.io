@@ -32,7 +32,10 @@ shows how the platform survives the loss of the region: **only persistent data i
 paired region**, and the clusters are rebuilt there from IaC and Git.
 
 Picture 21 shows what makes the platform portable: what is the same in every cloud, the thin layer of cloud
-adapters, and the PaaS services every cloud offers.
+adapters, and the PaaS services every cloud offers. Picture 22 puts the egress control options side by side and
+picture 23 shows how the traffic flows are **documented from Git** - a picture per application and per isolation zone,
+generated from the per-application firewall rule files and the applications' own configuration, because the hub
+Firewall cannot say which application uses a rule.
 
 > Status: **draft** for review. Country codes `fi` / `se` and all IP ranges are examples.
 
@@ -73,6 +76,7 @@ adapters, and the PaaS services every cloud offers.
 - [20. Backup and region recovery](docs/20-backup-and-region-recovery.md)
 - [21. Open standards and portability](docs/21-open-standards-and-portability.md)
 - [22. Egress control options and the company firewall](docs/22-egress-control-options-and-the-company-firewall.md)
+- [23. Traffic flow documentation: a picture per application and per zone](docs/23-traffic-flow-documentation.md)
 - [Decisions](docs/decisions.md)
 - [Open questions](docs/open-questions.md)
 - [Comparison with Wolkwacht](docs/wolkwacht-comparison.md)
