@@ -1,5 +1,5 @@
-%% Example of a generated per-application picture (section 23): int-fi-example on the dev lab's overlay cell az2, as the
-%% first run drew it on 2026-10-17 - with the amber stats.grafana.org rule that was then moved to the platform rules.
+%% Example of a generated per-application picture (section 23): int-fi-example on the dev lab's overlay cell az2,
+%% regenerated 2026-10-17 after the stats.grafana.org rule moved to the platform rules (azure-landing-zone docs/traffic-flows).
 flowchart LR
     client["Corporate network and VPN clients"]
     subgraph CELL["Cell aks-dev-int-stateless-az2 - overlay + hub firewall only: the firewall sees the zone's node addresses (model A)"]
@@ -16,10 +16,8 @@ flowchart LR
     fw["Hub firewall<br/>rule collection group dev-int-applications"]
     subgraph OUT["Outside the landing zone"]
         direction TB
-        d_login_microsoftonline_com["login.microsoftonline.com:443"]
         d_api_ipify_org["api.ipify.org:443"]
         d_api_open_meteo_com["api.open-meteo.com:443"]
-        d_stats_grafana_org["stats.grafana.org:443"]
     end
     client --> gw
     gw --> svc_aks_hello
@@ -27,10 +25,8 @@ flowchart LR
     wl_aks_hello --> dns
     eso -.->|"Secrets"| wl_aks_hello
     wl_aks_hello -->|"every flow leaving the cluster"| fw
-    fw -->|"zone allow-list"| d_login_microsoftonline_com
     fw -->|"allowed"| d_api_ipify_org
     fw -->|"allowed"| d_api_open_meteo_com
-    fw -->|"allowed, not in the configuration"| d_stats_grafana_org
     classDef ns fill:#e3f2fd,stroke:#1565c0,color:#000
     classDef platform fill:#eceff1,stroke:#455a64,color:#000
     classDef fw fill:#ede7f6,stroke:#5e35b1,color:#000
@@ -43,5 +39,3 @@ flowchart LR
     class fw fw
     class svc_aks_hello,wl_aks_hello ns
     class d_api_ipify_org,d_api_open_meteo_com allowed
-    class d_stats_grafana_org unexplained
-    class d_login_microsoftonline_com zone

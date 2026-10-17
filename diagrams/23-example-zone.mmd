@@ -1,4 +1,5 @@
-%% Example of a generated per-zone picture (section 23): zone int-se on the dev lab's node-subnet cell az3, first run 2026-10-17.
+%% Example of a generated per-zone picture (section 23): zone int-se on the dev lab's node-subnet cell az3 (2026-10-17):
+%% the applications' own rules, the zone allow-list and the exposure's platform rules, what the firewall opens for the zone.
 flowchart LR
     subgraph Z["Isolation zone int-se"]
         direction TB
@@ -8,13 +9,15 @@ flowchart LR
     subgraph OUT["What the firewall opens for the zone"]
         direction TB
         d_api_open_meteo_com["api.open-meteo.com:443<br/>asked by int-se-example"]
-        d_stats_grafana_org["stats.grafana.org:443<br/>asked by int-se-example"]
         z_login_microsoftonline_com["login.microsoftonline.com:443<br/>zone allow-list"]
+        p___grafana_net["*.grafana.net:443<br/>platform rule, every cell"]
+        p_stats_grafana_org["stats.grafana.org:443<br/>platform rule, every cell"]
     end
     a_int_se_example --> fw
     fw -->|"allowed"| d_api_open_meteo_com
-    fw -->|"allowed, not in the configuration"| d_stats_grafana_org
     fw -->|"zone allow-list"| z_login_microsoftonline_com
+    fw -->|"platform rule"| p___grafana_net
+    fw -->|"platform rule"| p_stats_grafana_org
     classDef ns fill:#e3f2fd,stroke:#1565c0,color:#000
     classDef platform fill:#eceff1,stroke:#455a64,color:#000
     classDef fw fill:#ede7f6,stroke:#5e35b1,color:#000
@@ -26,5 +29,5 @@ flowchart LR
     class fw fw
     class a_int_se_example ns
     class d_api_open_meteo_com allowed
-    class d_stats_grafana_org unexplained
     class z_login_microsoftonline_com zone
+    class p___grafana_net,p_stats_grafana_org platform
