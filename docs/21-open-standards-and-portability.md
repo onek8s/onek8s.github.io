@@ -28,8 +28,9 @@ of that cloud, and a handful of values per cluster (`cluster-settings`) that the
 
 The example application shows it end to end: [aks-hello](https://github.com/onek8s/aks-hello) and its manifests in
 [aks-fluxcd-example](https://github.com/onek8s/aks-fluxcd-example) contain no Azure name at all. The same
-`Deployment` and `HTTPRoute` run on `aks-dev-stateless-az1` and `aks-dev-stateless-az2` today, and
-https://hello.onek8s.lol says which cluster answered.
+`Deployment` and `HTTPRoute` run today in the dev lab's two internal cells, `aks-dev-int-stateless-az2` and
+`aks-dev-int-stateless-az3`, which differ in their egress model
+([section 22](22-egress-control-options-and-the-company-firewall.md)) and not in the application.
 
 ## Data in PaaS services that every cloud offers
 
