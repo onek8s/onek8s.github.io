@@ -1,11 +1,14 @@
 # OneK8s
 
-**One Kubernetes platform for every cloud.** The name comes from the one ring that rules them all: one platform
-that runs in any public cloud **without changes to the applications or to how they are deployed**. Applications,
+**One Kubernetes platform, one application contract for every cloud – built on Azure (AKS) first.** The name comes
+from the one ring that rules them all: one platform whose applications run in any public cloud **without changes to
+the applications or to how they are deployed** (R26). Applications,
 their manifests and the platform's in-cluster configuration use only open standards – Kubernetes, OCI, Flux, the
 Gateway API, External Secrets, OIDC workload identity – and data lives in PaaS services that every major cloud offers
 with the same protocol (PostgreSQL, MySQL, Redis / Valkey, MongoDB, Kafka). Only the landing zone and the cluster
-infrastructure-as-code are cloud-specific ([section 1.3](docs/1.3-open-standards-and-portability.md)).
+infrastructure-as-code are cloud-specific ([section 1.3](docs/1.3-open-standards-and-portability.md)). The *contract* is
+portable today; the platform under it is an AKS platform that leans on what Azure manages, and a second cloud is
+another implementation of it, not a lift of this one.
 
 **Azure is the first cloud implemented**; AWS and Google Cloud are the targets. This design describes the Azure
 implementation: a large Azure Kubernetes Service (AKS) platform with strong isolation between
@@ -21,6 +24,12 @@ cluster is the *last option*, used only when no suitable PaaS service exists or 
 it is **not built at all until the first such workload is approved**. All admission policies are implemented with
 the AKS-native **Azure Policy add-on** (Gatekeeper managed by AKS), and day-2 operations are run by **AI agents**
 that change the platform only through pull requests within human-defined guardrails.
+
+The platform is **private by default**: no PaaS service, vault, registry or API server takes public network access,
+and the only public endpoints are the external zones' gateways ([D60](docs/7.2-decisions.md#decision-matrix)). Egress
+leaves through the exposure's **hub Azure Firewall**, which decides per isolation zone by default; per-application
+egress (Cilium FQDN policies with ACNS, or pod addresses in the Firewall's rules) is a per-cell choice
+([D61](docs/7.2-decisions.md#decision-matrix), [section 5.2](docs/5.2-egress-control-options-and-the-company-firewall.md)).
 
 > Status: **draft** for review. Country codes `fi` / `se` and all IP ranges are examples.
 
