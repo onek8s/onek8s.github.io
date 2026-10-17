@@ -50,7 +50,8 @@ Each destination carries a **status**, the one fact the Firewall cannot give:
 | **allowed, not in the configuration** | amber | A rule in the application's file that nothing in its configuration names | A hidden dependency (a library, a base image, a sidecar) to document - or a rule nobody needs any more, to remove. The agent reports it as a finding |
 | **denied: no rule** | red, dashed | The configuration names a destination that no rule and no zone allow-list allows | The Firewall denies it; the egress agent proposes the rule from the denied flows, a human merges it |
 | **proposed** | purple, dashed | In an open pull request of the egress agent | Review the pull request |
-| **zone allow-list** | teal | On the zone's allow-list, open to every application of the zone | Nothing - but the application did not ask for it |
+| **zone allow-list** | teal | On the zone's allow-list, open to every application of the zone. On an application's page only when its configuration names it; otherwise it is the zone page's business | Nothing |
+| **platform rule** | grey | A rule of the platform for every cell of the exposure (the registry, Grafana Cloud, Grafana's usage statistics). Likewise only when named | Nothing |
 
 Below the picture, the page lists the same destinations with the rule's reason, where the configuration names the
 destination, and the rule's evidence; then the routes (hostnames per cell, gateway, backends), the workloads and notes
@@ -58,18 +59,24 @@ destination, and the rule's evidence; then the routes (hostnames per cell, gatew
 
 **Per zone** (`docs/traffic-flows/<spoke>/zone-<zone>.md`): every application of the zone, the hub Firewall with the
 zone's IP group as its source, and **the union of what the Firewall opens for the zone** - each destination with the
-applications that asked for it, the zone allow-list, and the names applications declare that no rule allows yet. This
+applications that asked for it, the zone allow-list, the platform's rules of the exposure (from the landing zone's
+`observability_fqdns`; the registry and vault rules follow), and the names applications declare that no rule allows
+yet. The zone page also notes when the fleet's allow-list and the landing zone's `fqdn_allow_list` of the zone differ -
+the Firewall enforces one, the pull request check reads the other. The shared names live here on purpose: an
+application's page shows only what the application itself asked for or names, so a reviewer sees its own footprint
+without the zone's noise. This
 is the picture section 22's "applications of one zone share the zone's destinations" needs: a reviewer of the next
 egress pull request sees what the zone already reaches and who brought each name in, and the Firewall's owners see
 the zone's whole exposure on one page. An index page lists the zones and applications of the spoke.
 
 Two pages of the first run, as examples (the rest is at azure-landing-zone `docs/traffic-flows/`, rendered by GitHub):
 
-The application `int-fi-example` on the overlay cell az2 - the amber destination is the finding described below:
+The application `int-fi-example` on the overlay cell az2, after the finding described below was settled (the two
+rules it asked for; the zone allow-list and the platform's rules are on the zone page):
 
 ![Example: the per-application picture of int-fi-example](../images/23-example-application.svg)
 
-The zone `int-se` on the node-subnet cell az3:
+The zone `int-se` on the node-subnet cell az3 - the application's rule, the zone allow-list and the platform's rules:
 
 ![Example: the per-zone picture of int-se](../images/23-example-zone.svg)
 
