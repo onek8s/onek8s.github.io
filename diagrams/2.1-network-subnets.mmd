@@ -1,49 +1,58 @@
-%% Subnet layout of an AKS spoke VNet, here an internal cell's. Every subnet has its own NSG and UDR.
-%% Every zone is its own address space of the VNet, taken from the zone prefix of the address plan (section 3.1).
-%% Internal and external are separate clusters and subscriptions (D52): an external cell's VNet
-%% (vnet-prd-ext-sl-az1) is the same with ext-fi / ext-se from the external halves (10.49.128.0/20, 10.50.128.0/20)
-%% and its control plane zone from 10.48.128.0/20.
-%% Pod subnets exist only in the stateful cluster (VNet CNI); stateless clusters use Azure CNI Overlay.
+%% Subnet layout of an AKS spoke VNet, here an internal overlay cell with the dev lab's addressing (172.22.16.0/20).
+%% One address space per cell, cut into sixteen equal slots: slot 0 the system subnet, slots 1-14 the isolation
+%% zones by their index (the same index in every cell of the exposure), slot 15 reserved for the delegated API
+%% server subnet of VNet integration (H14). In a zone's slot the first half is the node subnet and the fifth eighth
+%% the load balancer subnet; the rest is reserve (address plan, section 3.1). A node-subnet cell (D59) is the same
+%% with a /16 of 100.64.0.0/10 and its pods in the node subnets. Private endpoints are not in the cells (snet-shared-pe).
+%% Internal and external are separate clusters and subscriptions (D52): an external cell's VNet is the same layout
+%% with ext-fi / ext-se in its slots and public load balancers for its zone gateways.
 flowchart TB
-    subgraph VNET["AKS spoke VNet vnet-prd-int-sl-az1 in sub-aks-prd-int – one address space per zone (example addressing)"]
+    subgraph VNET["Cell VNet vnet-dev-int-stateless-az2 in sub-aks-dev-int – one address space 172.22.16.0/20, sixteen /24 slots"]
         direction TB
-        subgraph ISE["Zone int-se – address space 10.50.0.0/20"]
+        subgraph S15["Slot 15 – 172.22.31.0/24"]
             direction LR
-            ise_n["snet-int-se-nodes<br/>10.50.0.0/24"]
-            ise_p["snet-int-se-pods<br/>10.50.4.0/22<br/>stateful only (VNet CNI)"]
-            ise_i["snet-int-se-ilb<br/>10.50.8.0/27<br/>internal LB: zone gateway (stateless)<br/>or app Services (stateful)"]
-            ise_pe["snet-int-se-pe<br/>10.50.9.0/27<br/>Key Vault PE"]
+            api["snet-apiserver (reserved)<br/>delegated to Microsoft.ContainerService<br/>for API Server VNet Integration – not usable on an encrypted VNet with v4+ sizes (H14)"]
         end
-        subgraph IFI["Zone int-fi – address space 10.49.0.0/20"]
+        subgraph SF["Slots 3 to 14 – 172.22.19.0/24 … 172.22.30.0/24"]
             direction LR
-            ifi_n["snet-int-fi-nodes<br/>10.49.0.0/24"]
-            ifi_p["snet-int-fi-pods<br/>10.49.4.0/22<br/>stateful only (VNet CNI)"]
-            ifi_i["snet-int-fi-ilb<br/>10.49.8.0/27<br/>internal LB: zone gateway (stateless)<br/>or app Services (stateful)"]
-            ifi_pe["snet-int-fi-pe<br/>10.49.9.0/27<br/>Key Vault PE"]
+            free["free: a new zone takes its index's slot in every cell,<br/>nothing existing is re-addressed"]
         end
-        subgraph CP["Control plane zone – address space 10.48.0.0/20"]
+        subgraph S2["Slot 2 – zone int-se (index 2) – 172.22.18.0/24"]
             direction LR
-            s_api["snet-apiserver<br/>10.48.0.0/28<br/>delegated: Microsoft.ContainerService"]
-            s_sysn["snet-system-nodes<br/>10.48.1.0/24"]
-            s_sysp["snet-system-pods<br/>10.48.4.0/22<br/>stateful only (VNet CNI)"]
-            s_ppe["snet-platform-pe<br/>10.48.2.0/27<br/>platform Key Vault PE<br/>(certificates)"]
+            ise_n["snet-int-se-nodes<br/>172.22.18.0/25"]
+            ise_i["snet-int-se-ilb<br/>172.22.18.128/27"]
+            ise_r["reserve"]
+        end
+        subgraph S1["Slot 1 – zone int-fi (index 1) – 172.22.17.0/24"]
+            direction LR
+            ifi_n["snet-int-fi-nodes<br/>172.22.17.0/25<br/>the zone's NAP nodes"]
+            ifi_i["snet-int-fi-ilb<br/>172.22.17.128/27<br/>internal LB of the zone gateway"]
+            ifi_r["reserve<br/>172.22.17.160/27 … /26"]
+        end
+        subgraph S0["Slot 0 – 172.22.16.0/24"]
+            direction LR
+            sys["snet-system<br/>172.22.16.0/24<br/>system pool, every zone's gateway pods and ESO,<br/>API server private endpoint (D58)"]
         end
     end
 
-    ext["External cell vnet-prd-ext-sl-az1 (sub-aks-prd-ext)<br/>same layout: ext-fi 10.49.128.0/20 · ext-se 10.50.128.0/20<br/>control plane 10.48.128.0/20<br/>its zone gateways have public LBs (Traffic Manager)"]
-    rt["Route tables (one per zone)<br/>0.0.0.0/0 → Azure Firewall<br/>one route per other zone's address space → Azure Firewall"]
-    nsg["NSGs (one per subnet)<br/>default: deny VNet→VNet<br/>allow only mandatory flows, by zone prefix"]
-    cni["Stateless clusters: Azure CNI Overlay<br/>pod CIDR outside the VNet, SNAT to node IP<br/>→ no pod subnets; VNet encryption on"]
+    shared["Environment network vnet-aks-dev<br/>snet-shared-pe: private endpoints of the zone and platform Key Vaults,<br/>registry (prd), Terraform state, AI models – reached through the hub Firewall"]
+    hub["Hub VNet of the exposure<br/>Azure Firewall Premium (labfw in the dev lab)<br/>DNS proxy, SNAT, per-zone IP groups"]
+    rt["Route table rt-&lt;cell&gt; on snet-system and the node subnets<br/>0.0.0.0/0 → hub Firewall, BGP propagation off<br/>(traffic between the slots stays in the VNet: NSGs + Cilium separate the zones)"]
+    nsg["NSG per subnet nsg-&lt;cell&gt;-&lt;subnet&gt;<br/>deny-all inbound last; allows only kubelet 10250 from snet-system, Cilium health, DNS,<br/>the overlay pod range between node subnets, LB probes, 443 from Internet / VirtualNetwork"]
+    cni["Overlay cell: Azure CNI Overlay powered by Cilium<br/>pods in 100.201.0.0/16 (every cell), services 100.202.0.0/16;<br/>a pod leaving the cluster carries its zone's node address.<br/>Node-subnet cell: pods in the zone's node subnet (/21 of a /16)"]
     rt -.-> VNET
     nsg -.-> VNET
     cni -.-> VNET
-    VNET x-.-x|"⛔ only through the hub Firewall,<br/>denied by default"| ext
+    VNET <-->|"peering, encrypted"| hub
+    hub <--> shared
 
     classDef cp fill:#eceff1,stroke:#455a64,color:#000
     classDef int fill:#e3f2fd,stroke:#1565c0,color:#000
-    classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef res fill:#f5f5f5,stroke:#9e9e9e,color:#000,stroke-dasharray: 4 4
     classDef note fill:#fffde7,stroke:#9e9d24,color:#000
-    class s_api,s_sysn,s_sysp,s_ppe cp
-    class ifi_n,ifi_p,ifi_i,ifi_pe,ise_n,ise_p,ise_i,ise_pe int
-    class ext ext
+    classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000
+    class sys,api cp
+    class ifi_n,ifi_i,ise_n,ise_i int
+    class ifi_r,ise_r,free res
     class rt,nsg,cni note
+    class shared,hub ext
