@@ -1,6 +1,6 @@
-# 4. Node pools
+# 5. Node pools
 
-![Node pools](../images/04-node-pools.svg)
+![Node pools](../images/05-node-pools.svg)
 
 Every isolation zone has its own nodes in that zone's subnets, labelled `platform/zone=<zone>` and tainted
 `platform/zone=<zone>:NoSchedule`. How the nodes are created differs per cluster type, because the two cluster types
@@ -14,9 +14,9 @@ run different kinds of workloads:
 | VM sizes | Chosen by NAP for the pending pods from an allow-list of several VNet-encryption-capable SKU families in the `NodePool` requirements, **amd64 and arm64** | One fixed size per pool, chosen when the workload's exception is onboarded; amd64 |
 | Capacity type | On-demand and **spot**, chosen per application ([below](#cpu-architecture-and-spot-chosen-by-the-application)) | On-demand only |
 | Scaling | Nodes are created for pending pods and removed or consolidated when they are empty or under-used, **down to zero**: a zone without application pods has no nodes, because the zone's gateway and ESO run on the system pool ([below](#zone-nodes-only-for-applications)); the `NodePool` `limits` (CPU, memory) are the upper bound, sized for N+1 | **No autoscaling.** Fixed node count per pool, set in IaC; capacity changes are planned changes |
-| Node replacement | Drift (new node image or Kubernetes version), consolidation and `expireAfter`, limited by the `NodePool` disruption budgets; PDBs are respected | Surge upgrade per pool, one AZ at a time ([section 12](12-zero-downtime-cluster-upgrades.md#stateful-cluster)) |
+| Node replacement | Drift (new node image or Kubernetes version), consolidation and `expireAfter`, limited by the `NodePool` disruption budgets; PDBs are respected | Surge upgrade per pool, one AZ at a time ([section 14](14-zero-downtime-cluster-upgrades.md#stateful-cluster)) |
 | Defined by | Flux, in `infrastructure/stateless` (subnet IDs and AZ from the `cluster-vars` ConfigMap), applied before anything that runs on zone nodes | Cluster IaC |
-| Disk encryption | Cluster's disk encryption set (`key-<cluster>-disk`) on the ephemeral OS disks; `security.encryptionAtHost: true` in every `AKSNodeClass` | Cluster's disk encryption set on the OS disks, `--enable-encryption-at-host`; persistent volumes with the zone's own key ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)) |
+| Disk encryption | Cluster's disk encryption set (`key-<cluster>-disk`) on the ephemeral OS disks; `security.encryptionAtHost: true` in every `AKSNodeClass` | Cluster's disk encryption set on the OS disks, `--enable-encryption-at-host`; persistent volumes with the zone's own key ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)) |
 | System pool | Classic node pool `system`, fixed node count, pinned to the cell's AZ | Classic node pool `system`, fixed node count, spread over AZ 1–3 |
 
 **Why two models.** Stateless workloads scale on load all day and can be moved at any time, so NAP fits them: it
@@ -29,8 +29,8 @@ and its nodes change only in planned upgrades – never because an autoscaler de
 ### Zone nodes only for applications
 
 In the stateless clusters a zone's nodes exist only while the zone has application pods. The zone's platform
-components – its gateway (`<zone>-gateway`, [section 13](13-encryption-in-transit-and-tls.md)) and its External
-Secrets Operator (`<zone>-secrets`, [section 6](06-workload-identity-and-secrets.md)) – run on the system pool next to
+components – its gateway (`<zone>-gateway`, [section 15](15-encryption-in-transit-and-tls.md)) and its External
+Secrets Operator (`<zone>-secrets`, [section 7](07-workload-identity-and-secrets.md)) – run on the system pool next to
 the platform's own controllers, so they never hold a zone node. A zone that no application uses yet, or no longer,
 costs no VMs: NAP creates the first node when an application pod of the zone is pending and consolidates the last
 one away when it is empty. The zone's separation does not depend on where these two components run: the gateway's
@@ -38,7 +38,7 @@ load balancer is still the zone's own, in the zone's subnet, its routes are stil
 the ESO still reaches only the zone's vault, and Cilium policies still separate both from every other zone. What the
 system pool loses is node-level separation between the zones' gateways, which share the platform's nodes; it is
 sized for them (at least two Envoy replicas per zone and cell, the minimum of App Routing's HPA). The gateways also
-share one control plane per cell, App Routing's istiod ([section 13](13-encryption-in-transit-and-tls.md)): the data
+share one control plane per cell, App Routing's istiod ([section 15](15-encryption-in-transit-and-tls.md)): the data
 plane is per zone, the control plane is not.
 
 NAP details in the stateless clusters:
@@ -47,13 +47,13 @@ NAP details in the stateless clusters:
   (`--node-provisioning-default-pools None`), so every NAP node belongs to a zone's `NodePool`. NAP requires Azure CNI
   Overlay powered by Cilium, which the stateless clusters use anyway. The cluster autoscaler is not used anywhere.
 - All nodes run **Azure Linux 3.0** (`AKSNodeClass` `imageFamily: AzureLinux`, system pool `--os-sku AzureLinux`),
-  which eBPF host routing requires on every node of the cluster ([section 16](16-advanced-networking-and-fqdn-egress.md)).
+  which eBPF host routing requires on every node of the cluster ([section 17](17-advanced-networking-and-fqdn-egress.md)).
 - Several SKU families in each allow-list lower the risk that the cell's single AZ runs out of capacity for one VM size
-  when a cell is pre-scaled to carry the full load ([section 12](12-zero-downtime-cluster-upgrades.md#stateless-clusters)).
+  when a cell is pre-scaled to carry the full load ([section 14](14-zero-downtime-cluster-upgrades.md#stateless-clusters)).
 - Disruption budgets keep consolidation slow (e.g. at most 10 % of a zone's nodes at a time) and block it while a cell
   is being changed; all applications have ≥ 2 replicas and a PDB, so consolidation never takes an application down.
 - Only the platform manages `NodePool` and `AKSNodeClass` objects (Kubernetes RBAC), and Azure Policy rejects any whose
-  subnet, label, taint or VM sizes do not match its zone ([section 14](14-policy-enforcement.md)).
+  subnet, label, taint or VM sizes do not match its zone ([section 9](09-policy-enforcement.md)).
 
 ## CPU architecture and spot, chosen by the application
 
@@ -82,8 +82,8 @@ How the platform handles them:
   application that did not choose spot away from spot nodes, also from spot nodes that already exist and have room.
 - **Allow-lists per architecture**: the SKU allow-list holds amd64 families (e.g. Dsv5/Dsv6, Esv5/Esv6) and arm64
   families (e.g. Dpsv6/Epsv6, Cobalt 100) – only those that support VNet encryption, because it is the only encryption
-  between nodes ([section 13](13-encryption-in-transit-and-tls.md)), and encryption at host, which every node has
-  ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)). The spot `NodePool` uses the same allow-list:
+  between nodes ([section 15](15-encryption-in-transit-and-tls.md)), and encryption at host, which every node has
+  ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)). The spot `NodePool` uses the same allow-list:
   several families per architecture also give spot more places to find capacity.
 - **Capacity and N+1**: the on-demand `NodePool` limits alone are sized for N+1 (one cell carrying the whole
   environment), because spot capacity can disappear exactly when a cell is pre-scaled. The spot `NodePool` limits cap
@@ -100,7 +100,7 @@ How the platform handles them:
   multi-architecture.
 - **Validation**: applications set only the labels; Azure Policy rejects unknown label values, pods that set
   `kubernetes.io/arch` or `karpenter.sh/capacity-type` in their own `nodeSelector` / affinity, and pods that tolerate
-  `platform/capacity` without the `spot` label ([section 14](14-policy-enforcement.md)).
+  `platform/capacity` without the `spot` label ([section 9](09-policy-enforcement.md)).
 - **System pool and stateful cluster**: the system pool stays amd64 on-demand. The stateful cluster runs only
   on-demand nodes – a spot eviction would move a replica and re-attach its disks without a PDB – and only amd64 pools;
   in the stateful cluster any label value other than the defaults is rejected. An arm64 pool set (one per zone and
@@ -126,7 +126,7 @@ create a GPU node.
 - **Cost**: a GPU node is the most expensive thing in a cell. The `NodePool` scales to zero and removes an empty node
   after a minute, its vCPU limit is set per cluster, and the family's vCPU quota is raised only where GPUs are
   wanted. The dev lab runs none: its limit is 0, so the GPU rules are tested there by dry runs only. OpenCost reports the node's cost against the namespace that used it
-  ([section 7](07-application-multi-tenancy.md#ownership-and-cost)).
+  ([section 8](08-application-multi-tenancy.md#ownership-and-cost)).
 - **Validation**: Azure Policy rejects a GPU request without the label, the label without a GPU request (a pod that
   would hold a GPU node without using its GPU), a GPU pod that is not amd64, and the GPU toleration without the label.
   The stateful cluster offers no GPUs.
@@ -143,7 +143,7 @@ platform uses it in two loops:
 | Loop | Who | How fast | Writes |
 |---|---|---|---|
 | **Online**: resize running pods to their usage | [Vertical Pod Autoscaler](https://learn.microsoft.com/en-us/azure/aks/vertical-pod-autoscaler) (AKS add-on) in mode `InPlaceOrRecreate` – deterministic, in the cluster | Minutes | The pods' `resize` subresource only, within the bounds of the application's `VerticalPodAutoscaler` |
-| **Policy**: which applications may be resized, the bounds, and the requests new pods start from | **Right-sizing agent** ([section 15](15-ai-driven-day-2-operations.md#agents)) | Daily, and on OOMKill / throttling / stuck-resize alerts | Pull requests to the fleet repository, tiered by the merge gate |
+| **Policy**: which applications may be resized, the bounds, and the requests new pods start from | **Right-sizing agent** ([section 20](20-ai-driven-day-2-operations.md#agents)) | Daily, and on OOMKill / throttling / stuck-resize alerts | Pull requests to the fleet repository, tiered by the merge gate |
 
 The agent never resizes a pod itself: an agent with write access to pods would break *Git is the only write path*,
 and a language model does not belong in a loop that must react in minutes. It is the same split as HPA / KEDA
@@ -152,7 +152,7 @@ that are in Git).
 
 **How it is set up – on by default**
 
-- Every cluster starts on Kubernetes **1.36** ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)), so
+- Every cluster starts on Kubernetes **1.36** ([update policy](14-zero-downtime-cluster-upgrades.md#update-policy)), so
   container-level (GA) and pod-level (beta) in-place resize are available in every cell from day one. The VPA add-on
   (`--enable-vpa`) is enabled by the cluster IaC in every cluster – except the dev lab's cells, which leave it off to run
   on one 8 GiB system node (lab cost exception, [D55](decisions.md#decision-matrix)); all nodes are Azure Linux 3.0, which has the
@@ -192,7 +192,7 @@ that are in Git).
 - Resizes are admitted against the namespace `ResourceQuota`: `maxAllowed` × `maxReplicas` must fit it. The design
   does not count on Azure Policy (Gatekeeper) seeing the `pods/resize` subresource ([verification V09](decisions.md#azure-capability-and-verification-matrix)),
   so `maxAllowed`, quota and node allocatable are the bounds of an in-place resize, not the admission policies of
-  [section 14](14-policy-enforcement.md).
+  [section 9](09-policy-enforcement.md).
 - An in-place resize changes the pod, not the Deployment: Flux sees no drift. New pods start from the requests the
   VPA's admission webhook sets, or – if the webhook is down – from Git; the right-sizing agent keeps Git close to the
   VPA's target so a rebuilt cell or a drain does not start from stale numbers.
@@ -215,4 +215,4 @@ Gatekeeper data replication; a separate policy makes sure the label of a namespa
 DaemonSets (Cilium, CSI drivers, monitoring) run on all nodes.
 
 Note: the kubelet identity is cluster-wide in AKS, so it is **never** granted access to Key Vaults – workloads
-use workload identity only (picture 6).
+use workload identity only (picture 7).

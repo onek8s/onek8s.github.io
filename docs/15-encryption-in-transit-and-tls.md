@@ -1,9 +1,9 @@
-# 13. Encryption in transit and TLS
+# 15. Encryption in transit and TLS
 
-![Encryption in transit](../images/13-tls-encryption.svg)
+![Encryption in transit](../images/15-tls-encryption.svg)
 
 Every hop is encrypted, but each cluster type does it in the way that costs the applications least. Encryption at
-rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-customer-managed-keys.md).
+rest with customer-managed keys is in [section 16](16-encryption-at-rest-and-customer-managed-keys.md).
 
 ## Stateless clusters: VNet encryption + TLS-only zone gateway
 
@@ -33,9 +33,9 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
     fields: node selector, tolerations, resources, Service annotations, `externalTrafficPolicy`, ...).
   - One `Gateway` per isolation zone in the platform namespace `<zone>-gateway` (a reserved application name), its
     Envoy pods on the system pool (so that a zone without applications has no nodes,
-    [section 4](04-node-pools.md#zone-nodes-only-for-applications)), behind an internal load balancer in
+    [section 5](05-node-pools.md#zone-nodes-only-for-applications)), behind an internal load balancer in
     `snet-<zone>-ilb` (an external zone's: a public load balancer, see
-    [incoming traffic](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)). The platform owns the `GatewayClass` and one `Gateway` per zone; application teams own only
+    [incoming traffic](10-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)). The platform owns the `GatewayClass` and one `Gateway` per zone; application teams own only
     `HTTPRoute`s in their namespaces – the Gateway API role split between cluster operator and application developer. `allowedRoutes` selects namespaces with `platform/zone=<zone>`, so a route
     can never attach to another zone's gateway.
   - **One control plane for all zones of a cell.** The data plane (Envoy pods, load balancer) is per zone, but every
@@ -44,7 +44,7 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
     this, not the zone.
   - What the implementation does **not** offer: rate limits, request size limits, `EnvoyFilter` and an in-gateway WAF
     (e.g. Coraza). There are no gateway rate limits; protection of the external zones is discussed in
-    [section 8](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity).
+    [section 10](10-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity).
   - App Routing's own Key Vault (Secrets Store CSI) and DNS integration is not used: the certificate comes through
     ESO ([below](#certificates-issued-centrally-distributed-through-the-platform-key-vault)) and the DNS records from
     ExternalDNS.
@@ -101,8 +101,8 @@ Internet access to Let's Encrypt or write access to DNS.
   is created by the environment IaC module and is shared by all clusters of that exposure. It holds **all
   certificates of the exposure's zones** – the zone vaults hold none – plus the renewal job's ACME account key, and
   the customer-managed keys of the exposure's clusters
-  ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)). Every cluster spoke has one private endpoint to it in a small shared subnet
-  `snet-platform-pe` (control plane zone, [picture 2](02-network-layout.md)).
+  ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)). Every cluster spoke has one private endpoint to it in a small shared subnet
+  `snet-platform-pe` (control plane zone, [picture 3](03-network-layout.md)).
 - **Certificates per environment.** Each environment gets its own certificates in its own vault; nothing is copied
   between environments, and a dev or acc identity can never read a prd key:
 
@@ -127,14 +127,14 @@ Internet access to Let's Encrypt or write access to DNS.
   TLS-terminating applications in `sf`. A rebuilt cluster needs no new certificate, and Let's Encrypt rate limits are
   never an issue (a handful of certificates per environment).
 - **Access with plain Azure RBAC, no ABAC.** Key Vault RBAC roles can be assigned on a single certificate (its secret
-  object) instead of the whole vault. The secret reader identity ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator))
+  object) instead of the whole vault. The secret reader identity ([section 7](07-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator))
   of every namespace that needs a certificate – `<zone>-gateway` for the zone's gateway (`id-<zone>-gateway-secrets`),
   stateful applications, any application with a client or server certificate – gets **Key Vault Secrets User** scoped
   to `kv-<env>-platform/secrets/cert-<zone>-…` of *its own zone*; only External Secrets Operator uses it. Key Vault
   exposes a certificate together with its private key as a secret of the same name, which is what ESO reads. Neither
   the gateway nor any application calls Key Vault itself. No identity has a data-plane role on
   the vault scope except the renewal job and the platform team (PIM); the clusters' control plane identities have Key
-  Vault Contributor (management plane only) for KMS ([section 18](18-encryption-at-rest-and-customer-managed-keys.md#trade-off-cluster-identities-on-the-shared-platform-vault)). The role assignments are created by the
+  Vault Contributor (management plane only) for KMS ([section 16](16-encryption-at-rest-and-customer-managed-keys.md#trade-off-cluster-identities-on-the-shared-platform-vault)). The role assignments are created by the
   environment IaC module from the application onboarding (a "needs certificate" flag), so a certificate must exist
   before it can be assigned – the module creates it with a short-lived self-signed placeholder (issuer `Self`) that
   the job replaces on its first run.

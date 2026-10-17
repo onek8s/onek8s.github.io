@@ -1,6 +1,6 @@
-# 15. AI-driven day 2 operations
+# 20. AI-driven day 2 operations
 
-![AI-driven day 2 operations](../images/15-ai-operations.svg)
+![AI-driven day 2 operations](../images/20-ai-operations.svg)
 
 This design was written by AI, and the platform it describes is built to be operated mostly by AI too: upgrades,
 capacity, cost, pod right-sizing, compliance, drift, incident triage and application onboarding are run by **agents**. Agents may
@@ -12,7 +12,7 @@ which changes can be merged and by whom.
 
 1. **Git is the only write path.** No agent has write access to Azure, to a cluster, to Key Vault secrets or to the
    `main` branch. Everything an agent changes goes through a pull request and is applied by the existing delivery
-   ([section 10](10-keeping-clusters-in-sync.md)): IaC pipelines, Flux and the stateful pipeline, with their own
+   ([section 12](12-keeping-clusters-in-sync.md)): IaC pipelines, Flux and the stateful pipeline, with their own
    deployment identities that only run from the protected `main` branch.
 2. **Agents observe with read-only identities, act with pull requests.** Every agent has its own identity per
    environment, with the least read access its task needs, and no access to application data.
@@ -23,7 +23,7 @@ which changes can be merged and by whom.
    also in prd; anything that touches identity, network, policy, data or the guardrails needs one or two humans.
 5. **The design documents are the specification.** Agents read this repository as their context and cite the
    section a change follows; a change the design does not cover is a design change, made here first, by pull request.
-6. **The runtime guardrails stay the last line.** Azure Policy, the admission policies of [section 14](14-policy-enforcement.md),
+6. **The runtime guardrails stay the last line.** Azure Policy, the admission policies of [section 9](09-policy-enforcement.md),
    cell-by-cell rollouts with SLO gates and automatic rollback stop a wrong change that got merged, whoever wrote it.
 
 ## Agents
@@ -36,14 +36,14 @@ paths) are kept in the guardrails repository, versioned like code.
 |---|---|---|---|
 | **Operations agent** (on-call) | Triage alerts, correlate metrics, logs, Flux and pipeline status, Azure Resource Health; diagnose; verify that a fix worked; draft the incident report | Grafana Cloud alerts (IRM webhook), Flux notifications, failed pipeline runs, schedule (daily health report) | Incident issue with diagnosis and evidence, task for a change agent, dispatch of a [safe runbook action](#safe-actions-without-a-pull-request) |
 | **Platform change agent** | General IaC and fleet changes: fixes from incidents, platform component versions (KEDA, operators, External Secrets Operator; not the App Routing gateway, which AKS upgrades with the cluster), configuration | Task from the operations agent, issue assigned by a human | Pull request |
-| **Upgrade agent** | Runs the [update policy](12-zero-downtime-cluster-upgrades.md#update-policy): takes the target versions the version pipeline computes (the timetable stays deterministic), reads the release notes, checks the fleet manifests for removed APIs on the target minor, follows the cell-by-cell rollout and stops it on failed health | Version pipeline output, AKS release events | Version pull requests per environment and speed with a compatibility report; halt + incident on failed health |
-| **Release agent** | Prepares the application promotion pull requests dev → acc → prd ([section 10](10-keeping-clusters-in-sync.md)), summarises the change set, watches the cell gates | Successful release in the previous environment | Promotion pull request with release notes and risk summary |
-| **Capacity and cost agent** | NAP `NodePool` limits, spot share, amd64 / arm64 fit, system pool and stateful node pool sizes, quota headroom, idle resources; request and allocation efficiency ([section 19](19-observability-with-grafana-cloud.md#what-grafana-cloud-does)); reservations or savings plans for the steady baseline (system pools, stateful node pools, the on-demand share that always runs), while NAP and spot cover the variable part | Schedule (weekly), quota and budget alerts | Pull requests within `limits.yaml`, issues to application teams; reservation proposals as issues to the platform owner (they are purchases, not code) |
-| **Right-sizing agent** | Pod CPU and memory ([pod right-sizing](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)): the policy of the VPA that resizes pods **in place, online** – which applications (on by default, team opt-out), modes and `minAllowed` / `maxAllowed` bounds, HPA interplay, quota and N+1 fit – and the requests in Git new pods start from; watches resize health (`PodResizePending`, OOMKills, throttling). Never resizes a pod itself | Schedule (daily), task issues from the operations agent | Pull requests to the applications' `vpa.yaml` / `resources.yaml` within `limits.yaml`, issues to application teams and the capacity agent |
-| **Security and compliance agent** | Azure Policy non-compliance, Defender for Cloud recommendations and secure score trend, CIS benchmark scan results, expiring policy exemptions, image CVEs of platform components, certificate and secret expiry, policy `audit` → `deny` promotion ([section 14](14-policy-enforcement.md)), stateful-cluster drift report | Schedule (daily), Defender / Key Vault events | Pull requests for platform findings, issues to application teams for theirs |
+| **Upgrade agent** | Runs the [update policy](14-zero-downtime-cluster-upgrades.md#update-policy): takes the target versions the version pipeline computes (the timetable stays deterministic), reads the release notes, checks the fleet manifests for removed APIs on the target minor, follows the cell-by-cell rollout and stops it on failed health | Version pipeline output, AKS release events | Version pull requests per environment and speed with a compatibility report; halt + incident on failed health |
+| **Release agent** | Prepares the application promotion pull requests dev → acc → prd ([section 12](12-keeping-clusters-in-sync.md)), summarises the change set, watches the cell gates | Successful release in the previous environment | Promotion pull request with release notes and risk summary |
+| **Capacity and cost agent** | NAP `NodePool` limits, spot share, amd64 / arm64 fit, system pool and stateful node pool sizes, quota headroom, idle resources; request and allocation efficiency ([section 21](21-observability-with-grafana-cloud.md#what-grafana-cloud-does)); reservations or savings plans for the steady baseline (system pools, stateful node pools, the on-demand share that always runs), while NAP and spot cover the variable part | Schedule (weekly), quota and budget alerts | Pull requests within `limits.yaml`, issues to application teams; reservation proposals as issues to the platform owner (they are purchases, not code) |
+| **Right-sizing agent** | Pod CPU and memory ([pod right-sizing](05-node-pools.md#pod-right-sizing-vertical-scaling-in-place)): the policy of the VPA that resizes pods **in place, online** – which applications (on by default, team opt-out), modes and `minAllowed` / `maxAllowed` bounds, HPA interplay, quota and N+1 fit – and the requests in Git new pods start from; watches resize health (`PodResizePending`, OOMKills, throttling). Never resizes a pod itself | Schedule (daily), task issues from the operations agent | Pull requests to the applications' `vpa.yaml` / `resources.yaml` within `limits.yaml`, issues to application teams and the capacity agent |
+| **Security and compliance agent** | Azure Policy non-compliance, Defender for Cloud recommendations and secure score trend, CIS benchmark scan results, expiring policy exemptions, image CVEs of platform components, certificate and secret expiry, policy `audit` → `deny` promotion ([section 9](09-policy-enforcement.md)), stateful-cluster drift report | Schedule (daily), Defender / Key Vault events | Pull requests for platform findings, issues to application teams for theirs |
 | **Onboarding agent** | Turns an application team's request (new application, zone, identity, Key Vault secret exception, arch / capacity choice) into the IaC and fleet changes: namespace, managed identity, federated credentials, role assignments, overlays | Issue from a request template | Pull requests – always tier medium or high, because they create identities |
-| **Egress agent** ([D59](decisions.md#decision-matrix), [D61](decisions.md#decision-matrix)) | Proposes each application's hub Firewall rules from the flows the Firewall denied: finds the pod (or, in an overlay cell, the application pods on the node) behind each source address, checks the destination against the application's configuration, and adds it to the application's rule file with the reason and the evidence ([section 16](16-advanced-networking-and-fqdn-egress.md#two-egress-models-under-test-d59), [section 22](22-egress-control-options-and-the-company-firewall.md)) | Schedule (hourly), Firewall deny alerts | One pull request per application namespace to the landing zone's `firewall-applications/<env>-<exposure>/<namespace>.yaml` - tier high (a Firewall rule); never a rule it merges itself |
-| **Documentation agent** ([section 23](23-traffic-flow-documentation.md)) | Keeps the traffic flow pages current: a Mermaid picture per application (who reaches it, what it runs, every destination through the hub Firewall with its status - named in the configuration, allowed but not named, named but denied, proposed, zone allow-list) and per isolation zone (the union the Firewall opens, and who asked for each name), generated from Git by code; the model only explains the findings | Merged rule or application changes, schedule (weekly) | One pull request with the generated pages (`docs/traffic-flows/`) - tier low; never a rule |
+| **Egress agent** ([D59](decisions.md#decision-matrix), [D61](decisions.md#decision-matrix)) | Proposes each application's hub Firewall rules from the flows the Firewall denied: finds the pod (or, in an overlay cell, the application pods on the node) behind each source address, checks the destination against the application's configuration, and adds it to the application's rule file with the reason and the evidence ([section 17](17-advanced-networking-and-fqdn-egress.md#two-egress-models-under-test-d59), [section 18](18-egress-control-options-and-the-company-firewall.md)) | Schedule (hourly), Firewall deny alerts | One pull request per application namespace to the landing zone's `firewall-applications/<env>-<exposure>/<namespace>.yaml` - tier high (a Firewall rule); never a rule it merges itself |
+| **Documentation agent** ([section 19](19-traffic-flow-documentation.md)) | Keeps the traffic flow pages current: a Mermaid picture per application (who reaches it, what it runs, every destination through the hub Firewall with its status - named in the configuration, allowed but not named, named but denied, proposed, zone allow-list) and per isolation zone (the union the Firewall opens, and who asked for each name), generated from Git by code; the model only explains the findings | Merged rule or application changes, schedule (weekly) | One pull request with the generated pages (`docs/traffic-flows/`) - tier low; never a rule |
 | **Reviewer agent** | Reviews every agent pull request against this design and the evidence: does the change do what its intent says, is the rollback plan real, does it widen access; its review is a required check, never a human approval | Every pull request | Review with findings |
 
 The **reviewer agent never reviews its own work**: it runs with a separate context, its own instructions and, where
@@ -61,7 +61,7 @@ Git leads back to the agent run and its transcript.
 | Repository | Content | Agents | Humans |
 |---|---|---|---|
 | IaC repository (exists) | Environment and cluster modules, Azure Policy, identities, network, target versions | Pull requests from `agent/*` branches | Approve by tier; merge to `main` only through the merge gate |
-| Fleet repository (exists) | In-cluster state ([section 10](10-keeping-clusters-in-sync.md)) | Pull requests from `agent/*` branches | Approve by tier |
+| Fleet repository (exists) | In-cluster state ([section 12](12-keeping-clusters-in-sync.md)) | Pull requests from `agent/*` branches | Approve by tier |
 | **Guardrails repository** (new) | `limits.yaml`, risk tier rules, plan and manifest policies (OPA / Conftest), the merge gate workflow, CODEOWNERS of the other repositories, agent instructions and tool allow-lists, the IaC of the agent identities | Read only | Two approvals (platform + security) for every change |
 | **Runbooks repository** (new) | Pre-approved safe actions as parameterised pipelines | May only dispatch them | Own and change them |
 | This design repository | The specification | Pull requests (design changes) | Approve every change |
@@ -85,7 +85,7 @@ The examples use GitHub; Azure DevOps offers the same with branch policies, requ
   marked as an incident fix by a human.
 - **Rate limits per agent**: open pull requests, merges per day and environment, and **one prd cell per pull
   request** – the gate rejects a pull request that changes more than one cell's tag or version at a time, so the
-  cell-by-cell rule of [section 11](11-zero-downtime-application-upgrades.md#releases-cell-by-cell) also holds for agents.
+  cell-by-cell rule of [section 13](13-zero-downtime-application-upgrades.md#releases-cell-by-cell) also holds for agents.
 
 ## Risk tiers
 
@@ -144,7 +144,7 @@ boundary: the read-only roles below are, so a tool server configured with a writ
 
 | Agent | Azure roles | Never |
 |---|---|---|
-| All agents | `Reader` on the environment subscription; `Monitoring Reader`; a Grafana Cloud `Viewer` service account per agent and environment, which sees all telemetry of the stack like every Grafana user ([section 19](19-observability-with-grafana-cloud.md#stacks-and-access)) | Any write role, `Contributor`, `Owner`, `User Access Administrator`, PIM eligibility; any role on the backup subscription ([section 20](20-backup-and-region-recovery.md)) |
+| All agents | `Reader` on the environment subscription; `Monitoring Reader`; a Grafana Cloud `Viewer` service account per agent and environment, which sees all telemetry of the stack like every Grafana user ([section 21](21-observability-with-grafana-cloud.md#stacks-and-access)) | Any write role, `Contributor`, `Owner`, `User Access Administrator`, PIM eligibility; any role on the backup subscription ([section 22](22-backup-and-region-recovery.md)) |
 | Operations, platform, upgrade, release, right-sizing | `Azure Kubernetes Service RBAC Reader` on the clusters (does not include `Secret`s); read access to the Flux and pipeline status | `Azure Kubernetes Service RBAC Writer` / `Cluster Admin`, `listClusterAdminCredential` |
 | Capacity and cost | `Cost Management Reader`; quota read | – |
 | Security and compliance | `Security Reader`; `Key Vault Reader` on the zone and platform vaults (metadata and expiry dates, not values) | `Key Vault Secrets User` / `Officer`, `Key Vault Certificate User` |
@@ -152,7 +152,7 @@ boundary: the read-only roles below are, so a tool server configured with a writ
 
 No agent has a data-plane role on the PaaS services or the ACR: they do not need application data to run the
 platform, and a prompt injection through a log line or an issue then cannot exfiltrate it. Agents do read
-application logs and traces in Grafana Cloud, and the [rule of what must not be sent](19-observability-with-grafana-cloud.md#what-must-not-be-sent)
+application logs and traces in Grafana Cloud, and the [rule of what must not be sent](21-observability-with-grafana-cloud.md#what-must-not-be-sent)
 keeps secrets out of them; their outbound access stays limited to the model provider and GitHub. Only the guardrails
 pipeline may create role assignments for agent identities; any other role assignment to one of them triggers an
 Activity Log alert, and a daily comparison against the guardrails IaC reports and removes it.
@@ -172,7 +172,7 @@ identities are the only ones with write access. Their federated credentials acce
 branch – an agent's or a human's – can never deploy.
 
 **Humans**: platform and security engineers approve pull requests and own the guardrails; their Azure access
-stays read-only plus break-glass via PIM ([section 9](09-environments.md)). A break-glass action is followed by a
+stays read-only plus break-glass via PIM ([section 11](11-environments.md)). A break-glass action is followed by a
 pull request that brings Git back in line, opened by the operations agent from the drift it detects.
 
 ## Safe actions without a pull request
@@ -197,7 +197,7 @@ always reverse it.
 The pull request is the first guardrail, not the only one:
 
 - **Deployment**: the cell-by-cell releases, SLO gates, soak times and automatic rollback of
-  [section 11](11-zero-downtime-application-upgrades.md) and [section 12](12-zero-downtime-cluster-upgrades.md) apply to
+  [section 13](13-zero-downtime-application-upgrades.md) and [section 14](14-zero-downtime-cluster-upgrades.md) apply to
   every merged change; the stateful pipeline keeps its `kubectl diff` and approval stage.
 - **Runtime**: Azure Policy denies non-compliant Azure resources and Kubernetes objects, whoever deploys them;
   budgets and quotas cap cost; Azure RBAC keeps agents read-only.

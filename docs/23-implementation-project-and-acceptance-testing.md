@@ -1,6 +1,6 @@
-# 17. Implementation project and acceptance testing
+# 23. Implementation project and acceptance testing
 
-![Implementation project](../images/17-implementation-project.svg)
+![Implementation project](../images/23-implementation-project.svg)
 
 **Proposal: the platform is built and accepted in a new, separate build tenant that is not connected to the
 corporate network, and in which all Azure Policy assignments are in audit mode.** The team can then change anything
@@ -12,7 +12,7 @@ landing zone and connected to the corporate network.
 
 **The dev environment alone is enough for acceptance.** dev has the same topology as prd – two (or three) stateless
 cells and, if built, a three-AZ stateful cluster – and is built from the same IaC modules and the same fleet
-repository; only parameters differ ([section 9](09-environments.md)). Everything acceptance has to prove is a property
+repository; only parameters differ ([section 11](11-environments.md)). Everything acceptance has to prove is a property
 of the modules and the configuration, not of an individual environment. For the duration of the performance tests,
 dev gets prd's capacity parameters (NAP `NodePool` limits, stateful node pool sizes, Firewall SKU),
 then goes back to its own.
@@ -25,14 +25,14 @@ then goes back to its own.
 | Clusters | **One internal cell per egress model under test** ([D57](decisions.md#decision-matrix), [D59](decisions.md#decision-matrix), [D61](decisions.md#decision-matrix)): `aks-dev-int-stateless-az2` (design name `aks-dev-int-sl-az2`, Finland's `int-fi`, overlay with the hub firewall alone) and `aks-dev-int-stateless-az3` (Sweden's `int-se`, node subnet); `sub-aks-dev` plays `sub-aks-dev-int`. `az1` stays defined and disabled, because availability zone 1 is not available to the subscription in germanywestcentral. There is no external subscription or cell since D57 ([D52](decisions.md#decision-matrix)) | Cost: one cell per model proves the model; the external clusters are the same modules and fleet with the exposure `ext`, rebuilt when the cross-cell tests need them ([backlog](#backlog-in-priority-order)) |
 | Network | Same hub-and-spoke as [picture 1](01-overview.md): a hub VNet and Azure Firewall per exposure ([D53](decisions.md#decision-matrix)), Private DNS, Bastion and the management VNet, but **no ExpressRoute / VPN gateway and no peering to the corporate hub**. Since 2026-10-15 ([D57](decisions.md#decision-matrix)) the lab runs the internal exposure (Finland only, one cell in AZ1, germanywestcentral) with the routing of `firewall` mode but labfw - a small VM enforcing the same Firewall Policies - in the hub instead of Azure Firewall: the cell peered with the hub, `0.0.0.0/0` to labfw, its DNS proxy (V22, partly) | The design is complete except for the one link that would connect it |
 | Corporate network | Simulated by a **client VNet** peered to the internal hub, routed through its Firewall like on-premises: internal test clients, load generators, a test DNS resolver forwarding to the hub Private DNS (not built yet; the lab firewall's VPN clients stand in for internal clients until then) | Internal zones (`int-*`), their Private DNS records and the corporate-side Firewall rules can be tested end to end |
-| Address plan | The **real prefixes reserved from the corporate IPAM** ([address plan](08-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)), not temporary ones | Connecting later needs no re-addressing; overlaps with on-premises are found now |
-| Azure Policy | The corporate landing zone initiatives and the platform's own definitions ([section 14](14-policy-enforcement.md)) assigned at the same scopes as in the corporate tenant, **all with effect `audit` / `enforcementMode: DoNotEnforce`** – except rules that were already enforced in another way before they became Azure Policy definitions (the stateless clusters' "no persistent storage"), which keep `deny`, the mutations, which refuse nothing, and each of the platform's own Kubernetes rules once the running cells report no violation of it (promoted one by one, ahead of phase 3) | Nothing blocks a prototype, but the compliance view shows from day one what the corporate tenant would deny |
+| Address plan | The **real prefixes reserved from the corporate IPAM** ([address plan](10-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)), not temporary ones | Connecting later needs no re-addressing; overlaps with on-premises are found now |
+| Azure Policy | The corporate landing zone initiatives and the platform's own definitions ([section 9](09-policy-enforcement.md)) assigned at the same scopes as in the corporate tenant, **all with effect `audit` / `enforcementMode: DoNotEnforce`** – except rules that were already enforced in another way before they became Azure Policy definitions (the stateless clusters' "no persistent storage"), which keep `deny`, the mutations, which refuse nothing, and each of the platform's own Kubernetes rules once the running cells report no violation of it (promoted one by one, ahead of phase 3) | Nothing blocks a prototype, but the compliance view shows from day one what the corporate tenant would deny |
 | DNS and certificates | A separate test domain (e.g. `example-test.com`) with its own public validation zone for Let's Encrypt | The corporate DNS zones are not touched |
 | Git and pipelines | The same repositories; a `build` target with its own GitHub environments and OIDC federated credentials to the build tenant | The code that is accepted is the code that goes to the corporate tenant |
-| AI agents | **Full permissions during phases 1 and 2**: Owner on the build tenant's subscriptions and cluster admin, so they can change Azure and the clusters directly, not only through pull requests; every action is logged (Activity Log, Entra ID sign-in logs, Kubernetes audit logs) | The agents are built in the same project, and what they really need is not known yet: their least-privilege identities, risk tiers and merge gate ([section 15](15-ai-driven-day-2-operations.md)) are derived from what they actually did; the model provider question can also be answered here with synthetic data |
+| AI agents | **Full permissions during phases 1 and 2**: Owner on the build tenant's subscriptions and cluster admin, so they can change Azure and the clusters directly, not only through pull requests; every action is logged (Activity Log, Entra ID sign-in logs, Kubernetes audit logs) | The agents are built in the same project, and what they really need is not known yet: their least-privilege identities, risk tiers and merge gate ([section 20](20-ai-driven-day-2-operations.md)) are derived from what they actually did; the model provider question can also be answered here with synthetic data |
 | Data | **Synthetic test data only**; no copies of production or customer data | The tenant does not have the corporate controls, so it must not hold anything they protect |
 | Internet | Egress through the exposure's hub Firewall, the same FQDN allow-lists as designed, plus what prototyping temporarily needs; the lab's labfw enforces the parent and the internal child policy (the platform's sources, the zones' allow-lists), and the applications' Cilium FQDN policies sit inside it | – |
-| API servers | **Private** (D58, 2026-10-15): over Private Link - Azure refuses [section 3](03-control-plane.md)'s VNet integration on the encrypted cell networks (H14) - the public FQDN resolving to the private address; the lab's pipelines join labfw's VPN to reach them. Entra ID and Azure RBAC only, local accounts disabled | Until 2026-10-15 public with authorized ranges, so that prototyping was not held up by the network path |
+| API servers | **Private** (D58, 2026-10-15): over Private Link - Azure refuses [section 4](04-control-plane.md)'s VNet integration on the encrypted cell networks (H14) - the public FQDN resolving to the private address; the lab's pipelines join labfw's VPN to reach them. Entra ID and Azure RBAC only, local accounts disabled | Until 2026-10-15 public with authorized ranges, so that prototyping was not held up by the network path |
 
 Rules that keep the build tenant from drifting away from what will be deployed later:
 
@@ -42,7 +42,7 @@ Rules that keep the build tenant from drifting away from what will be deployed l
 - **Policy audit results are tracked.** Every non-compliant result of a corporate initiative is either fixed or
   recorded as a requested exemption with a reason; the list must be empty or approved before phase 3.
 - **Agent permissions are reduced before acceptance.** At the end of phase 2 the logged agent actions are turned
-  into the per-agent, per-environment roles and the risk tiers of [section 15](15-ai-driven-day-2-operations.md);
+  into the per-agent, per-environment roles and the risk tiers of [section 20](20-ai-driven-day-2-operations.md);
   from phase 3 on the agents run with exactly those, read-only identities and changes only through pull requests,
   so acceptance tests the permission model that will go to the corporate tenant. Changes an agent made directly
   during prototyping count as portal changes: they are in code or removed.
@@ -70,23 +70,23 @@ phase 3, last what only an external event triggers. **17 items** (2026-10-17).
 
 | # | Tier | Item | Why here | Repositories |
 |---|---|---|---|---|
-| 1 | A – now | Promote the remaining Azure Policy rules from audit to deny once Cluster status shows zero violations: pod security *restricted*, deployment safeguards, allowed images, automount, internal load balancers. Image Integrity stays audit while the add-on is preview; zone placement audits while aks-hello's lab patch exists | Phase 3 runs with every policy on deny; each promotion is one line after a status run ([section 14](14-policy-enforcement.md)) | azure-landing-zone (`policy.tfvars`) |
+| 1 | A – now | Promote the remaining Azure Policy rules from audit to deny once Cluster status shows zero violations: pod security *restricted*, deployment safeguards, allowed images, automount, internal load balancers. Image Integrity stays audit while the add-on is preview; zone placement audits while aks-hello's lab patch exists | Phase 3 runs with every policy on deny; each promotion is one line after a status run ([section 9](09-policy-enforcement.md)) | azure-landing-zone (`policy.tfvars`) |
 | 2 | A – now | A real Azure Firewall in the landing zone's `firewall` mode, and the external hub with its own: the cells' spokes peered to it, outbound type `userDefinedRouting`, the FQDN allow-lists, the parent policy with a child per exposure (D53, V22) | Since D57 the lab's firewall VM enforces the designed Firewall Policies for the internal exposure; Azure Firewall itself, the external hub and `firewall` mode with the running cells have not run | azure-landing-zone, aks-terraform |
-| 3 | A – now | What the private API server (D58) and the private endpoints (D60) left open: VNet integration once H14 is answered, a private DNS zone and the management VNet private endpoint with the real Firewall, the R1 isolation test | The last lab exceptions of [section 3](03-control-plane.md) | aks-terraform, azure-landing-zone (management VNet) |
+| 3 | A – now | What the private API server (D58) and the private endpoints (D60) left open: VNet integration once H14 is answered, a private DNS zone and the management VNet private endpoint with the real Firewall, the R1 isolation test | The last lab exceptions of [section 4](04-control-plane.md) | aks-terraform, azure-landing-zone (management VNet) |
 | 4 | B – before acceptance | The version pipeline and NAP image pinning: target versions and images per cell from the update policy, applied cell by cell with the drain procedure (R12, R12a, V02, D11) | R12 has no automation yet; phase 2 exits only with a passing test per requirement | aks-ai-agents, aks-terraform, aks-fluxcd-platform |
-| 5 | B – before acceptance | Run the AI agents against the build tenant; derive their least-privilege roles and risk tiers from the logged actions (R18, [section 15](15-ai-driven-day-2-operations.md)) | Phase 2 exit criterion; phase 3 runs the agents on those identities | aks-ai-agents |
+| 5 | B – before acceptance | Run the AI agents against the build tenant; derive their least-privilege roles and risk tiers from the logged actions (R18, [section 20](20-ai-driven-day-2-operations.md)) | Phase 2 exit criterion; phase 3 runs the agents on those identities | aks-ai-agents |
 | 6 | B – before acceptance | The rest of the internal exposure: the client VNet behind the internal hub, a cell with both zones, the placement artifact (shared `txt-owner-id`, `upsert-only`) and the migration workflow (D52, D53, V08) | Built since D57: `sub-aks-dev` as the internal subscription, the firewall VM as the hub firewall, `int-fi` in az2 and `int-se` in az3; home cells, migration and the corporate path have not run | azure-landing-zone, aks-terraform, aks-fluxcd-platform |
 | 7 | B – before acceptance | The external exposure back in the lab (`sub-aks-dev-ext`, the external hub) with two cells while the cross-cell tests run: Traffic Manager drain and failover, ExternalDNS record take-over, R13 sync between cells (V07, V08) | The lab has had no external cell since D57; R11 and R13 need two cells of one exposure; the cells are destroyed again afterwards for cost | azure-landing-zone, aks-terraform |
 | 8 | B – before acceptance | CIS follow-ups: External Secrets Operator's RBAC limited to its zone's namespaces (4.1.2, also R7's open point), network policies for the AKS add-on namespaces, restricted Pod Security for the gateway namespaces when App Routing allows it, an image vulnerability scan in the pipeline ([CIS benchmark](#cis-benchmark)) | Raises the score and closes the one cluster-wide Secret reader | aks-fluxcd-platform, aks-terraform |
-| 9 | B – before acceptance | Observability completed: OpenCost with a `metrics:read` token in the vault secret, Grafana Cloud through Private Link (V17), synthetic monitoring of the health routes and the SLO gates ([section 19](19-observability-with-grafana-cloud.md)) | Cost per team (D46) and the release and upgrade gates depend on it | aks-fluxcd-platform, aks-terraform |
-| 10 | B – before acceptance | Backups ([section 20](20-backup-and-region-recovery.md)): Key Vault key and secret backups, the immutable storage in the paired region, the PaaS backup pattern, one restore drill (V16) | The platform's keys and certificates exist only once today | aks-terraform |
-| 11 | B – before acceptance | CI checks of [section 14](14-policy-enforcement.md) on rendered manifests (a PDB and a VPA for every Deployment, egress names against the zone's allow-list) in the fleet and example repositories | Finds at review time what admission denies at deploy time; cheap | aks-fluxcd-platform, aks-fluxcd-example |
+| 9 | B – before acceptance | Observability completed: OpenCost with a `metrics:read` token in the vault secret, Grafana Cloud through Private Link (V17), synthetic monitoring of the health routes and the SLO gates ([section 21](21-observability-with-grafana-cloud.md)) | Cost per team (D46) and the release and upgrade gates depend on it | aks-fluxcd-platform, aks-terraform |
+| 10 | B – before acceptance | Backups ([section 22](22-backup-and-region-recovery.md)): Key Vault key and secret backups, the immutable storage in the paired region, the PaaS backup pattern, one restore drill (V16) | The platform's keys and certificates exist only once today | aks-terraform |
+| 11 | B – before acceptance | CI checks of [section 9](09-policy-enforcement.md) on rendered manifests (a PDB and a VPA for every Deployment, egress names against the zone's allow-list) in the fleet and example repositories | Finds at review time what admission denies at deploy time; cheap | aks-fluxcd-platform, aks-fluxcd-example |
 | 12 | C – phase 3 | The verifications still open: VPA in-place resize (V09), VNet encryption on every allowed VM family (V21), Inspektor Gadget and Image Cleaner (V19), Chaos Studio faults (V18); the performance, HA, upgrade and recovery tests of this section | Acceptance itself | all |
 | 13 | C – phase 3 / 4 | Penetration test and independent security review ([security reviews](#security-reviews)) | Phase 4 exit criterion | – |
 | 14 | D – on trigger | The stateful cluster, only with the first approved exception; first thing to verify there is the node OS channel (V13: `SecurityPatch` or `NodeImage`) | Not built until needed by design (R8) | aks-terraform (`envs/dev-ext-stateful.tfvars`), aks-fluxcd-platform |
 | 15 | D – on trigger | Application Gateway WAF v2 per external zone and cell, if the security team asks for it (H03, D04) | A sign-off, not a platform decision | aks-terraform |
 | 16 | D – on trigger | Image promotion tests between registries, with the acc environment | dev has one registry; the promotion path exists only from acc on | aks-terraform |
-| 17 | B – before acceptance | Traffic flow documentation follow-ups ([section 23](23-traffic-flow-documentation.md), first version 2026-10-17): the `--check` on the landing zone's pull requests that touch the rule files, the "observed" column from the Firewall's log (rules unused for 30 days), a declaration convention for names assembled in code (`platform/egress` annotation), the platform's own flows per cell, and the egress agent's proposal to remove a rule nothing names and nothing uses | The amber findings of the first run (`stats.grafana.org` in both zones) need the observed column to be settled; the check keeps the pages from falling behind the rules | aks-ai-agents, azure-landing-zone, aks-fluxcd-platform |
+| 17 | B – before acceptance | Traffic flow documentation follow-ups ([section 19](19-traffic-flow-documentation.md), first version 2026-10-17): the `--check` on the landing zone's pull requests that touch the rule files, the "observed" column from the Firewall's log (rules unused for 30 days), a declaration convention for names assembled in code (`platform/egress` annotation), the platform's own flows per cell, and the egress agent's proposal to remove a rule nothing names and nothing uses | The amber findings of the first run (`stats.grafana.org` in both zones) need the observed column to be settled; the check keeps the pages from falling behind the rules | aks-ai-agents, azure-landing-zone, aks-fluxcd-platform |
 
 Not on the list by decision: GPU nodes in the lab (D42, the user runs none), IPv6 (D54), AKS cost analysis (D46).
 
@@ -115,24 +115,24 @@ Each check names the requirement it covers. A forbidden manifest refused by a ru
 
 | Test | Expected result |
 |---|---|
-| From a pod in every zone, connect to every other zone's pods, ILB, nodes, Key Vault and private endpoints, in the same cell, the other cells and the stateful cluster | Blocked (NSG, Firewall and Cilium each log the drop) ([section 5](05-allowed-and-blocked-flows.md)) |
-| Application A's `ExternalSecret` references application B's secret in the same zone Key Vault | Sync fails with `403` from Key Vault ABAC ([section 6](06-workload-identity-and-secrets.md)) |
+| From a pod in every zone, connect to every other zone's pods, ILB, nodes, Key Vault and private endpoints, in the same cell, the other cells and the stateful cluster | Blocked (NSG, Firewall and Cilium each log the drop) ([section 6](06-allowed-and-blocked-flows.md)) |
+| Application A's `ExternalSecret` references application B's secret in the same zone Key Vault | Sync fails with `403` from Key Vault ABAC ([section 7](07-workload-identity-and-secrets.md)) |
 | An application reads Key Vault itself: SDK call with its own identity, a pod running as `secrets-reader`, a `SecretProviderClass` or CSI volume, a hand-made `Secret`, a vault name in its egress policy | Dropped by Cilium / `403` (no role) / denied by admission; an Azure Resource Graph query finds no Key Vault data-plane role on any application identity |
-| Egress to an FQDN not in the application's policy, to an IP address, and to an FQDN in the policy but not in the zone's Firewall allow-list | Dropped by Cilium; CI check fails the last one before deployment ([section 16](16-advanced-networking-and-fqdn-egress.md)) |
+| Egress to an FQDN not in the application's policy, to an IP address, and to an FQDN in the policy but not in the zone's Firewall allow-list | Dropped by Cilium; CI check fails the last one before deployment ([section 17](17-advanced-networking-and-fqdn-egress.md)) |
 | From a pod in every zone, request a token from the instance metadata service (`169.254.169.254`) | Dropped by Cilium |
-| A member of a namespace's `view`, `edit` and `admin` group (impersonated, and signed in as a test application in the group) reads, writes and binds roles in that namespace, and does anything in another namespace or cluster-wide | Exactly the role's rights in its namespace (`view` no `Secret`s, only `admin` role bindings), refused everywhere else; the namespace's `RoleBinding`s match the IaC; in the zone vault nobody lists, `view` has nothing, `admin` reads and writes only the namespace's prefix by name, `edit` writes and updates it but reads no value and deletes nothing (D51), and neither creates anything outside it ([section 6](06-workload-identity-and-secrets.md#soft-multi-tenancy)) |
-| A platform viewer lists the clusters' namespaces and the vaults' secrets, reads a pod, a `Secret` or a secret value, writes | Lists both (names only); everything else refused; its role is assignable at the environment's resource group only ([section 7](07-application-multi-tenancy.md#platform-viewers)) ([section 7](07-application-multi-tenancy.md#who-may-work-in-a-namespace)) |
-| Sign in to every cluster with the local admin credential (`az aks get-credentials --admin`) and SSH to a node | Both refused: local accounts and SSH are disabled ([section 3](03-control-plane.md)) |
-| Promote an image that is not signed by the platform's CI; push an image to the acc registry with any identity other than the promotion pipeline | Promotion fails on the signature check; the push is refused (no role). An unsigned image deployed in dev shows up as non-compliant in Image Integrity ([section 14](14-policy-enforcement.md)); every image in the registry and every image an application runs verifies against the platform's certificate |
-| Apply each forbidden manifest of the [policy table](14-policy-enforcement.md) (privileged pod, image not from ACR, `toCIDR`, `PersistentVolumeClaim` in a stateless cluster, …) | Denied by admission |
-| Reach the API server from the client VNet, the hub and a spoke | Only from the management VNet ([section 3](03-control-plane.md)) |
+| A member of a namespace's `view`, `edit` and `admin` group (impersonated, and signed in as a test application in the group) reads, writes and binds roles in that namespace, and does anything in another namespace or cluster-wide | Exactly the role's rights in its namespace (`view` no `Secret`s, only `admin` role bindings), refused everywhere else; the namespace's `RoleBinding`s match the IaC; in the zone vault nobody lists, `view` has nothing, `admin` reads and writes only the namespace's prefix by name, `edit` writes and updates it but reads no value and deletes nothing (D51), and neither creates anything outside it ([section 7](07-workload-identity-and-secrets.md#soft-multi-tenancy)) |
+| A platform viewer lists the clusters' namespaces and the vaults' secrets, reads a pod, a `Secret` or a secret value, writes | Lists both (names only); everything else refused; its role is assignable at the environment's resource group only ([section 8](08-application-multi-tenancy.md#platform-viewers)) ([section 8](08-application-multi-tenancy.md#who-may-work-in-a-namespace)) |
+| Sign in to every cluster with the local admin credential (`az aks get-credentials --admin`) and SSH to a node | Both refused: local accounts and SSH are disabled ([section 4](04-control-plane.md)) |
+| Promote an image that is not signed by the platform's CI; push an image to the acc registry with any identity other than the promotion pipeline | Promotion fails on the signature check; the push is refused (no role). An unsigned image deployed in dev shows up as non-compliant in Image Integrity ([section 9](09-policy-enforcement.md)); every image in the registry and every image an application runs verifies against the platform's certificate |
+| Apply each forbidden manifest of the [policy table](09-policy-enforcement.md) (privileged pod, image not from ACR, `toCIDR`, `PersistentVolumeClaim` in a stateless cluster, …) | Denied by admission |
+| Reach the API server from the client VNet, the hub and a spoke | Only from the management VNet ([section 4](04-control-plane.md)) |
 | Azure Resource Graph: public IPs, public endpoints of PaaS / Key Vault / ACR, local auth enabled | None except the designed ones (the external zones' gateway load balancers) |
 | Stateful cluster: any Internet destination | Blocked, apart from the documented Entra ID and Azure Policy exceptions |
 
 ### CIS benchmark
 
 The [CIS Azure Kubernetes Service (AKS) Benchmark](https://www.cisecurity.org/benchmark/kubernetes) is the reference
-hardening checklist ([section 14](14-policy-enforcement.md)). Like the isolation tests, it is an automated stage that
+hardening checklist ([section 9](09-policy-enforcement.md)). Like the isolation tests, it is an automated stage that
 runs by hand after a change that can move the score (in the dev lab the weekly run and the run after every change of a cell are off, to keep the deploy-and-test loop short), and it stays in the pipelines for the platform's life. It has three
 sources, merged into one result per CIS recommendation and a score (the share of automated recommendations that pass):
 
@@ -147,17 +147,17 @@ only; any other failure, including a new object that fails an accepted recommend
 three kinds of entries: the dev lab's own exceptions, which acc and prd do not have; what AKS manages and cannot be changed
 (its control-plane users, the add-ons' RBAC and namespaces); and design decisions with their section. The score and the
 result per recommendation are kept for every run, and a drop raises an alert to the security agent
-([section 15](15-ai-driven-day-2-operations.md)).
+([section 20](20-ai-driven-day-2-operations.md)).
 
 **Baseline and improvements in the dev lab** (`aks-dev-stateless-az1`, Kubernetes 1.36, October 2026):
 
 | | Score | Result |
 |---|---|---|
-| First run | 55 % (23 of 42 automated) | Every node check (section 3) passes. 19 failures: no audit logs (2.1.1); the lab's public API server (5.4.1, 5.4.2) and Defender for Containers off (5.1.1); RBAC of AKS, the Flux extension and External Secrets Operator (4.1.x); default service accounts that mount tokens, and platform namespaces without a network policy or restricted Pod Security (4.1.5, 4.2.8, 4.4.2); Kubescape's security-context control, which fails every workload (4.7.2); what Kubernetes puts into `default` (4.7.3) |
+| First run | 55 % (23 of 42 automated) | Every node check (section 4) passes. 19 failures: no audit logs (2.1.1); the lab's public API server (5.4.1, 5.4.2) and Defender for Containers off (5.1.1); RBAC of AKS, the Flux extension and External Secrets Operator (4.1.x); default service accounts that mount tokens, and platform namespaces without a network policy or restricted Pod Security (4.1.5, 4.2.8, 4.4.2); Kubescape's security-context control, which fails every workload (4.7.2); what Kubernetes puts into `default` (4.7.3) |
 | After the first round | 59 % (24 of 41 automated; 4.7.1, a list of every namespace to review, counted as manual) | Audit logs pass (2.1.1); no unaccepted failure. Objects failing an accepted recommendation down from 22 to 6 (4.1.5, only Kubernetes' empty namespaces and AKS's), 12 to 9 (4.2.8) and 8 to 2 (4.4.2, the AKS add-on namespaces). Isolation tests unchanged and green |
 
 Improvements made in the first round: Kubernetes audit logs (`kube-audit-admin`, `guard`) of every cluster to the
-environment's Log Analytics workspace ([section 19](19-observability-with-grafana-cloud.md)); Cilium policies for the
+environment's Log Analytics workspace ([section 21](21-observability-with-grafana-cloud.md)); Cilium policies for the
 platform's own namespaces (external-dns, External Secrets Operator, the platform gateway) like the zones' ones; no service
 account token from a `default` service account in any namespace the platform creates; Kubernetes' empty namespaces
 (`default`, `kube-public`, `kube-node-lease`) restricted, with a deny-all policy.
@@ -172,7 +172,7 @@ through phase 2:
 - Network policies for the AKS add-on namespaces (`aks-istio-system`, `gatekeeper-system`) if AKS supports them there
   (4.4.2), and restricted Pod Security for `flux-system` once the Flux extension's pods meet it (4.2.8).
 - The gateways' namespaces on restricted Pod Security once App Routing lets its gateway pods set a seccomp profile
-  (4.2.8, [section 14](14-policy-enforcement.md)).
+  (4.2.8, [section 9](09-policy-enforcement.md)).
 - An image vulnerability scan in the pipeline for the dev lab, where Defender for Containers is off (5.1.1).
 
 ### Performance and capacity
@@ -196,7 +196,7 @@ Fault injection with [Azure Chaos Studio](https://learn.microsoft.com/en-us/azur
 and Kubernetes chaos experiments, every one under load. Each experiment must also raise the expected alert.
 Chaos Studio's AKS faults run through Chaos Mesh, which installs a privileged daemon on every node. In dev of the
 build tenant it is installed only for the duration of the tests, in a platform namespace with a time-limited
-exemption ([section 14](14-policy-enforcement.md)); whether its network faults work with eBPF host routing and a
+exemption ([section 9](09-policy-enforcement.md)); whether its network faults work with eBPF host routing and a
 private cluster is checked first ([verification V18](decisions.md#azure-capability-and-verification-matrix)). VM- and zone-level faults (stop VMSS
 instances, zone down) need no in-cluster agent.
 
@@ -212,18 +212,18 @@ instances, zone down) need no in-cluster agent.
 
 ### Zero-downtime upgrades and changes
 
-The procedures of [section 11](11-zero-downtime-application-upgrades.md) and
-[section 12](12-zero-downtime-cluster-upgrades.md) are run end to end under load, at least once each; the pass
+The procedures of [section 13](13-zero-downtime-application-upgrades.md) and
+[section 14](14-zero-downtime-cluster-upgrades.md) are run end to end under load, at least once each; the pass
 criterion for all is **no errors beyond the budget at the load generators**.
 
 - Application release cell by cell, including a database schema change and a rollback.
 - Kubernetes minor upgrade of `sl-az2` and of `sl-az1` (drain → upgrade → return), and a node image upgrade.
 - A cell **deleted and rebuilt** from IaC and Flux while the others carry the traffic.
 - Stateful cluster (if built): node image and patch upgrade one AZ at a time.
-- Certificate renewal and rotation in the zone's gateway ([section 13](13-encryption-in-transit-and-tls.md)).
+- Certificate renewal and rotation in the zone's gateway ([section 15](15-encryption-in-transit-and-tls.md)).
 - Azure Policy definition change rolled out audit → deny.
-- **Adding a country online** (two new zones, [R16](08-cluster-types-stateless-and-stateful.md#adding-a-country-online)).
-- An AI agent change through every risk tier, and the kill switch ([section 15](15-ai-driven-day-2-operations.md)).
+- **Adding a country online** (two new zones, [R16](10-cluster-types-stateless-and-stateful.md#adding-a-country-online)).
+- An AI agent change through every risk tier, and the kill switch ([section 20](20-ai-driven-day-2-operations.md)).
 - A VPA bound change by the right-sizing agent rolled through the cells while the VPA resizes the reference
   application in place.
 
@@ -235,8 +235,8 @@ criterion for all is **no errors beyond the budget at the load generators**.
 | Restore a deleted Key Vault secret and a deleted Key Vault (soft delete, purge protection) | Recovered; applications reconnect |
 | PaaS point-in-time restore of the reference database | Within the agreed RPO / RTO |
 | Stateful cluster (if built): restore of a zone's persistent volumes only (Azure Backup for AKS, vault tier) into the same and a rebuilt cluster, the pipeline deploying the StatefulSets afterwards | Data consistent; StatefulSets bind the restored claims; within the agreed RPO / RTO |
-| Immutability of the backups: delete a recovery point, delete a blob version, shorten a retention and disable soft delete as `Owner` of the backup subscription ([section 20](20-backup-and-region-recovery.md#tests)) | Every attempt denied or blocked by multi-user authorization |
-| Region recovery drill: the primary region treated as lost; the environment rebuilt in the paired region from IaC, Git and the immutable copies only ([section 20](20-backup-and-region-recovery.md#region-recovery)) | Reference application passes its tests; RPO per data store and RTO end to end recorded |
+| Immutability of the backups: delete a recovery point, delete a blob version, shorten a retention and disable soft delete as `Owner` of the backup subscription ([section 22](22-backup-and-region-recovery.md#tests)) | Every attempt denied or blocked by multi-user authorization |
+| Region recovery drill: the primary region treated as lost; the environment rebuilt in the paired region from IaC, Git and the immutable copies only ([section 22](22-backup-and-region-recovery.md#region-recovery)) | Reference application passes its tests; RPO per data store and RTO end to end recorded |
 | Loss of the Flux source (Git unavailable) | Clusters keep running the last applied state; recovery when Git returns |
 
 ### Operations
@@ -246,7 +246,7 @@ criterion for all is **no errors beyond the budget at the load generators**.
 - Telemetry: metrics, logs (including Hubble flow logs) and traces of every cluster arrive in the environment's
   Grafana Cloud stack through Private Link, also from the stateful cluster; a trace of the reference application
   links the gateway, the application and its logs; the absent-data alert fires when a cluster's Alloy is stopped
-  ([section 19](19-observability-with-grafana-cloud.md)).
+  ([section 21](21-observability-with-grafana-cloud.md)).
 - Logs: Kubernetes audit logs, Activity Log, Firewall and Traffic Manager logs arrive in the Log Analytics
   workspace with the agreed retention and can be queried from Grafana.
 - No secrets in telemetry: a test application that logs a token, a connection string and an `Authorization`
@@ -254,7 +254,7 @@ criterion for all is **no errors beyond the budget at the load generators**.
 - Cost per environment measured at idle and at peak, and the prd estimate updated.
 - Break-glass: the PIM break-glass path to a cluster and to Azure is used once end to end, raises its alert, and the
   operations agent opens the pull request that brings Git back in line. Repeated every six months in acc.
-- Security detections ([section 19](19-observability-with-grafana-cloud.md#security-detections-and-forensics)):
+- Security detections ([section 21](21-observability-with-grafana-cloud.md#security-detections-and-forensics)):
   each one is triggered once on purpose and reaches its owner.
 
 ## Security reviews
@@ -267,10 +267,10 @@ in the build tenant with all policies in `deny`.
 | Threat model | STRIDE over the design documents and the as-built diagrams: trust boundaries (Internet, corporate network, cells, isolation zones, management VNet, CI/CD, AI agents) | Security architect with the platform team |
 | Cloud configuration | Defender for Cloud secure score and recommendations, the corporate Azure Policy initiatives in `deny` with zero non-compliant resources (or approved exemptions), the [CIS benchmark](#cis-benchmark) results and every accepted failure's reason, IaC scanning in CI | Security team |
 | Identity and access | All role assignments in all subscriptions, PIM settings and break-glass accounts, no standing write access; workload identity federated credentials (issuer, subject per ServiceAccount); GitHub OIDC subjects per environment; AI agent identities read-only, full prototyping permissions removed and the derived roles compared with the logged actions | Security team + identity team |
-| Network | NSG and Firewall rule sets against [section 5](05-allowed-and-blocked-flows.md), FQDN allow-lists per zone, WAF policies, no unexpected public endpoints, the stateful cluster's "no Internet" exceptions | Network + security teams |
+| Network | NSG and Firewall rule sets against [section 6](06-allowed-and-blocked-flows.md), FQDN allow-lists per zone, WAF policies, no unexpected public endpoints, the stateful cluster's "no Internet" exceptions | Network + security teams |
 | Penetration test | External: Internet → the `ext-*` zones' gateways (the addresses Traffic Manager hands out). Internal: client VNet → the gateways of the `int-*` zones. **Assumed breach**: a compromised pod in each zone tries container escape, IMDS / token theft, lateral movement to other zones, cells, Key Vaults, the API server and the stateful cluster | Independent party |
 | Supply chain | Image sources and ACR import path, vulnerability scanning, image signatures / digests, Flux source verification, branch protection and required reviews, secret scanning of all repositories | Security team |
-| Data protection | Encryption in transit verified (VNet encryption on the node links, TLS-only listeners), encryption at rest with customer-managed keys verified per cluster and zone ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)): KMS and disk encryption set on every cluster, encryption at host on every node, per-zone StorageClasses only; a key rotation and a key revocation (disable, recover) rehearsed in dev; data residency per country zone | Security + privacy |
+| Data protection | Encryption in transit verified (VNet encryption on the node links, TLS-only listeners), encryption at rest with customer-managed keys verified per cluster and zone ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)): KMS and disk encryption set on every cluster, encryption at host on every node, per-zone StorageClasses only; a key rotation and a key revocation (disable, recover) rehearsed in dev; data residency per country zone | Security + privacy |
 | Detection and response | Defender for Containers and Defender for Cloud alerts reach the SOC tooling; the pen test's activity was detected | SOC |
 
 Findings: **critical and high must be fixed and re-tested before the gate**; medium findings need an owner and a
@@ -304,7 +304,7 @@ build tenant could not test is added, so acceptance there is short:
 - Integration with on-premises systems and the real SOC.
 - A repeat of the isolation tests and a short load and failover test, to show nothing changed with the move.
 
-acc and prd follow the normal promotion ([section 9](09-environments.md)); application teams onboard and run their
+acc and prd follow the normal promotion ([section 11](11-environments.md)); application teams onboard and run their
 own user acceptance in acc. The build tenant is kept afterwards as the **platform lab** – policies in audit, no
 corporate connection, synthetic data – for prototyping new AKS features and the next design changes, or deleted if
 that is not needed.

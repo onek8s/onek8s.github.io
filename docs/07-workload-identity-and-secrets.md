@@ -1,6 +1,6 @@
-# 6. Workload identity first, Key Vault secrets only when needed
+# 7. Workload identity first, Key Vault secrets only when needed
 
-![Workload identity and Key Vault](../images/06-key-vault-abac.svg)
+![Workload identity and Key Vault](../images/07-key-vault-abac.svg)
 
 **Rule: an application authenticates with its workload identity wherever the target supports Microsoft Entra ID;
 a secret is used only when there is no other way.** No passwords, connection strings with keys, SAS tokens or
@@ -32,7 +32,7 @@ storage account keys for Azure services.
   "Local auth disabled" is enforced with Azure Policy on the resources, so a key-based fallback cannot be switched
   on later. Application configuration contains only endpoints and client IDs, which are not secrets. The table lists
   the Azure services; the ones without an equivalent in every cloud (Azure SQL, Service Bus, Cosmos DB's NoSQL API)
-  are available only as a documented cloud-pinning exception ([section 21](21-open-standards-and-portability.md#data-in-paas-services-that-every-cloud-offers)).
+  are available only as a documented cloud-pinning exception ([section 2](02-open-standards-and-portability.md#data-in-paas-services-that-every-cloud-offers)).
 - **Platform components use workload identity too**: Flux (`OCIRepository` `provider: azure`), the stateful
   deployment pipeline (workload identity federation, no client secret), External Secrets Operator (below), external-dns. Unlike applications, platform components may use
   Key Vault directly with their own identity ([below](#platform-components-may-use-key-vault-directly)). Images are pulled
@@ -42,7 +42,7 @@ storage account keys for Azure services.
 
 A secret is allowed only when the target cannot use Entra ID: third-party APIs and SaaS keys, partner systems and
 legacy protocols. TLS certificates are **not** in the zone vaults; they live in the environment's platform Key Vault
-([section 13](13-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
+([section 15](15-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
 Such a secret always lives in the zone's **Key Vault** – never in Git, Helm values or a Kubernetes `Secret` created by
 hand.
 
@@ -57,13 +57,13 @@ cluster spoke. Inside a zone's vault, applications share the vault but are separ
 - Application pipelines get **Key Vault Secrets Officer** with the same prefix on
   `@Request[...secrets:name]` for `setSecret`; rotation is owned by the application team (expiry dates set, Event
   Grid `SecretNearExpiry` alerts).
-- The namespace's Entra ID groups ([section 7](07-application-multi-tenancy.md#who-may-work-in-a-namespace),
+- The namespace's Entra ID groups ([section 8](08-application-multi-tenancy.md#who-may-work-in-a-namespace),
   [decision D49](decisions.md#decision-matrix)) get what their Kubernetes role gets on `Secret`s: the `admin` group **Key Vault Secrets Officer** under the
   same prefix conditions as the pipelines; the `edit` group a custom **Key Vault Secrets Editor** role
   (`setSecret`, `update`, `readMetadata` - no `getSecret`, delete, purge or restore) under the same conditions, so
   it creates and changes the namespace's secrets and sees their attributes but never a value
   ([decision D51](decisions.md#decision-matrix)); the `view` group nothing.
-- The **platform viewers** ([section 7](07-application-multi-tenancy.md#platform-viewers),
+- The **platform viewers** ([section 8](08-application-multi-tenancy.md#platform-viewers),
   [decision D50](decisions.md#decision-matrix)) list every secret's name and attributes, never a value.
 
 Constraints to keep in mind: Key Vault ABAC is **preview**, supports **secrets only** (not keys/certificates
@@ -72,7 +72,7 @@ convention `<app>-<secret>` is mandatory and must be enforced by the platform. T
 as well as `getSecret`, which refuses every list call – deliberately, see *Soft multi-tenancy* below. Because most applications need no secrets at all, the
 vault stays small and the preview dependency affects only the few exceptions. ABAC is also not the only boundary
 between two applications of a zone: each has its own reader identity, its own `SecretStore`, and admission rejects
-an `ExternalSecret` that names another application's prefix ([section 14](14-policy-enforcement.md)), so a change in
+an `ExternalSecret` that names another application's prefix ([section 9](09-policy-enforcement.md)), so a change in
 the preview cannot open a path on its own. The fallback, one vault per application with a secret exception, is a
 per-application flag in the environment IaC module ([decision D15](decisions.md#decision-matrix)).
 
@@ -94,7 +94,7 @@ is all External Secrets Operator does, and nobody can create a secret outside th
 on a new secret is on the name in the request). Tools that browse the vault – the Azure portal among them – are for
 the platform viewers, whose role lists every name; so names must never carry secrets. The isolation tests sign in
 as a member of each group and as the namespace's identity and check every row of the table
-([section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests)). The hard
+([section 23](23-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests)). The hard
 alternative – one vault per namespace – stays a per-namespace option ([decision D15](decisions.md#decision-matrix)).
 
 **The same pattern applies to other shared PaaS services**: one instance per zone (or environment), a data-plane
@@ -119,14 +119,14 @@ performance isolation, the namespace gets its own instance – hard multi-tenanc
 namespaces; platform components are the exception ([below](#platform-components-may-use-key-vault-directly)). The **Secrets Store CSI driver is not
 used**: the AKS Key Vault secrets provider add-on (`azure-keyvault-secrets-provider`) is disabled on every cluster and
 Azure Policy denies enabling it, its CRDs are not installed, and admission rejects `SecretProviderClass` objects and
-`secrets-store.csi.k8s.io` volumes ([section 14](14-policy-enforcement.md)).
+`secrets-store.csi.k8s.io` volumes ([section 9](09-policy-enforcement.md)).
 
 - **One ESO controller per isolation zone**, in the platform namespace `<zone>-secrets` (a reserved application
   name, like `<zone>-gateway`), on the system pool – so that a zone without applications has no nodes
-  ([section 4](04-node-pools.md#zone-nodes-only-for-applications)) – and deployed by
+  ([section 5](05-node-pools.md#zone-nodes-only-for-applications)) – and deployed by
   Flux (stateless) or the pipeline (stateful). Each instance has its own `controllerClass` (`<zone>`) and reconciles
   only the stores of its zone; the CRDs and the conversion webhook are installed once per cluster. Its path to Key
-  Vault is the zone's own flow ⑤ (⑤b to the platform vault, [section 5](05-allowed-and-blocked-flows.md)), so a
+  Vault is the zone's own flow ⑤ (⑤b to the platform vault, [section 6](06-allowed-and-blocked-flows.md)), so a
   controller can never reach another zone's vault and a compromised controller exposes one zone at most. It may
   write `Secret`s and request ServiceAccount tokens only through RoleBindings in its own zone's namespaces, created
   with each namespace at onboarding.
@@ -139,7 +139,7 @@ Azure Policy denies enabling it, its CRDs are not installed, and admission rejec
   do not already hold, since those groups manage the namespace's secrets in the vault themselves; no workload can.
 - **One `SecretStore` per application namespace**, generated from the onboarding by a platform preset: provider
   `azurekv`, `vaultUrl` of the own zone vault (and a second store for the platform vault where the application has
-  a certificate, [section 13](13-encryption-in-transit-and-tls.md)), `authType: WorkloadIdentity` with
+  a certificate, [section 15](15-encryption-in-transit-and-tls.md)), `authType: WorkloadIdentity` with
   `serviceAccountRef: secrets-reader`, `controller: <zone>`. Azure Policy rejects any other store configuration.
   Applications write only **`ExternalSecret`s** that reference their own namespace's store; `ClusterSecretStore`,
   `ClusterExternalSecret` and `PushSecret` are platform only. An application can therefore only ever pull with its
@@ -147,10 +147,10 @@ Azure Policy denies enabling it, its CRDs are not installed, and admission rejec
   `ExternalSecret` for `b-…` fails with `403`.
 - **No other way in.** Application identities have no Key Vault role at all; in application namespaces Cilium
   never allows `*.vault.azure.net` (only `<zone>-secrets` and the platform namespaces below reach a vault), and Azure Policy rejects an application egress policy that names a vault
-  ([section 16](16-advanced-networking-and-fqdn-egress.md)). In application namespaces, admission accepts
+  ([section 17](17-advanced-networking-and-fqdn-egress.md)). In application namespaces, admission accepts
   `Secret`s only from the zone's ESO controller (plus Helm release Secrets), so a secret in Git, Helm values or
   created with `kubectl` is rejected as before. Only the environment IaC module assigns Key Vault data-plane roles;
-  an acceptance test and the security agent ([section 15](15-ai-driven-day-2-operations.md)) check that no
+  an acceptance test and the security agent ([section 20](20-ai-driven-day-2-operations.md)) check that no
   application identity holds one.
 - **Consumption and rotation.** Applications mount the resulting `Secret` as a **volume** (preferred: the kubelet
   updates the files after a rotation; no `subPath`) or as environment variables (picked up only on the next
@@ -168,20 +168,20 @@ vault in its namespace's platform-owned egress policy. The Secrets Store CSI dri
 - **The zone's gateway uses ESO exactly like an application.** `<zone>-gateway` has the standard `secrets-reader`
   ServiceAccount, federated to the reader identity `id-<zone>-gateway-secrets`, which has **Key Vault Secrets User**
   on the zone certificate `kv-<env>-platform/secrets/cert-<zone>-wildcard` only
-  ([section 13](13-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
+  ([section 15](15-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
   The gateway pods have no Azure identity at all (istiod hands them the Secret; App Routing's own Key Vault
   integration through the Secrets Store CSI driver is not used), their egress policy names no vault, and the ESO rules of
-  [section 14](14-policy-enforcement.md) apply to `<zone>-gateway` as to any application namespace.
+  [section 9](09-policy-enforcement.md) apply to `<zone>-gateway` as to any application namespace.
 - **External Secrets Operator** itself, Flux and the monitoring components follow the rules above: own identity, own
   narrow roles, egress policy owned by the platform.
 - **Grafana Alloy** cannot read Key Vault, so its Grafana Cloud write token is delivered by a platform ESO controller
   in `platform-secrets` that serves only platform namespaces. Its reader identity has Key Vault Secrets User on
-  that one secret in `kv-<env>-platform` ([section 19](19-observability-with-grafana-cloud.md#collection-grafana-alloy-node-local)).
+  that one secret in `kv-<env>-platform` ([section 21](21-observability-with-grafana-cloud.md#collection-grafana-alloy-node-local)).
 
 Trade-offs of delivering secrets as Kubernetes `Secret`s instead of CSI file mounts:
 
 - The values are **stored in etcd**, encrypted with the cluster's customer-managed KMS key
-  ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)), and readable by anyone with `get secrets` in
+  ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)), and readable by anyone with `get secrets` in
   the namespace: only the application team in its own namespaces, the platform team through PIM; the AI agents'
   `Azure Kubernetes Service RBAC Reader` role does not include `Secret`s.
 - **ESO becomes a critical platform component** (one controller per zone and cluster, upgraded by the platform). In

@@ -1,18 +1,18 @@
-# 23. Traffic flow documentation: a picture per application and per zone
+# 19. Traffic flow documentation: a picture per application and per zone
 
-![Traffic flow documentation](../images/23-traffic-flow-docs.svg)
+![Traffic flow documentation](../images/19-traffic-flow-docs.svg)
 
 > Proposed 2026-10-17 ([D63](decisions.md#decision-matrix)); a first version runs against the dev lab (the pages of
 > `dev-int` are in azure-landing-zone `docs/traffic-flows/`).
 
-[Section 22](22-egress-control-options-and-the-company-firewall.md) chose the hub Firewall as the egress decision of
+[Section 18](18-egress-control-options-and-the-company-firewall.md) chose the hub Firewall as the egress decision of
 the default stateless cell. Its price is granularity: the Firewall's rules take a zone's IP group as their source, so a
 destination one application asked for is open to every application of its zone, and the Firewall itself can never say
 **which application uses a rule** - its log shows node addresses (overlay) or pod addresses (node subnet), never a
 namespace. Azure has no view that answers "what does application X talk to, and why is this rule here?".
 
 The platform can answer it, because its rules are not written at the Firewall. Every rule has a **source**: the
-egress agent ([section 15](15-ai-driven-day-2-operations.md#agents)) writes one file per application namespace
+egress agent ([section 20](20-ai-driven-day-2-operations.md#agents)) writes one file per application namespace
 (azure-landing-zone `firewall-applications/<env>-<exposure>/<namespace>.yaml`) with the destination, the reason it
 found in the application's configuration and the evidence (the denied flows, the pod, the manifest line), and a human
 merges it. Join those files with the application's own configuration in Git and the picture draws itself. That is
@@ -26,7 +26,7 @@ Everything comes from Git. Nothing is read from a cluster, the Firewall or Azure
 | Source | Repository | What it gives |
 |---|---|---|
 | The applications' rule files `firewall-applications/<spoke>/<namespace>.yaml` | azure-landing-zone | Per application: destination, port, protocol, **reason**, **evidence**, the zone, the contact. The rule the landing zone renders it into (`<spoke>-applications/<namespace>-<protocol>-<port>`) |
-| The cells' `envs/<env>-*.tfvars` (`managed_namespaces`, `network_profile`, `advanced_networking`) and `shared/envs/<env>.tfvars` (`cells`) | aks-terraform | Which namespaces run in which cells, their team and contact, where their configuration is (Flux URL and path), the zone and its domain, the home cell; per cell the egress model of section 22 (overlay or node subnet, with or without ACNS) and whether the cell is built |
+| The cells' `envs/<env>-*.tfvars` (`managed_namespaces`, `network_profile`, `advanced_networking`) and `shared/envs/<env>.tfvars` (`cells`) | aks-terraform | Which namespaces run in which cells, their team and contact, where their configuration is (Flux URL and path), the zone and its domain, the home cell; per cell the egress model of section 18 (overlay or node subnet, with or without ACNS) and whether the cell is built |
 | The application's Flux Kustomization at that path | the team's repository (aks-fluxcd-example) | Workloads, replicas, images, every URL in the pods' environment and arguments, routes (hostnames, gateway, backends), services - built with `kustomize` where available, else a small built-in reader of resources, components, images, replicas and patches |
 | The zone allow-lists `policy/egress-allow-lists.yaml` | aks-fluxcd-platform | Names open to every application of the zone (the Firewall's `<spoke>-zones` rule collection; the same list the pull request check reads) |
 | The egress agent's open pull requests | azure-landing-zone (GitHub API, optional) | Destinations proposed but not merged yet |
@@ -65,7 +65,7 @@ yet. The zone page also notes when the fleet's allow-list and the landing zone's
 the Firewall enforces one, the pull request check reads the other. The shared names live here on purpose: an
 application's page shows only what the application itself asked for or names, so a reviewer sees its own footprint
 without the zone's noise. This
-is the picture section 22's "applications of one zone share the zone's destinations" needs: a reviewer of the next
+is the picture section 18's "applications of one zone share the zone's destinations" needs: a reviewer of the next
 egress pull request sees what the zone already reaches and who brought each name in, and the Firewall's owners see
 the zone's whole exposure on one page. An index page lists the zones and applications of the spoke.
 
@@ -74,15 +74,15 @@ Two pages of the first run, as examples (the rest is at azure-landing-zone `docs
 The application `int-fi-example` on the overlay cell az2, after the finding described below was settled (the two
 rules it asked for; the zone allow-list and the platform's rules are on the zone page):
 
-![Example: the per-application picture of int-fi-example](../images/23-example-application.svg)
+![Example: the per-application picture of int-fi-example](../images/19-example-application.svg)
 
 The zone `int-se` on the node-subnet cell az3 - the application's rule, the zone allow-list and the platform's rules:
 
-![Example: the per-zone picture of int-se](../images/23-example-zone.svg)
+![Example: the per-zone picture of int-se](../images/19-example-zone.svg)
 
 ## The documentation agent
 
-The agent follows the rules of [section 15](15-ai-driven-day-2-operations.md): read-only sources, Git as its only
+The agent follows the rules of [section 20](20-ai-driven-day-2-operations.md): read-only sources, Git as its only
 write path, one pull request per run, tier low (documentation). As with the egress agent, **the model is the expensive
 part and does only what needs judgement**:
 
@@ -100,7 +100,7 @@ part and does only what needs judgement**:
    model step needs the lab's VPN (Foundry has no public endpoint, [D60](decisions.md#decision-matrix)).
 
 The pages live **next to the rules they document**, in the landing zone's `docs/traffic-flows/<spoke>/`: that is
-where the egress agent's pull requests arrive and where the Firewall's owners review ([section 22](22-egress-control-options-and-the-company-firewall.md#working-with-a-company-wide-firewall)).
+where the egress agent's pull requests arrive and where the Firewall's owners review ([section 18](18-egress-control-options-and-the-company-firewall.md#working-with-a-company-wide-firewall)).
 A company that keeps its firewall rules in the firewall team's repository (option 1 of that section) keeps the pages
 there too; the generator takes the repositories as parameters.
 
@@ -111,7 +111,7 @@ node-subnet cell az3) found, in both zones, a rule **no configuration explains**
 agent proposed from denied flows attributed to aks-hello with the reason "a plausible public API for metrics" and
 which a human merged. Nothing in aks-hello's configuration names it. Either aks-hello's image has a dependency its
 manifests do not show, or the flow came from something else on the same node (az2 attributes a node's address to the
-application pods on it, section 22) and the rule should go. That is exactly the review the pictures are for, and it
+application pods on it, section 18) and the rule should go. That is exactly the review the pictures are for, and it
 is a pull request the documentation agent cannot open itself: a rule's removal is the egress files' owners' decision.
 
 Settled the same day: `stats.grafana.org` is Grafana's anonymous usage statistics, reported by Alloy, Beyla and the
@@ -127,7 +127,7 @@ address stands for the application pods on it), and the fix was one line in the 
   the input for removing stale rules. Reading the Firewall's log is the egress agent's path already.
 - **Ingress is the Gateway's view only.** Internal clients (the corporate network, VPN) and Traffic Manager are drawn
   from the exposure, not from the Gateway's listeners or the DNS records. Cross-application flows inside the cluster
-  (Cilium policies between namespaces, [section 7](07-application-multi-tenancy.md)) are not drawn yet; the zone
+  (Cilium policies between namespaces, [section 8](08-application-multi-tenancy.md)) are not drawn yet; the zone
   baseline denies them, so today there are none to draw.
 - **Names in the environment.** A destination counts as named by the configuration when a URL in the pods'
   environment, arguments or a ConfigMap carries it, or the name appears in the manifests. A hostname assembled in

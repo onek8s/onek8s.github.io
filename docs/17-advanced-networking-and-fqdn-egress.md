@@ -1,9 +1,9 @@
-# 16. Advanced networking: eBPF host routing and FQDN egress
+# 17. Advanced networking: eBPF host routing and FQDN egress
 
-![eBPF host routing and FQDN egress](../images/16-fqdn-egress.svg)
+![eBPF host routing and FQDN egress](../images/17-fqdn-egress.svg)
 
 > Proposed since 2026-10-16 ([D61](decisions.md#decision-matrix)): the default stateless cell runs **without** ACNS,
-> with overlay and the hub Firewall deciding egress per zone ([section 22](22-egress-control-options-and-the-company-firewall.md));
+> with overlay and the hub Firewall deciding egress per zone ([section 18](18-egress-control-options-and-the-company-firewall.md));
 > this section describes the cells that keep ACNS for per-application FQDN egress.
 
 Every cluster enables **[Advanced Container Networking Services](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview)**
@@ -37,7 +37,7 @@ The two layers therefore split the work:
 | Layer | Identity it sees | Owner | Allow-list |
 |---|---|---|---|
 | Cilium FQDN policy (ACNS) | Pod (namespace, labels, ServiceAccount) | Application team, validated by Azure Policy | Per application: the FQDNs and ports *this* application uses |
-| Azure Firewall | Zone (node subnet / pod subnet prefix) | Platform + security (high risk tier, [section 15](15-ai-driven-day-2-operations.md#risk-tiers)) | Per zone: the union of what the zone's applications may use, plus the platform FQDNs |
+| Azure Firewall | Zone (node subnet / pod subnet prefix) | Platform + security (high risk tier, [section 20](20-ai-driven-day-2-operations.md#risk-tiers)) | Per zone: the union of what the zone's applications may use, plus the platform FQDNs |
 
 An application's FQDNs must be a subset of its zone's Firewall allow-list; a CI check on the fleet repository
 compares the two and fails a pull request that declares an FQDN the Firewall would drop, so the gap is found at review
@@ -57,7 +57,7 @@ application's policy (application team) and, if the zone does not have it yet, t
 eBPF host routing requires Kubernetes 1.33 or later, Ubuntu 24.04 or Azure Linux 3.0 on **every** node of the cluster
 (it is all or nothing), and no iptables rules in the node's network namespace. Azure Linux 3.0 is chosen because it
 is the smaller image with fewer packages to patch; Ubuntu 24.04 would work too. Azure Policy enforces the OS SKU,
-`imageFamily`, ACNS and the acceleration mode on the cluster resources ([section 14](14-policy-enforcement.md)).
+`imageFamily`, ACNS and the acceleration mode on the cluster resources ([section 9](09-policy-enforcement.md)).
 
 What eBPF host routing changes for the rest of the design:
 
@@ -76,7 +76,7 @@ What eBPF host routing changes for the rest of the design:
   and the node-local Grafana Alloy.
 - **Enabling it rolls the nodes** (rolling node pool upgrade, existing connections may be disrupted). In the
   stateless clusters it is part of the cluster IaC from day one; changing it on an existing cell follows the
-  drain-and-upgrade procedure of [section 12](12-zero-downtime-cluster-upgrades.md#stateless-clusters), one cell at a
+  drain-and-upgrade procedure of [section 14](14-zero-downtime-cluster-upgrades.md#stateless-clusters), one cell at a
   time. Nodes carry the label `kubernetes.azure.com/ebpf-host-routing=true`, which the cell's post-upgrade checks verify.
 - It can be switched off (`--acns-datapath-acceleration-mode None`) without touching FQDN filtering – the rollback if a
   regression is found in a cell.
@@ -85,7 +85,7 @@ What eBPF host routing changes for the rest of the design:
 
 The stateful cluster is created on the **second latest GA minor** (N-1, the same minor as `sl-az1`; 1.36 at the start
 of the platform) and then stays on
-it with Long Term Support ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)); its slower upgrade
+it with Long Term Support ([update policy](14-zero-downtime-cluster-upgrades.md#update-policy)); its slower upgrade
 cycle exists because of the more demanding workloads it runs, not because it starts on an old version. It therefore
 meets the 1.33 requirement from day one and runs the same ACNS settings as the stateless clusters – eBPF host routing
 and FQDN filtering (which needs only 1.29) – so the whole fleet has one datapath. Its later LTS minor upgrades only
@@ -93,7 +93,7 @@ move it forward, so the requirement stays met.
 
 ## How an application declares its egress
 
-Each application namespace gets the baseline of [section 7](07-application-multi-tenancy.md) from the platform, as a
+Each application namespace gets the baseline of [section 8](08-application-multi-tenancy.md) from the platform, as a
 `CiliumClusterwideNetworkPolicy` that selects all pods in namespaces labelled `platform/zone`:
 
 - egress to CoreDNS (`k8s-app: kube-dns`) on UDP/TCP 53 with a DNS rule that allows queries for
@@ -147,13 +147,13 @@ spec:
 - **Platform presets.** A Kustomize component in `infrastructure/base` offers presets – such as `entra-id` – that expand to the right names per zone and
   environment. They are still part of the application's own `egress` policy: nothing is opened for an application
   that does not ask for it. Telemetry needs no entry: the baseline allows every pod to reach the Grafana Alloy on its
-  own node ([section 19](19-observability-with-grafana-cloud.md#collection-grafana-alloy-node-local)).
+  own node ([section 21](21-observability-with-grafana-cloud.md#collection-grafana-alloy-node-local)).
 - **No policy, no egress.** An application that needs nothing outside the cluster simply has no `egress` policy (CI
   reports this explicitly at onboarding, so it is a decision, not an omission).
 - **No instance metadata.** The Azure Instance Metadata Service (`169.254.169.254`) is a common pivot for stealing
   credentials. Application pods cannot reach it: it has no name that `toFQDNs` could allow, CIDR egress is rejected,
   and `hostNetwork` is forbidden. Workload identity does not need it. The isolation tests of
-  [section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) check this from
+  [section 23](23-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) check this from
   every zone.
 
 ## Two egress models under test (D59)
@@ -163,7 +163,7 @@ holds a zone-wide allow-list behind it - the hub Firewall itself can be the deci
 keeps its address up to the Firewall, which decides every flow leaving the cluster from per-application rules that
 an AI egress agent proposes from the denied flows ([decision D59](decisions.md#decision-matrix), sign-off H15 in
 [open questions](open-questions.md)). The two feature sets differ and neither is better on every count.
-[Section 22](22-egress-control-options-and-the-company-firewall.md) separates the two choices behind them - how pods
+[Section 18](18-egress-control-options-and-the-company-firewall.md) separates the two choices behind them - how pods
 get their addresses, and who enforces egress - puts their four combinations side by side with the pros and cons of
 each, and proposes overlay with the hub Firewall alone, without ACNS, as the default
 ([D61](decisions.md#decision-matrix)).
@@ -175,7 +175,7 @@ forecast from api.open-meteo.com, which the Firewall denies until the egress age
 
 ## What Azure Policy enforces
 
-Azure Policy cannot look up other objects ([section 14](14-policy-enforcement.md)), so it validates each policy object
+Azure Policy cannot look up other objects ([section 9](09-policy-enforcement.md)), so it validates each policy object
 on its own; together with Cilium's default deny that is enough to make FQDN policies the only way out:
 
 | Rule (application namespaces) | Why |
@@ -185,7 +185,7 @@ on its own; together with Cilium's default deny that is enough to make FQDN poli
 | DNS rules only for names that are also in a `toFQDNs` of the same policy, plus `*.cluster.local` | No resolving of names that cannot be reached (DNS exfiltration) |
 | Kubernetes `NetworkPolicy` with egress `ipBlock` rejected | Cilium enforces `NetworkPolicy` too; it must not become a CIDR back door |
 | `CiliumClusterwideNetworkPolicy`, `CiliumCIDRGroup`, `CiliumEgressGatewayPolicy` and policies in other namespaces: platform only (Kubernetes RBAC + Azure Policy) | Applications cannot widen the baseline |
-| No Key Vault names (`*.vault.azure.net`, `*.vaultcore.azure.net`) in application `toFQDNs` or DNS rules | Applications get secrets only from the zone's External Secrets Operator; platform namespaces may name a vault in their own policies ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)) |
+| No Key Vault names (`*.vault.azure.net`, `*.vaultcore.azure.net`) in application `toFQDNs` or DNS rules | Applications get secrets only from the zone's External Secrets Operator; platform namespaces may name a vault in their own policies ([section 7](07-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)) |
 | Pod `dnsPolicy` must be `ClusterFirst` (no `None` with own `nameservers`), no `hostNetwork` | DNS must go through CoreDNS and the ACNS DNS proxy, or FQDN policies cannot work |
 
 Platform namespaces (`<zone>-gateway`, `<zone>-secrets` with External Secrets Operator, `flux-system`, `infra-observability`) have
@@ -200,10 +200,10 @@ are not pod traffic; they are controlled by the Firewall allow-list as before.
 - **Dropped egress is visible per namespace**: ACNS container network logs (Hubble flows with verdict `DROPPED` and
   reason *policy denied*, plus DNS responses `REFUSED` by the DNS proxy) are collected from every node by Grafana
   Alloy into Grafana Cloud Logs, and the Cilium and Hubble metrics into Grafana Cloud Metrics
-  ([section 19](19-observability-with-grafana-cloud.md)). Every user of the environment's stack, application teams
+  ([section 21](21-observability-with-grafana-cloud.md)). Every user of the environment's stack, application teams
   included, can see the flows. The dev lab cells run without Hubble ([D56](decisions.md#decision-matrix)): there
   the drops are read on the cluster, not as flow logs.
-- **In dev** the operations agent ([section 15](15-ai-driven-day-2-operations.md)) summarises drops after a
+- **In dev** the operations agent ([section 20](20-ai-driven-day-2-operations.md)) summarises drops after a
   deployment and proposes the missing FQDN as a pull request to the application – reviewed by the application team,
   plus a Firewall pull request (high tier) if the zone does not allow the name either.
 - Alerts on a sudden rise of policy drops or DNS refusals in acc / prd, which usually mean a dependency the

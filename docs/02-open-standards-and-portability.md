@@ -1,6 +1,6 @@
-# 21. Open standards and portability
+# 2. Open standards and portability
 
-![Open standards and portability](../images/21-portability.svg)
+![Open standards and portability](../images/02-portability.svg)
 
 **OneK8s** is named after the one ring that rules them all: **one platform that runs in any public cloud without
 changes to the applications or to how they are deployed.** Azure (AKS) is the first cloud implemented and the
@@ -17,24 +17,24 @@ of that cloud, and a handful of values per cluster (`cluster-settings`) that the
 |---|---|---|
 | Container images | [OCI image and distribution specs](https://opencontainers.org/) | Every app is an OCI image; every cloud registry (ACR, ECR, Artifact Registry) serves the same image |
 | Cluster API | Kubernetes, [CNCF certified](https://www.cncf.io/training/certification/software-conformance/) on AKS, EKS and GKE | Manifests use only GA Kubernetes APIs; no cloud CRDs in team repositories |
-| Delivery | [Flux](https://fluxcd.io/) (CNCF graduated), Kustomize, Helm | The same Git repositories and Kustomizations reconcile every cluster ([section 10](10-keeping-clusters-in-sync.md)) |
-| Ingress | [Gateway API](https://gateway-api.sigs.k8s.io/), implemented on AKS by App Routing's sidecar-less Istio (open-source Istio, which other clouds also offer) | Teams write `HTTPRoute`s; the Gateway, its listeners and TLS are the platform's ([section 13](13-encryption-in-transit-and-tls.md)), and the implementation behind them is the cloud's ([below](#what-stays-cloud-specific)) |
-| Secrets | [External Secrets Operator](https://external-secrets.io/) | Teams write `ExternalSecret`s against a `SecretStore` named `key-vault`; only the store's provider is cloud-specific ([section 6](06-workload-identity-and-secrets.md)) |
+| Delivery | [Flux](https://fluxcd.io/) (CNCF graduated), Kustomize, Helm | The same Git repositories and Kustomizations reconcile every cluster ([section 12](12-keeping-clusters-in-sync.md)) |
+| Ingress | [Gateway API](https://gateway-api.sigs.k8s.io/), implemented on AKS by App Routing's sidecar-less Istio (open-source Istio, which other clouds also offer) | Teams write `HTTPRoute`s; the Gateway, its listeners and TLS are the platform's ([section 15](15-encryption-in-transit-and-tls.md)), and the implementation behind them is the cloud's ([below](#what-stays-cloud-specific)) |
+| Secrets | [External Secrets Operator](https://external-secrets.io/) | Teams write `ExternalSecret`s against a `SecretStore` named `key-vault`; only the store's provider is cloud-specific ([section 7](07-workload-identity-and-secrets.md)) |
 | Identity | OIDC workload identity federation | Pods get cloud tokens through a Kubernetes service account – Entra Workload ID, EKS Pod Identity / IRSA, GKE Workload Identity Federation – never stored keys |
 | DNS | [external-dns](https://kubernetes-sigs.github.io/external-dns/) | Publishes listener hostnames in Azure DNS, Route 53 or Cloud DNS – one provider flag |
 | Network policy | Kubernetes `NetworkPolicy`, Cilium | Deny-by-default between namespaces in every cloud; AKS, EKS and GKE all offer Cilium-based data planes. The FQDN egress policies are `CiliumNetworkPolicy` objects and need a Cilium agent with its DNS proxy – see [below](#what-stays-cloud-specific) |
-| Workload security | Pod Security Standards, Gatekeeper constraint templates, `ValidatingAdmissionPolicy` (CEL) | The rules of [section 14](14-policy-enforcement.md) are Gatekeeper templates and CEL policies kept in the IaC repository; on AKS the Azure Policy add-on delivers them, elsewhere the same templates run on open-source Gatekeeper ([below](#what-stays-cloud-specific)) |
-| Telemetry | [OpenTelemetry](https://opentelemetry.io/), Prometheus | Apps emit OTLP; the collector's destination is configuration ([section 19](19-observability-with-grafana-cloud.md)) |
+| Workload security | Pod Security Standards, Gatekeeper constraint templates, `ValidatingAdmissionPolicy` (CEL) | The rules of [section 9](09-policy-enforcement.md) are Gatekeeper templates and CEL policies kept in the IaC repository; on AKS the Azure Policy add-on delivers them, elsewhere the same templates run on open-source Gatekeeper ([below](#what-stays-cloud-specific)) |
+| Telemetry | [OpenTelemetry](https://opentelemetry.io/), Prometheus | Apps emit OTLP; the collector's destination is configuration ([section 21](21-observability-with-grafana-cloud.md)) |
 
 The example application shows it end to end: [aks-hello](https://github.com/onek8s/aks-hello) and its manifests in
 [aks-fluxcd-example](https://github.com/onek8s/aks-fluxcd-example) contain no Azure name at all. The same
 `Deployment` and `HTTPRoute` run today in the dev lab's two internal cells, `aks-dev-int-stateless-az2` and
 `aks-dev-int-stateless-az3`, which differ in their egress model
-([section 22](22-egress-control-options-and-the-company-firewall.md)) and not in the application.
+([section 18](18-egress-control-options-and-the-company-firewall.md)) and not in the application.
 
 ## Data in PaaS services that every cloud offers
 
-Data belongs in managed PaaS services ([section 8](08-cluster-types-stateless-and-stateful.md)). To stay portable,
+Data belongs in managed PaaS services ([section 10](10-cluster-types-stateless-and-stateful.md)). To stay portable,
 an application **talks to a data service through its open protocol, never through a cloud SDK**, and gets its
 endpoint and credentials from a Kubernetes `Secret` (synced by External Secrets, or – preferably – an identity-based
 login with workload identity). The platform offers only services that **every major cloud runs as a managed
@@ -82,7 +82,7 @@ Azure specifics that are accepted on purpose, and what replaces them in another 
   `GitRepository`, `OCIRepository` and `Kustomization` objects are the same.
 - **Admission policy.** The Azure Policy add-on is the single policy engine on Azure (R14), but what it runs is
   Gatekeeper: the constraint templates (Rego, CEL) and mutation objects (`Assign`, `AssignMetadata`) of
-  [section 14](14-policy-enforcement.md) live in the IaC repository and are not Azure-only code. EKS and GKE have no Azure Policy, so another cloud runs either **open-source
+  [section 9](09-policy-enforcement.md) live in the IaC repository and are not Azure-only code. EKS and GKE have no Azure Policy, so another cloud runs either **open-source
   Gatekeeper** with the same templates, delivered by Flux, or the clusters are connected with **Azure Arc** so that
   Azure Policy keeps being the one engine and compliance view across clouds. The default is Gatekeeper, confirmed when the
   second cloud starts ([decision D39](decisions.md#decision-matrix)); either way, CI already tests the templates with `gator verify` outside any cluster.
@@ -104,10 +104,10 @@ management and business continuity. This design contributes:
 
 | Requirement | Where the design meets it |
 |---|---|
-| Recovery from the loss of a region, tested | Immutable backups in the paired region, drill every six months ([section 20](20-backup-and-region-recovery.md)) |
+| Recovery from the loss of a region, tested | Immutable backups in the paired region, drill every six months ([section 22](22-backup-and-region-recovery.md)) |
 | Defined RTO and RPO | Measured in the drills; the business targets are a [sign-off](decisions.md#human-sign-offs-still-needed) (H04) |
 | Exit from the cloud provider | Applications and their deployment do not change between clouds (this section); data uses open protocols |
-| Control of keys | Customer-managed keys for etcd, node disks and persistent volumes; crypto-shredding by disabling a key ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)) |
+| Control of keys | Customer-managed keys for etcd, node disks and persistent volumes; crypto-shredding by disabling a key ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)) |
 | Data residency | Isolation zones per country (R3); primary and paired regions chosen inside the EU, covered by the EU Data Boundary |
 
 Data in an EU region is not the same as data under EU law only: all three target clouds, and several platform
@@ -117,10 +117,10 @@ listed so they can be judged together, not one by one:
 | Dependency | Holds | Section |
 |---|---|---|
 | Azure (and later AWS / Google Cloud) | Everything, with customer-managed keys | – |
-| GitHub | IaC, fleet and design repositories, pipeline runs | [section 15](15-ai-driven-day-2-operations.md) |
-| Grafana Cloud | All telemetry, including the logs' personal data | [section 19](19-observability-with-grafana-cloud.md) |
-| The AI agents' model provider | Logs, traces and diagnostics sent in prompts | [section 15](15-ai-driven-day-2-operations.md) |
-| Let's Encrypt | Public certificate requests (zone names only) | [section 13](13-encryption-in-transit-and-tls.md) |
+| GitHub | IaC, fleet and design repositories, pipeline runs | [section 20](20-ai-driven-day-2-operations.md) |
+| Grafana Cloud | All telemetry, including the logs' personal data | [section 21](21-observability-with-grafana-cloud.md) |
+| The AI agents' model provider | Logs, traces and diagnostics sent in prompts | [section 20](20-ai-driven-day-2-operations.md) |
+| Let's Encrypt | Public certificate requests (zone names only) | [section 15](15-encryption-in-transit-and-tls.md) |
 
 Whether the exit strategy must also include a **European provider** – one with managed Kubernetes and managed
 PostgreSQL, Redis-compatible and Kafka services, so that "another implementation of the same platform" stays possible
@@ -139,7 +139,7 @@ Adding AWS or Google Cloud is a defined amount of work, and none of it touches a
    implementation and its load balancer settings, the StorageClass of portable disks.
 4. **Clusters directory** per new cluster in the platform repository, and the team namespaces in the cluster IaC.
 5. **Acceptance**: the reference application and aks-hello deploy unchanged from the same commits, and the same
-   tests pass ([section 17](17-implementation-project-and-acceptance-testing.md)).
+   tests pass ([section 23](23-implementation-project-and-acceptance-testing.md)).
 
 Teams then choose a cloud per environment or per workload through configuration – or run in several at once behind
 global DNS, as `hello.onek8s.lol` already runs across two clusters.

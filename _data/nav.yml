@@ -1,101 +1,100 @@
 # Site navigation: the reading order of the design, in parts.
 #
-# The section numbers are stable identifiers (other repositories and the decision log cite "section 14"),
-# so the files keep their numbers while the parts group them by topic. The layout builds the sidebar and the
-# previous / next links from this list; README.md repeats it with a one-line description per page, and
-# scripts/check.sh fails when the two lists or the files in docs/ disagree.
+# The sections are numbered in this order, and the pictures carry the number of the section that shows them. The
+# layout builds the sidebar and the previous / next links from this list; README.md repeats it with a one-line
+# description per page, and scripts/check.sh fails when the two lists or the files in docs/ disagree.
 - part: Start here
   pages:
     - path: README.md
       title: Introduction
+    - path: docs/requirements.md
+      title: Requirements
     - path: docs/01-overview.md
       number: 1
       title: Overview
-    - path: docs/requirements.md
-      title: Requirements
-    - path: docs/21-open-standards-and-portability.md
-      number: 21
+    - path: docs/02-open-standards-and-portability.md
+      number: 2
       title: Open standards and portability
 
 - part: Inside a cluster
   pages:
-    - path: docs/02-network-layout.md
-      number: 2
-      title: Network layout
-    - path: docs/03-control-plane.md
+    - path: docs/03-network-layout.md
       number: 3
-      title: Control plane
-    - path: docs/04-node-pools.md
+      title: Network layout
+    - path: docs/04-control-plane.md
       number: 4
-      title: Node pools
-    - path: docs/05-allowed-and-blocked-flows.md
+      title: Control plane
+    - path: docs/05-node-pools.md
       number: 5
-      title: Allowed and blocked flows
-    - path: docs/06-workload-identity-and-secrets.md
+      title: Node pools
+    - path: docs/06-allowed-and-blocked-flows.md
       number: 6
-      title: Workload identity and secrets
-    - path: docs/07-application-multi-tenancy.md
+      title: Allowed and blocked flows
+    - path: docs/07-workload-identity-and-secrets.md
       number: 7
+      title: Workload identity and secrets
+    - path: docs/08-application-multi-tenancy.md
+      number: 8
       title: Application multi-tenancy
-    - path: docs/14-policy-enforcement.md
-      number: 14
+    - path: docs/09-policy-enforcement.md
+      number: 9
       title: Policy enforcement
 
 - part: The fleet
   pages:
-    - path: docs/08-cluster-types-stateless-and-stateful.md
-      number: 8
-      title: "Cluster types: stateless and stateful"
-    - path: docs/09-environments.md
-      number: 9
-      title: Environments
-    - path: docs/10-keeping-clusters-in-sync.md
+    - path: docs/10-cluster-types-stateless-and-stateful.md
       number: 10
-      title: Keeping clusters in sync
-    - path: docs/11-zero-downtime-application-upgrades.md
+      title: "Cluster types: stateless and stateful"
+    - path: docs/11-environments.md
       number: 11
-      title: Zero-downtime application upgrades
-    - path: docs/12-zero-downtime-cluster-upgrades.md
+      title: Environments
+    - path: docs/12-keeping-clusters-in-sync.md
       number: 12
+      title: Keeping clusters in sync
+    - path: docs/13-zero-downtime-application-upgrades.md
+      number: 13
+      title: Zero-downtime application upgrades
+    - path: docs/14-zero-downtime-cluster-upgrades.md
+      number: 14
       title: Zero-downtime cluster upgrades
 
 - part: Encryption
   pages:
-    - path: docs/13-encryption-in-transit-and-tls.md
-      number: 13
+    - path: docs/15-encryption-in-transit-and-tls.md
+      number: 15
       title: Encryption in transit and TLS
-    - path: docs/18-encryption-at-rest-and-customer-managed-keys.md
-      number: 18
+    - path: docs/16-encryption-at-rest-and-customer-managed-keys.md
+      number: 16
       title: Encryption at rest
 
 - part: Egress control
   pages:
-    - path: docs/16-advanced-networking-and-fqdn-egress.md
-      number: 16
+    - path: docs/17-advanced-networking-and-fqdn-egress.md
+      number: 17
       title: Advanced networking and FQDN egress
-    - path: docs/22-egress-control-options-and-the-company-firewall.md
-      number: 22
+    - path: docs/18-egress-control-options-and-the-company-firewall.md
+      number: 18
       title: Egress control options
-    - path: docs/23-traffic-flow-documentation.md
-      number: 23
+    - path: docs/19-traffic-flow-documentation.md
+      number: 19
       title: Traffic flow documentation
 
 - part: Operations
   pages:
-    - path: docs/15-ai-driven-day-2-operations.md
-      number: 15
-      title: AI-driven day 2 operations
-    - path: docs/19-observability-with-grafana-cloud.md
-      number: 19
-      title: Observability with Grafana Cloud
-    - path: docs/20-backup-and-region-recovery.md
+    - path: docs/20-ai-driven-day-2-operations.md
       number: 20
+      title: AI-driven day 2 operations
+    - path: docs/21-observability-with-grafana-cloud.md
+      number: 21
+      title: Observability with Grafana Cloud
+    - path: docs/22-backup-and-region-recovery.md
+      number: 22
       title: Backup and region recovery
 
 - part: Delivery and decisions
   pages:
-    - path: docs/17-implementation-project-and-acceptance-testing.md
-      number: 17
+    - path: docs/23-implementation-project-and-acceptance-testing.md
+      number: 23
       title: Implementation project and acceptance testing
     - path: docs/decisions.md
       title: Decisions
