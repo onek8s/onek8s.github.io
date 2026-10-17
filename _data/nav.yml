@@ -111,6 +111,9 @@
     - path: docs/7.3-open-questions.md
       number: "7.3"
       title: Open questions
+    - path: docs/7.4-outlook-2030-and-the-options-kept-open.md
+      number: "7.4"
+      title: "Outlook: 2030 and the options kept open"
 
 - number: 8
   part: Appendix

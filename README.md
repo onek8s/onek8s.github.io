@@ -105,6 +105,8 @@ The sections are numbered by part and page in reading order; the decision log an
   verification matrix, and the human sign-offs still needed.
 - [7.3 Open questions](docs/7.3-open-questions.md) – only what still needs a person: the sign-off list for the connection
   readiness gate.
+- [7.4 Outlook: 2030 and the options kept open](docs/7.4-outlook-2030-and-the-options-kept-open.md) – what is meant
+  to hold, what is changing, the rule that keeps the platform simple, and every feature left out today with its way in.
 
 **8. Appendix**
 
