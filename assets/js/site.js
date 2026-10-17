@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  // Light / dark toggle. Follows the system setting until the reader picks one, which is then remembered.
+  // Light / dark toggle. The system setting is the default; a choice overrides it and is remembered per browser.
   var root = document.documentElement;
   var btn = document.getElementById('theme-toggle');
   if (btn) {
@@ -59,9 +59,9 @@
   }
 
   // Keep the current page visible in the sidebar.
-  var current = document.querySelector('.sidebar li.current');
-  if (current && current.scrollIntoView) {
-    current.scrollIntoView({ block: 'center' });
+  var currentPage = document.querySelector('.sidebar li.current');
+  if (currentPage && currentPage.scrollIntoView) {
+    currentPage.scrollIntoView({ block: 'center' });
     window.scrollTo(0, 0);
   }
 })();
