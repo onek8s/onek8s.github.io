@@ -1,0 +1,30 @@
+%% Example of a generated per-zone picture (section 23): zone int-se on the dev lab's node-subnet cell az3, first run 2026-10-17.
+flowchart LR
+    subgraph Z["Isolation zone int-se"]
+        direction TB
+        a_int_se_example["int-se-example<br/>team example"]
+    end
+    fw["Hub firewall<br/>source: IP group of zone int-se"]
+    subgraph OUT["What the firewall opens for the zone"]
+        direction TB
+        d_api_open_meteo_com["api.open-meteo.com:443<br/>asked by int-se-example"]
+        d_stats_grafana_org["stats.grafana.org:443<br/>asked by int-se-example"]
+        z_login_microsoftonline_com["login.microsoftonline.com:443<br/>zone allow-list"]
+    end
+    a_int_se_example --> fw
+    fw -->|"allowed"| d_api_open_meteo_com
+    fw -->|"allowed, not in the configuration"| d_stats_grafana_org
+    fw -->|"zone allow-list"| z_login_microsoftonline_com
+    classDef ns fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef platform fill:#eceff1,stroke:#455a64,color:#000
+    classDef fw fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef allowed fill:#e8f5e9,stroke:#2e7d32,color:#000
+    classDef unexplained fill:#fff8e1,stroke:#ef6c00,color:#000
+    classDef missing fill:#ffebee,stroke:#c62828,color:#000,stroke-dasharray: 5 5
+    classDef proposed fill:#f3e5f5,stroke:#7b1fa2,color:#000,stroke-dasharray: 5 5
+    classDef zone fill:#e0f2f1,stroke:#00695c,color:#000
+    class fw fw
+    class a_int_se_example ns
+    class d_api_open_meteo_com allowed
+    class d_stats_grafana_org unexplained
+    class z_login_microsoftonline_com zone
