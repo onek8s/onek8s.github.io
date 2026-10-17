@@ -142,7 +142,3 @@ Adding AWS or Google Cloud is a defined amount of work, and none of it touches a
 
 Teams then choose a cloud per environment or per workload through configuration – or run in several at once behind
 global DNS, as `hello.onek8s.lol` already runs across two clusters.
-
----
-
-[Back to contents](../README.md) · Previous: [20. Backup and region recovery](20-backup-and-region-recovery.md) · Next: [22. Egress control options and the company firewall](22-egress-control-options-and-the-company-firewall.md)

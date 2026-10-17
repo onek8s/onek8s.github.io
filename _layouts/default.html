@@ -4,78 +4,80 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<title>{% if page.title and page.title != site.title %}{{ page.title }} – {% endif %}{{ site.title }}</title>
+{%- comment -%}
+  Navigation comes from _data/nav.yml: the current page's part, its previous and next page, and the sidebar.
+{%- endcomment -%}
+{%- assign nav_found = false -%}
+{%- assign nav_prev = nil -%}
+{%- assign nav_next = nil -%}
+{%- assign nav_current = nil -%}
+{%- assign nav_part = nil -%}
+{%- for part in site.data.nav -%}
+  {%- for item in part.pages -%}
+    {%- if nav_found and nav_next == nil -%}{%- assign nav_next = item -%}{%- endif -%}
+    {%- if item.path == page.path -%}
+      {%- assign nav_found = true -%}
+      {%- assign nav_current = item -%}
+      {%- assign nav_part = part -%}
+    {%- endif -%}
+    {%- unless nav_found -%}{%- assign nav_prev = item -%}{%- endunless -%}
+  {%- endfor -%}
+{%- endfor -%}
+{%- if nav_current -%}
+  {%- capture page_heading -%}{% if nav_current.number %}{{ nav_current.number }}. {% endif %}{{ nav_current.title }}{%- endcapture -%}
+{%- else -%}
+  {%- assign page_heading = page.title -%}
+{%- endif -%}
+<title>{% if page.path != 'README.md' and page_heading %}{{ page_heading }} – {% endif %}{{ site.title }}</title>
+{%- if site.description %}
+<meta name="description" content="{{ site.description | escape }}">
+{%- endif %}
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10.5' fill='none' stroke='%230b4f9c' stroke-width='5'/%3E%3C/svg%3E">
 <script>
   // Apply the saved theme before the page is drawn, so a dark page does not flash white.
   try { var t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
 </script>
-<style>
-  :root { color-scheme: light; --fg: #1f2328; --bg: #ffffff; --muted: #59636e; --border: #d0d7de; --subtle: #f6f8fa; --link: #0969da; }
-  :root[data-theme="dark"] { color-scheme: dark; --fg: #e6edf3; --bg: #0d1117; --muted: #9198a1; --border: #3d444d; --subtle: #151b23; --link: #4493f8; }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { color-scheme: dark; --fg: #e6edf3; --bg: #0d1117; --muted: #9198a1; --border: #3d444d; --subtle: #151b23; --link: #4493f8; }
-  }
-  body { max-width: 1100px; margin: 0 auto; padding: 16px; font: 16px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--fg); background: var(--bg); }
-  a { color: var(--link); }
-  img { max-width: 100%; }
-  /* The diagrams are drawn for a white background; keep them on one in dark mode too. */
-  main img { background: #ffffff; border-radius: 6px; }
-  table { border-collapse: collapse; display: block; overflow-x: auto; }
-  th, td { border: 1px solid var(--border); padding: 6px 12px; }
-  code, pre { background: var(--subtle); border-radius: 4px; }
-  code { padding: 0.1em 0.3em; }
-  pre { padding: 12px; overflow-x: auto; }
-  blockquote { margin: 0; padding: 0 1em; color: var(--muted); border-left: 4px solid var(--border); }
-  #lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: #fff; cursor: zoom-out; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
-  #lightbox.open { display: flex; }
-  #lightbox img { width: 100%; height: 100%; object-fit: contain; }
-  main img { cursor: zoom-in; }
-  #pagebar { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); font-size: 14px; }
-  #pagebar .right { display: flex; align-items: center; gap: 16px; }
-  #pagebar a { color: var(--link); text-decoration: none; }
-  #pagebar a:hover { text-decoration: underline; }
-  #theme-toggle { font: inherit; color: var(--fg); background: var(--subtle); border: 1px solid var(--border); border-radius: 6px; padding: 2px 10px; cursor: pointer; }
-  #toc { margin: 1em 0 2em; padding: 8px 16px; background: var(--subtle); border: 1px solid var(--border); border-radius: 6px; }
-  #toc h2 { margin: 0.5em 0; font-size: 1.25em; border: 0; }
-  #toc ul { margin: 0; padding-left: 0; list-style: none; }
-  #toc ul ul { padding-left: 1.5em; list-style: disc; }
-  @media print {
-    :root[data-theme], :root:not([data-theme]) { color-scheme: light; --fg: #1f2328; --bg: #ffffff; --muted: #59636e; --border: #d0d7de; --subtle: #f6f8fa; --link: #0969da; }
-    body { max-width: none; padding: 0; }
-    #lightbox { display: none !important; }
-    main img { cursor: auto; }
-    table { display: table; overflow: visible; }
-    pre { white-space: pre-wrap; overflow: visible; }
-    img, tr, pre, blockquote { break-inside: avoid; }
-    h1, h2, h3, h4 { break-after: avoid; }
-    #toc { break-after: page; }
-    #pagebar { display: none; }
-  }
-</style>
+<link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
 </head>
-<body>
-<nav id="pagebar" aria-label="Page">
-<a href="{{ '/' | relative_url }}">{{ site.title }}</a>
-<span class="right">
+<body{% if page.path == 'README.md' %} class="home"{% endif %}>
+<input type="checkbox" id="nav-toggle" aria-hidden="true">
+<header class="site-header">
+<a class="brand" href="{{ '/' | relative_url }}">
+<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="10.5" fill="none" stroke="currentColor" stroke-width="5"/></svg>
+<span>{{ site.title }}</span><span class="brand-sub">Platform design</span>
+</a>
+<div class="header-actions">
+<label for="nav-toggle" class="menu-button" aria-label="Show the list of pages">Pages</label>
 <button type="button" id="theme-toggle" hidden></button>
-<a href="https://github.com/{{ site.repository }}/edit/{{ site.branch }}/{{ page.path }}">Edit this page</a>
-</span>
+<a class="edit-link" href="https://github.com/{{ site.repository }}/edit/{{ site.branch }}/{{ page.path }}" title="Edit this page on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 0 0-.064.108l-.558 1.953 1.953-.558a.253.253 0 0 0 .108-.064Zm1.238-3.763a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 0 0 0-.354Z"/></svg><span>Edit this page</span></a>
+<a class="github-link" href="https://github.com/{{ site.repository }}" title="The repository on GitHub">GitHub</a>
+</div>
+</header>
+<div class="layout">
+<nav class="sidebar" aria-label="Pages">
+{%- for part in site.data.nav %}
+<div class="part">
+<span class="part-title">{{ part.part }}</span>
+<ul>
+{%- for item in part.pages -%}
+  {%- assign target = site.pages | where: "path", item.path | first -%}
+<li{% if item.path == page.path %} class="current"{% endif %}><a href="{{ target.url | relative_url }}"{% if item.path == page.path %} aria-current="page"{% endif %}>{% if item.number %}<span class="num">{{ item.number }}</span>{% endif %}<span>{{ item.title }}</span></a></li>
+{%- endfor %}
+</ul>
+</div>
+{%- endfor %}
 </nav>
-<main>
 {%- comment -%}
-  Table of contents, built at Jekyll build time from the h2/h3 headings so it is plain HTML
-  (works without JavaScript, in saved copies and in print). Inserted before the first h2.
-  Left out on the front page, which is itself the list of pages, and on pages without h2.
+  "On this page", built at Jekyll build time from the h2/h3 headings so it is plain HTML (works without
+  JavaScript, in saved copies and in print). Shown as a right rail on wide screens and, below that width, as a
+  box between the page's introduction and its first h2. Left out on the front page, which is itself the list of
+  pages, and on pages with fewer than two h2 headings.
 {%- endcomment -%}
 {%- assign h2_count = content | split: '<h2' | size -%}
-{%- if page.path == 'README.md' or h2_count < 2 -%}
-{{ content }}
-{%- else -%}
-{%- assign intro = content | split: '<h2' | first -%}
-{%- capture toc -%}
-<nav id="toc" aria-label="Table of contents">
-<h2>Contents</h2>
-<ul>
+{%- assign toc_list = '' -%}
+{%- if page.path != 'README.md' and h2_count > 2 -%}
+{%- capture toc_list -%}
+<ul class="toc-list">
 {%- assign open_h3 = false -%}
 {%- assign open_h2 = false -%}
 {%- assign parts = content | split: '<h' -%}
@@ -92,65 +94,59 @@
     {%- if open_h3 -%}</ul>{%- assign open_h3 = false -%}{%- endif -%}
     {%- if open_h2 -%}</li>{%- endif -%}{%- assign open_h2 = true -%}
 <li><a href="#{{ id }}">{{ title }}</a>
-  {%- else -%}
+  {%- elsif open_h2 -%}
     {%- unless open_h3 -%}<ul>{%- assign open_h3 = true -%}{%- endunless -%}
+<li><a href="#{{ id }}">{{ title }}</a></li>
+  {%- else -%}
 <li><a href="#{{ id }}">{{ title }}</a></li>
   {%- endif -%}
 {%- endfor -%}
 {%- if open_h3 -%}</ul>{%- endif -%}
 {%- if open_h2 -%}</li>{%- endif -%}
 </ul>
-</nav>
 {%- endcapture -%}
+{%- endif -%}
+<aside class="toc-rail">
+{%- if toc_list != '' %}
+<nav aria-label="On this page">
+<p class="toc-title">On this page</p>
+{{ toc_list }}
+</nav>
+{%- endif %}
+</aside>
+<div class="content">
+<main>
+{%- if nav_part and page.path != 'README.md' %}
+<p class="eyebrow">{{ nav_part.part }}</p>
+{%- endif %}
+{%- if toc_list != '' -%}
+{%- assign intro = content | split: '<h2' | first %}
 {{ intro }}
-{{ toc }}
+<nav class="toc-inline" aria-label="On this page">
+<p class="toc-title">On this page</p>
+{{ toc_list }}
+</nav>
 {{ content | remove_first: intro }}
+{%- else %}
+{{ content }}
 {%- endif %}
 </main>
+{%- if nav_prev or nav_next %}
+<nav class="page-nav" aria-label="Previous and next page">
+{%- if nav_prev -%}
+  {%- assign target = site.pages | where: "path", nav_prev.path | first %}
+<a class="prev" href="{{ target.url | relative_url }}" rel="prev"><span class="label">Previous</span><span class="title">{% if nav_prev.number %}{{ nav_prev.number }}. {% endif %}{{ nav_prev.title }}</span></a>
+{%- endif -%}
+{%- if nav_next -%}
+  {%- assign target = site.pages | where: "path", nav_next.path | first %}
+<a class="next" href="{{ target.url | relative_url }}" rel="next"><span class="label">Next</span><span class="title">{% if nav_next.number %}{{ nav_next.number }}. {% endif %}{{ nav_next.title }}</span></a>
+{%- endif %}
+</nav>
+{%- endif %}
+<p class="page-meta"><span>{{ site.title }} – a design under review; country codes and IP ranges are examples.</span><a href="https://github.com/{{ site.repository }}/blob/{{ site.branch }}/{{ page.path }}">Source of this page</a><a href="https://github.com/{{ site.repository }}/issues">Comments and issues</a></p>
+</div>
+</div>
 <div id="lightbox" role="dialog" aria-label="Picture in full screen"><img alt=""></div>
-<script>
-(function () {
-  // Light / dark toggle. Follows the system setting until the reader picks one, which is then remembered.
-  var root = document.documentElement;
-  var btn = document.getElementById('theme-toggle');
-  var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
-  function current() { return root.getAttribute('data-theme') || (systemDark.matches ? 'dark' : 'light'); }
-  function label() {
-    var next = current() === 'dark' ? 'light' : 'dark';
-    btn.textContent = next === 'dark' ? '\u263E Dark' : '\u2600 Light';
-    btn.setAttribute('aria-label', 'Switch to ' + next + ' mode');
-  }
-  btn.addEventListener('click', function () {
-    var next = current() === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch (e) {}
-    label();
-  });
-  systemDark.addEventListener('change', label);
-  label();
-  btn.hidden = false;
-})();
-(function () {
-  var box = document.getElementById('lightbox');
-  var big = box.querySelector('img');
-  function close() {
-    box.classList.remove('open');
-    if (document.fullscreenElement) document.exitFullscreen();
-  }
-  document.querySelectorAll('main img').forEach(function (img) {
-    img.addEventListener('click', function () {
-      big.src = img.src;
-      big.alt = img.alt;
-      box.classList.add('open');
-      if (box.requestFullscreen) box.requestFullscreen().catch(function () {});
-    });
-  });
-  box.addEventListener('click', close);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
-  document.addEventListener('fullscreenchange', function () {
-    if (!document.fullscreenElement) box.classList.remove('open');
-  });
-})();
-</script>
+<script src="{{ '/assets/js/site.js' | relative_url }}"></script>
 </body>
 </html>

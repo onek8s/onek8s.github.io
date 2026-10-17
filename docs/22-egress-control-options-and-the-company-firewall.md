@@ -205,7 +205,3 @@ Per stateless cell, against model B:
 
 ACNS and Azure Firewall are priced in the Azure pricing calculator (per node and hour for ACNS; per deployment hour and
 per GB processed for the Firewall); the list prices are not repeated here because they change.
-
----
-
-[Back to contents](../README.md) · Previous: [21. Open standards and portability](21-open-standards-and-portability.md) · Next: [23. Traffic flow documentation](23-traffic-flow-documentation.md)

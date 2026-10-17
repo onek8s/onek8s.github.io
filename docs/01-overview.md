@@ -19,7 +19,3 @@ External zones receive Internet traffic on a public load balancer of the zone's 
 Traffic Manager choosing the cell by DNS;
 internal zones are reached only from the corporate network through the internal hub's Firewall, directly at the zone's gateway in the cell that hosts the application (private DNS kept up to date by ExternalDNS). In both cases the traffic ends at the zone's gateway (AKS App Routing)
 in a stateless cluster – the stateful cluster is never reached from outside the platform.
-
----
-
-[Back to contents](../README.md) · Previous: [Requirements](requirements.md) · Next: [2. Network layout](02-network-layout.md)

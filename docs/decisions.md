@@ -191,7 +191,3 @@ issues.
 | 10 Cost and capacity model | The fixed and variable cost structure is in [section 9](09-environments.md#cost-and-capacity-model); the numbers are measured in phase 3 (H05) rather than estimated here |
 | 11 Decision record, CI validation, requirement traceability | This page; the CI check; every isolation test is tagged with its requirement number and runs after every change |
 | Acceptance criteria matrix (comment) | AZ-01 to AZ-06 map to the capability matrix (AZ-01, AZ-02), the isolation tests (AZ-03), the CI address plan check in the merge gate (AZ-04), the rebuild test (AZ-05) and the quota row of the capacity model (AZ-06) |
-
----
-
-[Back to contents](../README.md) · Previous: [23. Traffic flow documentation](23-traffic-flow-documentation.md) · Next: [Open questions](open-questions.md)

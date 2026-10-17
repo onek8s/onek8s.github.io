@@ -76,7 +76,3 @@ Consequences:
   that is home to some of them, so placing a few low-risk internal applications in every cell makes sense.
   In-cell progressive delivery (Flagger with `HTTPRoute` weights on the zone's gateway) is not used for
   interactive applications: it splits requests inside the cell, so their clients would jump between versions again. It stays an option for back-end APIs that are strictly backwards compatible.
-
----
-
-[Back to contents](../README.md) · Previous: [10. Keeping clusters in sync: Flux for stateless, pipelines for stateful](10-keeping-clusters-in-sync.md) · Next: [12. Zero-downtime cluster upgrades](12-zero-downtime-cluster-upgrades.md)

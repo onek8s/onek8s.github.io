@@ -50,7 +50,3 @@ own PaaS resources, and nothing else; a compromised ESO controller reaches one z
 cluster administrator reaches one cell. Country separation inside one cluster rests on these controls, not on a
 separate control plane; whether that is enough for the regulation the organisation is under is a sign-off
 ([decision D01](decisions.md#decision-matrix)).
-
----
-
-[Back to contents](../README.md) · Previous: [4. Node pools](04-node-pools.md) · Next: [6. Workload identity first, Key Vault secrets only when needed](06-workload-identity-and-secrets.md)

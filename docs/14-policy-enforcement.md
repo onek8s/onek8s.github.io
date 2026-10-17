@@ -90,7 +90,3 @@ local accounts and SSH off, CMK). Everything else in the table starts in `audit`
 | Reject `LoadBalancer` / `NodePort` Services outside `<zone>-gateway` | | ✔ | |
 | Reject `Ingress`, `Gateway`, `HTTPRoute`; `LoadBalancer` only internal, in the zone's ILB subnet, `externalTrafficPolicy: Local`; no `NodePort` | | | ✔ |
 | Namespace has `platform/stateful-exception` | | | ✔ |
-
----
-
-[Back to contents](../README.md) · Previous: [13. Encryption in transit and TLS](13-encryption-in-transit-and-tls.md) · Next: [15. AI-driven day 2 operations](15-ai-driven-day-2-operations.md)

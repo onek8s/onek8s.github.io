@@ -187,7 +187,3 @@ Trade-offs of delivering secrets as Kubernetes `Secret`s instead of CSI file mou
 - **ESO becomes a critical platform component** (one controller per zone and cluster, upgraded by the platform). In
   return a Key Vault or Entra ID outage no longer stops pods from starting – the `Secret` is already in the
   cluster, whereas a CSI mount fails at pod start.
-
----
-
-[Back to contents](../README.md) · Previous: [5. Allowed and blocked flows](05-allowed-and-blocked-flows.md) · Next: [7. Application multi-tenancy inside a zone](07-application-multi-tenancy.md)

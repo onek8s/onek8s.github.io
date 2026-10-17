@@ -98,7 +98,3 @@ with its own Traffic Manager profiles, Private DNS zones and fleet tags. The add
 country's `/16` already summarises its zones), nor do the applications, their manifests or the policies; what
 changes is the cluster IaC loop and the release train, which then runs per country. Nothing in the design has to be
 undone for that, which is why it is not built now ([decision D01](decisions.md#decision-matrix)).
-
----
-
-[Back to contents](../README.md) · Next: [1. Overview](01-overview.md)

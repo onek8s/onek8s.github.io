@@ -132,7 +132,3 @@ The design keeps the keys in the platform vault as decided, and limits the impac
 
 If this is not acceptable, the keys move to a separate `kv-<env>-keys` vault per environment with the same layout
 ([decision D20](decisions.md#decision-matrix)).
-
----
-
-[Back to contents](../README.md) · Previous: [17. Implementation project and acceptance testing](17-implementation-project-and-acceptance-testing.md) · Next: [19. Observability with Grafana Cloud](19-observability-with-grafana-cloud.md)

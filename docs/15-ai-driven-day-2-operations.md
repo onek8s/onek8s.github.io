@@ -215,7 +215,3 @@ The pull request is the first guardrail, not the only one:
   credentials stops its Azure reads. The platform keeps running – it is just changed by humans again.
 - **Start small**: agents begin in dev with every tier needing a human, and tiers are relaxed per agent and
   environment based on the measured outcome (merged without rework, rollbacks, incidents caused).
-
----
-
-[Back to contents](../README.md) · Previous: [14. Policy enforcement with the Azure Policy add-on](14-policy-enforcement.md) · Next: [16. Advanced networking: eBPF host routing and FQDN egress](16-advanced-networking-and-fqdn-egress.md)

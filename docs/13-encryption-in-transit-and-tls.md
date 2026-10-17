@@ -155,7 +155,3 @@ Internet access to Let's Encrypt or write access to DNS.
     vault-level assignments in general; per-object assignments are fine here because the number of certificates and
     consumers is small, but they count towards the subscription's role assignment limit.
   - Egress `acme-v02.api.letsencrypt.org` is allowed only for the renewal job, not for any cluster.
-
----
-
-[Back to contents](../README.md) · Previous: [12. Zero-downtime cluster upgrades](12-zero-downtime-cluster-upgrades.md) · Next: [14. Policy enforcement with the Azure Policy add-on](14-policy-enforcement.md)

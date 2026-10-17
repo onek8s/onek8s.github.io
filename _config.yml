@@ -1,8 +1,10 @@
 title: OneK8s
+description: One Kubernetes platform for every cloud - the design of the Azure implementation.
 # Used by the "Edit this page" links.
 repository: onek8s/onek8s.github.io
 branch: main
 # Only publish the design document and its pictures.
 exclude:
+  - CLAUDE.md
   - diagrams
   - scripts

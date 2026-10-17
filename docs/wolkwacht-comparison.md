@@ -86,7 +86,3 @@ apart from the open question above, Apple container on macOS, local Dapr with Or
 [AKS Desktop](https://wolkwacht.nl/posts/operating-aks-from-your-workstation/) (an operator tool that changes nothing
 in the platform), the CNI and eBPF introductions (Chronicles 1–3, already reflected in sections 2 and 16), and the
 general cloud cost essay.
-
----
-
-[Back to contents](../README.md) · Previous: [Open questions](open-questions.md) · Next: [Editing the pictures](editing-the-pictures.md)
