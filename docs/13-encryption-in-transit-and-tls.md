@@ -95,27 +95,29 @@ rest with customer-managed keys is in [section 18](18-encryption-at-rest-and-cus
 No cluster issues certificates – there is no cert-manager or other ACME client in any cluster, so no cluster needs
 Internet access to Let's Encrypt or write access to DNS.
 
-- **One platform Key Vault per environment.** `kv-<env>-platform` (RBAC permission model, public access disabled,
-  purge protection) exists exactly once per environment, is created by the environment IaC module and is shared by all
-  clusters of that environment. It holds **all certificates of the environment** – the zone vaults hold none – plus
-  the renewal job's ACME account key, and the customer-managed keys of the environment's clusters
+- **One platform Key Vault per environment and exposure.** `kv-<env>-<exposure>-platform` – `kv-<env>-platform`
+  for short, [requirements](requirements.md) – (RBAC permission model, public access disabled, purge protection)
+  exists once per environment and exposure ([D52](decisions.md#decision-matrix), [D53](decisions.md#decision-matrix)),
+  is created by the environment IaC module and is shared by all clusters of that exposure. It holds **all
+  certificates of the exposure's zones** – the zone vaults hold none – plus the renewal job's ACME account key, and
+  the customer-managed keys of the exposure's clusters
   ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)). Every cluster spoke has one private endpoint to it in a small shared subnet
   `snet-platform-pe` (control plane zone, [picture 2](02-network-layout.md)).
 - **Certificates per environment.** Each environment gets its own certificates in its own vault; nothing is copied
   between environments, and a dev or acc identity can never read a prd key:
 
-  | Environment | Platform Key Vault | Certificates (one wildcard per isolation zone) |
+  | Environment | Platform Key Vaults | Certificates (one wildcard per isolation zone) |
   |---|---|---|
-  | dev | `kv-dev-platform` | `cert-int-fi-wildcard` (`*.int-fi.dev.example.com`), `cert-int-se-wildcard`, `cert-ext-fi-wildcard`, `cert-ext-se-wildcard` |
-  | acc | `kv-acc-platform` | the same names for `*.<zone>.acc.example.com` |
-  | prd | `kv-prd-platform` | the same names for `*.<zone>.prd.example.com` |
+  | dev | `kv-dev-int-platform`, `kv-dev-ext-platform` | `cert-int-fi-wildcard` (`*.int-fi.dev.example.com`) and `cert-int-se-wildcard` in the internal vault; `cert-ext-fi-wildcard` and `cert-ext-se-wildcard` in the external one |
+  | acc | `kv-acc-int-platform`, `kv-acc-ext-platform` | the same names for `*.<zone>.acc.example.com` |
+  | prd | `kv-prd-int-platform`, `kv-prd-ext-platform` | the same names for `*.<zone>.prd.example.com` |
 
   The certificate *names* are identical in every environment, so the fleet manifests (`SecretStore`, `ExternalSecret`) need
-  only the vault name `kv-${ENV}-platform`, substituted from `cluster-vars`. An application that must not share the zone key gets its
+  only the vault name of the cluster's environment and exposure, substituted from `cluster-vars`. An application that must not share the zone key gets its
   own certificate `cert-<zone>-<app>` in the same vault.
 - **One renewal job per environment** runs in the management network (scheduled pipeline or Container Apps job) with
   its own managed identity, which has **Key Vault Certificates Officer and Key Vault Secrets Officer (for the ACME
-  account key) on its own environment's platform vault only**.
+  account key) on its own environment's platform vaults only**.
   It requests the certificates from Let's Encrypt with the **DNS-01** challenge, writes only the `_acme-challenge` TXT
   records into a public Azure DNS validation zone (the zone names are delegated to it by CNAME, so the job cannot
   change any other record) and **imports** the result into the platform vault as Key Vault certificates. It renews

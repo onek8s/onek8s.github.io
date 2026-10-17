@@ -5,7 +5,8 @@ The shared working notes for all OneK8s repos (what is deployed, decisions, gotc
 
 This repo is the design, published with GitHub Pages (`docs/01-...22-*.md`, `requirements.md`,
 `decisions.md` (decision log, capability matrix, human sign-offs), `open-questions.md` (only what still needs a
-human); diagrams in `diagrams/`, rendered as described in `docs/editing-the-pictures.md`). A decision goes into
+human); diagrams in `diagrams/`, rendered as described in `docs/editing-the-pictures.md`; the site's reading order is
+`_data/nav.yml`, repeated with a description per page in `README.md`'s Contents - a new page goes into both). A decision goes into
 `decisions.md` with its options and justification; `scripts/check.sh` runs in CI (diagram freshness, links).
 When an implementation decision changes the design, update the affected sections here in the same
 round. Decisions already reflected: Traffic Manager instead of Front Door; public API server as a dev

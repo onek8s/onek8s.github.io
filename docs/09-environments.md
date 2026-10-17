@@ -21,10 +21,12 @@ the same in both. dev and acc must have the *same topology* as prd per exposure 
 a three-AZ stateful cluster if prd has one), otherwise the upgrade procedures cannot be rehearsed there; they can use
 lower NAP `NodePool` limits and smaller stateful node pools.
 
-> **The build tenant's dev lab** runs one cell only, `aks-dev-ext-sl-az1` (in the implementation
-> `aks-dev-ext-stateless-az1`), in `sub-aks-dev`, which plays the role of `sub-aks-dev-ext`. The second external cell
-> stays defined but is built only on request, and the lab has no internal subscription: the internal clusters are
-> the same modules with the exposure `int` ([section 17](17-implementation-project-and-acceptance-testing.md)).
+> **The build tenant's dev lab** ([section 17](17-implementation-project-and-acceptance-testing.md)) runs the
+> internal exposure only, in germanywestcentral: `sub-aks-dev` plays the role of `sub-aks-dev-int`, with one cell per
+> egress model under test - `aks-dev-int-stateless-az2` (Finland's `int-fi`) and `aks-dev-int-stateless-az3`
+> (Sweden's `int-se`) - behind a small firewall VM that enforces the designed Firewall Policies
+> ([D57](decisions.md#decision-matrix), [D59](decisions.md#decision-matrix), [D61](decisions.md#decision-matrix)).
+> The lab has no external subscription: the external clusters are the same modules with the exposure `ext`.
 
 **Why three cells in prd** ([decision D08](decisions.md#decision-matrix)). With two cells each must be able to carry
 100 % of the load, and losing an availability zone *while* the other cell is drained for an upgrade leaves nothing.
@@ -49,7 +51,7 @@ owner's sign-off ([H05](decisions.md#human-sign-offs-still-needed)).
 | Part | What is in it | Scales with | Where it is capped |
 |---|---|---|---|
 | **Fixed per cell** | System pool (two nodes; one in the dev lab, which runs Traefik instead of App Routing's istiod and no VPA add-on – [D55](decisions.md#decision-matrix)), App Routing istiod and the zones' Envoy pods, the zone gateways' load balancers and public IPs, private endpoints (zone vaults, platform vault, ACR), hub peering, AKS Standard tier, Defender for Containers | Number of cells and zones | IaC |
-| **Fixed per environment** | Hub share (the exposure's hub and Firewall, [D53](decisions.md#decision-matrix); Private DNS, Bastion, the DDoS plan), Key Vaults, ACR Premium (and its prd replica), Traffic Manager profiles, backup vaults and storage, Grafana Cloud stack, Log Analytics, the stateful cluster's node pools and control plane if built | Number of environments, zones and stateful workloads | IaC |
+| **Fixed per environment** | Hub share (the exposure's hub and Firewall, [D53](decisions.md#decision-matrix); Private DNS, Bastion, the DDoS plan), Key Vaults, the container registry (Basic in dev and acc, Premium with its replica in prd, [D62](decisions.md#decision-matrix)), Traffic Manager profiles, backup vaults and storage, Grafana Cloud stack, Log Analytics, the stateful cluster's node pools and control plane if built | Number of environments, zones and stateful workloads | IaC |
 | **Variable** | NAP zone nodes (on-demand and spot), PaaS data services, Grafana Cloud ingest and retention, Firewall data processing, ACNS per node | Load, right-sizing, spot share, telemetry volume | `limits.yaml`: `NodePool` limits per zone, `maxSpotShare`, retention; budgets and quota alerts to the capacity agent |
 
 Capacity rules that the cost model must leave room for, all of them checked in acceptance:

@@ -4,8 +4,9 @@
 
 All data at rest in the clusters is encrypted with **customer-managed keys (CMK)**, not Microsoft-managed keys.
 Every cluster's control plane has its own key, and so do the disks of its nodes. In the stateful cluster, every
-isolation zone also has its own key for its persistent volumes. All keys live in the environment's **platform Key
-Vault** `kv-<env>-platform`, next to the certificates ([section 13](13-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
+isolation zone also has its own key for its persistent volumes. All keys live in the **platform Key Vault** of the
+cluster's exposure, `kv-<env>-<exposure>-platform` – `kv-<env>-platform` for short, [requirements](requirements.md) –
+next to the certificates ([section 13](13-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
 
 ## Keys
 
