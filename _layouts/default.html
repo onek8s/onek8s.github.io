@@ -24,7 +24,7 @@
   {%- endfor -%}
 {%- endfor -%}
 {%- if nav_current -%}
-  {%- capture page_heading -%}{% if nav_current.number %}{{ nav_current.number }}. {% endif %}{{ nav_current.title }}{%- endcapture -%}
+  {%- capture page_heading -%}{% if nav_current.number %}{{ nav_current.number }} {% endif %}{{ nav_current.title }}{%- endcapture -%}
 {%- else -%}
   {%- assign page_heading = page.title -%}
 {%- endif -%}
@@ -57,7 +57,7 @@
 <nav class="sidebar" aria-label="Pages">
 {%- for part in site.data.nav %}
 <div class="part">
-<span class="part-title">{{ part.part }}</span>
+<span class="part-title">{% if part.number %}{{ part.number }}. {% endif %}{{ part.part }}</span>
 <ul>
 {%- for item in part.pages -%}
   {%- assign target = site.pages | where: "path", item.path | first -%}
@@ -117,7 +117,7 @@
 <div class="content">
 <main>
 {%- if nav_part and page.path != 'README.md' %}
-<p class="eyebrow">{{ nav_part.part }}</p>
+<p class="eyebrow">{% if nav_part.number %}{{ nav_part.number }}. {% endif %}{{ nav_part.part }}</p>
 {%- endif %}
 {%- if toc_list != '' -%}
 {%- assign intro = content | split: '<h2' | first %}
@@ -135,11 +135,11 @@
 <nav class="page-nav" aria-label="Previous and next page">
 {%- if nav_prev -%}
   {%- assign target = site.pages | where: "path", nav_prev.path | first %}
-<a class="prev" href="{{ target.url | relative_url }}" rel="prev"><span class="label">Previous</span><span class="title">{% if nav_prev.number %}{{ nav_prev.number }}. {% endif %}{{ nav_prev.title }}</span></a>
+<a class="prev" href="{{ target.url | relative_url }}" rel="prev"><span class="label">Previous</span><span class="title">{% if nav_prev.number %}{{ nav_prev.number }} {% endif %}{{ nav_prev.title }}</span></a>
 {%- endif -%}
 {%- if nav_next -%}
   {%- assign target = site.pages | where: "path", nav_next.path | first %}
-<a class="next" href="{{ target.url | relative_url }}" rel="next"><span class="label">Next</span><span class="title">{% if nav_next.number %}{{ nav_next.number }}. {% endif %}{{ nav_next.title }}</span></a>
+<a class="next" href="{{ target.url | relative_url }}" rel="next"><span class="label">Next</span><span class="title">{% if nav_next.number %}{{ nav_next.number }} {% endif %}{{ nav_next.title }}</span></a>
 {%- endif %}
 </nav>
 {%- endif %}

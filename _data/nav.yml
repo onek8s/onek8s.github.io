@@ -1,109 +1,123 @@
-# Site navigation: the reading order of the design, in parts.
+# Site navigation: the reading order of the design, in numbered parts.
 #
-# The sections are numbered in this order, and the pictures carry the number of the section that shows them. The
-# layout builds the sidebar and the previous / next links from this list; README.md repeats it with a one-line
-# description per page, and scripts/check.sh fails when the two lists or the files in docs/ disagree.
-- part: Start here
+# A page is numbered <part>.<page>, and the pictures carry the number of the page that shows them. The layout builds
+# the sidebar and the previous / next links from this list; README.md repeats it with a one-line description per
+# page, and scripts/check.sh fails when the two lists or the files in docs/ disagree.
+
+- number: 1
+  part: Start here
   pages:
     - path: README.md
       title: Introduction
-    - path: docs/requirements.md
-      title: Requirements
-    - path: docs/01-overview.md
-      number: 1
+    - path: docs/1.1-overview.md
+      number: "1.1"
       title: Overview
-    - path: docs/02-open-standards-and-portability.md
-      number: 2
+    - path: docs/1.2-requirements.md
+      number: "1.2"
+      title: Requirements
+    - path: docs/1.3-open-standards-and-portability.md
+      number: "1.3"
       title: Open standards and portability
 
-- part: Inside a cluster
+- number: 2
+  part: Inside a cluster
   pages:
-    - path: docs/03-network-layout.md
-      number: 3
+    - path: docs/2.1-network-layout.md
+      number: "2.1"
       title: Network layout
-    - path: docs/04-control-plane.md
-      number: 4
+    - path: docs/2.2-control-plane.md
+      number: "2.2"
       title: Control plane
-    - path: docs/05-node-pools.md
-      number: 5
+    - path: docs/2.3-node-pools.md
+      number: "2.3"
       title: Node pools
-    - path: docs/06-allowed-and-blocked-flows.md
-      number: 6
+    - path: docs/2.4-allowed-and-blocked-flows.md
+      number: "2.4"
       title: Allowed and blocked flows
-    - path: docs/07-workload-identity-and-secrets.md
-      number: 7
+    - path: docs/2.5-workload-identity-and-secrets.md
+      number: "2.5"
       title: Workload identity and secrets
-    - path: docs/08-application-multi-tenancy.md
-      number: 8
+    - path: docs/2.6-application-multi-tenancy.md
+      number: "2.6"
       title: Application multi-tenancy
-    - path: docs/09-policy-enforcement.md
-      number: 9
+    - path: docs/2.7-policy-enforcement.md
+      number: "2.7"
       title: Policy enforcement
 
-- part: The fleet
+- number: 3
+  part: The fleet
   pages:
-    - path: docs/10-cluster-types-stateless-and-stateful.md
-      number: 10
+    - path: docs/3.1-cluster-types-stateless-and-stateful.md
+      number: "3.1"
       title: "Cluster types: stateless and stateful"
-    - path: docs/11-environments.md
-      number: 11
+    - path: docs/3.2-environments.md
+      number: "3.2"
       title: Environments
-    - path: docs/12-keeping-clusters-in-sync.md
-      number: 12
+    - path: docs/3.3-keeping-clusters-in-sync.md
+      number: "3.3"
       title: Keeping clusters in sync
-    - path: docs/13-zero-downtime-application-upgrades.md
-      number: 13
+    - path: docs/3.4-zero-downtime-application-upgrades.md
+      number: "3.4"
       title: Zero-downtime application upgrades
-    - path: docs/14-zero-downtime-cluster-upgrades.md
-      number: 14
+    - path: docs/3.5-zero-downtime-cluster-upgrades.md
+      number: "3.5"
       title: Zero-downtime cluster upgrades
 
-- part: Encryption
+- number: 4
+  part: Encryption
   pages:
-    - path: docs/15-encryption-in-transit-and-tls.md
-      number: 15
+    - path: docs/4.1-encryption-in-transit-and-tls.md
+      number: "4.1"
       title: Encryption in transit and TLS
-    - path: docs/16-encryption-at-rest-and-customer-managed-keys.md
-      number: 16
+    - path: docs/4.2-encryption-at-rest-and-customer-managed-keys.md
+      number: "4.2"
       title: Encryption at rest
 
-- part: Egress control
+- number: 5
+  part: Egress control
   pages:
-    - path: docs/17-advanced-networking-and-fqdn-egress.md
-      number: 17
+    - path: docs/5.1-advanced-networking-and-fqdn-egress.md
+      number: "5.1"
       title: Advanced networking and FQDN egress
-    - path: docs/18-egress-control-options-and-the-company-firewall.md
-      number: 18
+    - path: docs/5.2-egress-control-options-and-the-company-firewall.md
+      number: "5.2"
       title: Egress control options
-    - path: docs/19-traffic-flow-documentation.md
-      number: 19
+    - path: docs/5.3-traffic-flow-documentation.md
+      number: "5.3"
       title: Traffic flow documentation
 
-- part: Operations
+- number: 6
+  part: Operations
   pages:
-    - path: docs/20-ai-driven-day-2-operations.md
-      number: 20
+    - path: docs/6.1-ai-driven-day-2-operations.md
+      number: "6.1"
       title: AI-driven day 2 operations
-    - path: docs/21-observability-with-grafana-cloud.md
-      number: 21
+    - path: docs/6.2-observability-with-grafana-cloud.md
+      number: "6.2"
       title: Observability with Grafana Cloud
-    - path: docs/22-backup-and-region-recovery.md
-      number: 22
+    - path: docs/6.3-backup-and-region-recovery.md
+      number: "6.3"
       title: Backup and region recovery
 
-- part: Delivery and decisions
+- number: 7
+  part: Delivery and decisions
   pages:
-    - path: docs/23-implementation-project-and-acceptance-testing.md
-      number: 23
+    - path: docs/7.1-implementation-project-and-acceptance-testing.md
+      number: "7.1"
       title: Implementation project and acceptance testing
-    - path: docs/decisions.md
+    - path: docs/7.2-decisions.md
+      number: "7.2"
       title: Decisions
-    - path: docs/open-questions.md
+    - path: docs/7.3-open-questions.md
+      number: "7.3"
       title: Open questions
 
-- part: Appendix
+- number: 8
+  part: Appendix
   pages:
-    - path: docs/wolkwacht-comparison.md
+    - path: docs/8.1-wolkwacht-comparison.md
+      number: "8.1"
       title: Comparison with Wolkwacht
-    - path: docs/editing-the-pictures.md
+    - path: docs/8.2-editing-the-pictures.md
+      number: "8.2"
       title: Editing the pictures and the site

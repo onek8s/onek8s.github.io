@@ -1,0 +1,41 @@
+%% Example of a generated per-application picture (section 5.3): int-fi-example on the dev lab's overlay cell az2,
+%% regenerated 2026-10-17 after the stats.grafana.org rule moved to the platform rules (azure-landing-zone docs/traffic-flows).
+flowchart LR
+    client["Corporate network and VPN clients"]
+    subgraph CELL["Cell aks-dev-int-stateless-az2 - overlay + hub firewall only: the firewall sees the zone's node addresses (model A)"]
+        direction LR
+        gw["Gateway int-fi-gateway/int-fi<br/>hello-aks-dev-int-stateless-az2.int-fi.dev.onek8s.lol<br/>hello.int-fi.dev.onek8s.lol"]
+        subgraph NS["namespace int-fi-example - team example"]
+            direction TB
+            svc_aks_hello["Service aks-hello"]
+            wl_aks_hello["Deployment aks-hello x2<br/>acronek8sdev.azurecr.io/aks-hello:0.5.0"]
+        end
+        dns["CoreDNS"]
+        eso["ESO int-fi - Key Vault share int-fi-example--*"]
+    end
+    fw["Hub firewall<br/>rule collection group dev-int-applications"]
+    subgraph OUT["Outside the landing zone"]
+        direction TB
+        d_api_ipify_org["api.ipify.org:443"]
+        d_api_open_meteo_com["api.open-meteo.com:443"]
+    end
+    client --> gw
+    gw --> svc_aks_hello
+    svc_aks_hello --> wl_aks_hello
+    wl_aks_hello --> dns
+    eso -.->|"Secrets"| wl_aks_hello
+    wl_aks_hello -->|"every flow leaving the cluster"| fw
+    fw -->|"allowed"| d_api_ipify_org
+    fw -->|"allowed"| d_api_open_meteo_com
+    classDef ns fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef platform fill:#eceff1,stroke:#455a64,color:#000
+    classDef fw fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef allowed fill:#e8f5e9,stroke:#2e7d32,color:#000
+    classDef unexplained fill:#fff8e1,stroke:#ef6c00,color:#000
+    classDef missing fill:#ffebee,stroke:#c62828,color:#000,stroke-dasharray: 5 5
+    classDef proposed fill:#f3e5f5,stroke:#7b1fa2,color:#000,stroke-dasharray: 5 5
+    classDef zone fill:#e0f2f1,stroke:#00695c,color:#000
+    class gw,dns,eso platform
+    class fw fw
+    class svc_aks_hello,wl_aks_hello ns
+    class d_api_ipify_org,d_api_open_meteo_com allowed

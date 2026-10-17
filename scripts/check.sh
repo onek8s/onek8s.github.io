@@ -2,7 +2,8 @@
 # CI checks for the design repository:
 #  1. every diagram source (diagrams/*.mmd) has a rendering (images/*.svg) that is at least as new in Git history;
 #  2. every relative Markdown link and image reference resolves to a file;
-#  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree.
+#  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree, and every page's
+#     <part>.<page> number is the same in its file name, its first heading and the navigation.
 # Usage: scripts/check.sh   (run from anywhere; needs git and python3)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -72,9 +73,9 @@ for line in open('_data/nav.yml', encoding='utf-8'):
     if m:
         nav.append({'path': m.group(1)})
         continue
-    m = re.match(r'\s+number: (\d+)', line)
+    m = re.match(r'\s+number: "(\d+\.\d+)"', line)
     if m and nav:
-        nav[-1]['number'] = int(m.group(1))
+        nav[-1]['number'] = m.group(1)
 paths = [item['path'] for item in nav]
 for path in paths:
     if not os.path.exists(path):
@@ -89,14 +90,16 @@ for doc in docs:
         fail(f'{doc} is not in _data/nav.yml')
     if doc not in linked:
         fail(f'{doc} is not linked from the Contents of README.md')
-    number = re.match(r'docs/(\d+)-', doc)
+    number = re.match(r'docs/(\d+\.\d+)-', doc)
     item = next((i for i in nav if i['path'] == doc), None)
-    if number and item is not None and item.get('number') != int(number.group(1)):
-        fail(f'{doc}: number in _data/nav.yml is {item.get("number")}, the file name says {int(number.group(1))}')
-    if number:
-        heading = open(doc, encoding='utf-8').readline().strip()
-        if not heading.startswith(f'# {int(number.group(1))}. '):
-            fail(f'{doc}: the first heading does not start with "# {int(number.group(1))}. "')
+    if not number:
+        fail(f'{doc}: the file name does not start with a <part>.<page> number')
+        continue
+    if item is not None and item.get('number') != number.group(1):
+        fail(f'{doc}: number in _data/nav.yml is {item.get("number")}, the file name says {number.group(1)}')
+    heading = open(doc, encoding='utf-8').readline().strip()
+    if not heading.startswith(f'# {number.group(1)} '):
+        fail(f'{doc}: the first heading does not start with "# {number.group(1)} "')
 if 'README.md' not in paths:
     fail('README.md is not in _data/nav.yml')
 sys.exit(1 if bad else 0)

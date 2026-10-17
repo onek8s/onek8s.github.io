@@ -175,7 +175,7 @@ td > :last-child, th > :last-child { margin-bottom: 0; }
 .sidebar li { margin: 0; }
 .sidebar a { display: flex; gap: 0.5rem; padding: 0.3rem 0.6rem; border-radius: 6px; color: var(--fg); text-decoration: none; line-height: 1.35; }
 .sidebar a:hover { background: var(--surface); color: var(--fg-strong); }
-.sidebar .num { flex: none; width: 1.5rem; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sidebar .num { flex: none; width: 1.9rem; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 .sidebar li.current > a { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .sidebar li.current .num { color: var(--accent); }
 
