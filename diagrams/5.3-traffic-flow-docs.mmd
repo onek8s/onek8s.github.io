@@ -1,0 +1,44 @@
+%% Traffic flow documentation (section 5.3): the hub Firewall's rules name zones, not applications, but the platform
+%% writes them per application - so the pictures are generated from Git: one per application, one per zone.
+flowchart LR
+    subgraph SRC["Sources - Git only, nothing read from Azure or a cluster"]
+        direction TB
+        rules["azure-landing-zone<br/>firewall-applications/&lt;spoke&gt;/&lt;namespace&gt;.yaml<br/>destination · reason · evidence (the egress agent's files)"]
+        iac["aks-terraform envs/*.tfvars<br/>managed namespaces → team, zone, Flux path<br/>cells → egress model A / B / C"]
+        app["Team repository (Flux path)<br/>workloads · images · URLs in the environment<br/>routes · services"]
+        allow["aks-fluxcd-platform<br/>policy/egress-allow-lists.yaml<br/>(open to the whole zone)"]
+        prs["Open egress pull requests<br/>(proposed, not merged)"]
+    end
+
+    gen["aks-agent docs traffic<br/>deterministic generator<br/>no model · no timestamp"]
+
+    subgraph OUT["docs/traffic-flows/&lt;spoke&gt;/ - Markdown + Mermaid, rendered by GitHub"]
+        direction TB
+        appPage["Per application<br/>client → Gateway → Service → Deployment<br/>→ hub Firewall → destinations with status"]
+        zonePage["Per zone<br/>applications → Firewall (zone IP group)<br/>→ the union the zone may reach, and who asked"]
+        status["Status of every destination<br/>🟩 allowed, named in the configuration<br/>🟧 allowed, not in the configuration<br/>🟥 named, no rule (denied)<br/>🟪 proposed · 🟦 zone allow-list"]
+    end
+
+    agent["Documentation agent<br/>explains the findings<br/>one pull request, tier low"]
+    humans["Humans merge<br/>Firewall owners · platform · teams"]
+    find["Findings<br/>amber: hidden dependency or stale rule<br/>red: the egress agent's next proposal"]
+
+    rules & iac & app & allow & prs --> gen
+    gen --> appPage & zonePage
+    appPage & zonePage -.- status
+    gen -->|"pages changed"| agent
+    gen --> find
+    find --> agent
+    agent -->|"pull request"| humans
+    humans -->|"merge"| OUT
+
+    classDef src fill:#eceff1,stroke:#455a64,color:#000
+    classDef gen fill:#e8f5e9,stroke:#2e7d32,color:#000
+    classDef page fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef note fill:#fffde7,stroke:#f9a825,color:#000
+    class rules,iac,app,allow,prs src
+    class gen gen
+    class appPage,zonePage page
+    class agent,humans hub
+    class status,find note
