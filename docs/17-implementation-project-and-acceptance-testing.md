@@ -66,7 +66,7 @@ Rules that keep the build tenant from drifting away from what will be deployed l
 What is not built yet, as one list across the repositories (the status of what *is* built is in
 `onek8s/aks-terraform/CLAUDE.md` and `onek8s/azure-landing-zone/docs/design-mapping.md`). Order: first the security
 gaps of the running lab that are cheap to close, then what phase 2's exit criteria need, then the verifications of
-phase 3, last what only an external event triggers. **17 items** (2026-10-14).
+phase 3, last what only an external event triggers. **18 items** (2026-10-17).
 
 | # | Tier | Item | Why here | Repositories |
 |---|---|---|---|---|
@@ -87,6 +87,7 @@ phase 3, last what only an external event triggers. **17 items** (2026-10-14).
 | 15 | D – on trigger | The stateful cluster, only with the first approved exception; first thing to verify there is the node OS channel (V13: `SecurityPatch` or `NodeImage`) | Not built until needed by design (R8) | aks-terraform (`envs/dev-ext-stateful.tfvars`), aks-fluxcd-platform |
 | 16 | D – on trigger | Application Gateway WAF v2 per external zone and cell, if the security team asks for it (H03, D04) | A sign-off, not a platform decision | aks-terraform |
 | 17 | D – on trigger | Image promotion tests between registries, with the acc environment | dev has one registry; the promotion path exists only from acc on | aks-terraform |
+| 18 | B – before acceptance | Traffic flow documentation follow-ups ([section 23](23-traffic-flow-documentation.md), first version 2026-10-17): the `--check` on the landing zone's pull requests that touch the rule files, the "observed" column from the Firewall's log (rules unused for 30 days), a declaration convention for names assembled in code (`platform/egress` annotation), the platform's own flows per cell, and the egress agent's proposal to remove a rule nothing names and nothing uses | The amber findings of the first run (`stats.grafana.org` in both zones) need the observed column to be settled; the check keeps the pages from falling behind the rules | aks-ai-agents, azure-landing-zone, aks-fluxcd-platform |
 
 Not on the list by decision: GPU nodes in the lab (D42, the user runs none), IPv6 (D54), AKS cost analysis (D46).
 

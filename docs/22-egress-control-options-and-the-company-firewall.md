@@ -75,6 +75,13 @@ What it takes:
 The choice is per cell (`network_profile.network_plugin_mode` and `advanced_networking` in aks-terraform, both need a
 rebuild to change), so a fleet can run A by default and B, C or D where a zone needs it.
 
+**Making the shared destinations visible.** With A and C the Firewall opens a destination to the whole zone and
+cannot say which application uses it - but the per-application rule files can, because every rule names the
+application that asked for it, why, and the evidence. [Section 23](23-traffic-flow-documentation.md) generates from
+them, and from the applications' own configuration, a picture per application (every destination with its status:
+named in the configuration, allowed but not named, named but denied) and a picture per zone (the union the Firewall
+opens, and who brought each name in) - the review a zone-wide rule needs.
+
 **Built in the dev lab (2026-10-16)**: the cell `aks-dev-int-stateless-az2` (Finland's `int-fi`) runs A - rebuilt without
 ACNS, its Cilium policies at layer 4, aks-hello on the zone's nodes fetching a weather forecast. The firewall denied it from
 the zone's node addresses, and the egress agent attributed the denial to the application on that node and opened the pull
@@ -201,4 +208,4 @@ per GB processed for the Firewall); the list prices are not repeated here becaus
 
 ---
 
-[Back to contents](../README.md) · Previous: [21. Open standards and portability](21-open-standards-and-portability.md) · Next: [Decisions](decisions.md)
+[Back to contents](../README.md) · Previous: [21. Open standards and portability](21-open-standards-and-portability.md) · Next: [23. Traffic flow documentation](23-traffic-flow-documentation.md)
