@@ -63,6 +63,16 @@ is the picture section 22's "applications of one zone share the zone's destinati
 egress pull request sees what the zone already reaches and who brought each name in, and the Firewall's owners see
 the zone's whole exposure on one page. An index page lists the zones and applications of the spoke.
 
+Two pages of the first run, as examples (the rest is at azure-landing-zone `docs/traffic-flows/`, rendered by GitHub):
+
+The application `int-fi-example` on the overlay cell az2 - the amber destination is the finding described below:
+
+![Example: the per-application picture of int-fi-example](../images/23-example-application.svg)
+
+The zone `int-se` on the node-subnet cell az3:
+
+![Example: the per-zone picture of int-se](../images/23-example-zone.svg)
+
 ## The documentation agent
 
 The agent follows the rules of [section 15](15-ai-driven-day-2-operations.md): read-only sources, Git as its only
@@ -96,6 +106,12 @@ which a human merged. Nothing in aks-hello's configuration names it. Either aks-
 manifests do not show, or the flow came from something else on the same node (az2 attributes a node's address to the
 application pods on it, section 22) and the rule should go. That is exactly the review the pictures are for, and it
 is a pull request the documentation agent cannot open itself: a rule's removal is the egress files' owners' decision.
+
+Settled the same day: `stats.grafana.org` is Grafana's anonymous usage statistics, reported by Alloy, Beyla and the
+k8s-monitoring chart from every node - a platform flow, not aks-hello's. The user moved it to the exposure's
+`observability_fqdns` (the platform's `observability` rule, every cell) and removed it from both application files; the
+regenerated pages show no amber destination. The finding was real, the attribution was the overlay cell's (a node's
+address stands for the application pods on it), and the fix was one line in the right place.
 
 ## Limits of the first version, and what comes next
 
