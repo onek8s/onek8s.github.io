@@ -1,6 +1,6 @@
-# 7. Application multi-tenancy inside a zone
+# 8. Application multi-tenancy inside a zone
 
-![Namespace tenancy](../images/07-namespace-tenancy.svg)
+![Namespace tenancy](../images/08-namespace-tenancy.svg)
 
 Each application gets its own namespace(s) inside a zone, with a baseline policy set applied automatically:
 
@@ -14,9 +14,9 @@ Each application gets its own namespace(s) inside a zone, with a baseline policy
 5. no egress out of the cluster by default: **the application must declare every external destination by FQDN** in
    its own `CiliumNetworkPolicy` `egress` – Entra ID, PaaS private endpoints, stateful cluster services and approved Internet names (which must also be on the
    zone's Firewall allow-list); CIDR-based egress is rejected by Azure Policy
-   ([section 16](16-advanced-networking-and-fqdn-egress.md)). Key Vault is never on that list: secrets and
+   ([section 17](17-advanced-networking-and-fqdn-egress.md)). Key Vault is never on that list: secrets and
    certificates arrive as Kubernetes `Secret`s from the zone's External Secrets Operator
-   ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)).
+   ([section 7](07-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)).
 
 Applications in the same zone therefore cannot talk to each other unless an explicit policy pair is agreed.
 Kubernetes RBAC is namespace-scoped (Entra ID groups per application team), plus ResourceQuota/LimitRange per
@@ -38,16 +38,16 @@ None of them reaches another namespace or anything cluster-wide. The IaC (aks-te
 Flux like everything else inside the cluster, and the Azure role `Azure Kubernetes Service Namespace User` on the
 managed namespace, so that its members can fetch a kubeconfig for that namespace alone
 (`az aks namespace get-credentials`). On the namespace's share of the zone vault the same groups get the matching
-rights ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)): since
+rights ([section 7](07-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)): since
 application secrets reach the cluster only through External Secrets Operator, managing them in the vault is how a
 team with `edit` changes its `Secret`s. A role without a group gets no binding and no vault role. The isolation tests
-([section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests), R6) compare
+([section 23](23-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests), R6) compare
 the bindings with the IaC and check each role's rights – in the cluster and in the vault – by impersonating a member
 of its group and by signing in as a test application that is one.
 
 None of these groups can list the cluster's namespaces or the vault's secrets: other tenants' names stay hidden
 from them – **soft multi-tenancy**, the separation of tenants sharing one cluster and one vault in their data
-planes ([section 6](06-workload-identity-and-secrets.md#soft-multi-tenancy), which also applies the pattern to
+planes ([section 7](07-workload-identity-and-secrets.md#soft-multi-tenancy), which also applies the pattern to
 other PaaS services).
 
 ### Platform viewers
@@ -84,9 +84,9 @@ Every namespace says who owns what runs in it and who pays for it (R25, [decisio
 
 The onboarding request names them, and the IaC sets them on the namespace (aks-terraform
 `managed_namespaces.<ns>.owner`); the platform's own namespaces are `platform`. Azure Policy
-(`namespace-ownership`, [section 14](14-policy-enforcement.md)) requires them on every namespace but the ones AKS
-creates. **OpenCost** ([section 19](19-observability-with-grafana-cloud.md#what-grafana-cloud-does)) prices every
+(`namespace-ownership`, [section 9](09-policy-enforcement.md)) requires them on every namespace but the ones AKS
+creates. **OpenCost** ([section 21](21-observability-with-grafana-cloud.md#what-grafana-cloud-does)) prices every
 node from Azure's retail prices and splits its cost over the namespaces by what their pods request and use, so a
 team's share of the cell, its GPU nodes included, is a query by these labels
 ([decision D46](decisions.md#decision-matrix)). A monthly budget on each environment subscription alerts the owners
-at 80 % and 100 % of the actual cost and at a forecast of 100 % ([section 9](09-environments.md#cost-and-capacity-model)).
+at 80 % and 100 % of the actual cost and at a forecast of 100 % ([section 11](11-environments.md#cost-and-capacity-model)).

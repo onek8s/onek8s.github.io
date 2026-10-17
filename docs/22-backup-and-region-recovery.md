@@ -1,15 +1,15 @@
-# 20. Backup and region recovery
+# 22. Backup and region recovery
 
-![Backup and region recovery](../images/20-backup-region-recovery.svg)
+![Backup and region recovery](../images/22-backup-region-recovery.svg)
 
 The platform survives the loss of an availability zone with its cells and zone-redundant services
-([section 8](08-cluster-types-stateless-and-stateful.md)). To survive the **loss of the whole Azure region**,
+([section 10](10-cluster-types-stateless-and-stateful.md)). To survive the **loss of the whole Azure region**,
 **every piece of persistent data is backed up immutably into the region's [Azure paired region](https://learn.microsoft.com/en-us/azure/reliability/cross-region-replication-azure)**.
 Nobody can change or delete those copies before their retention ends: not the platform team, not an
 `Owner`, not a compromised pipeline or agent.
 
 **Only persistent data is backed up, never clusters.** Clusters, their etcd, node disks and every Kubernetes object
-are rebuilt from IaC and Git ([section 9](09-environments.md): *clusters are cattle*). After a region loss the
+are rebuilt from IaC and Git ([section 11](11-environments.md): *clusters are cattle*). After a region loss the
 platform is rebuilt in the paired region, and only the data is restored into it.
 
 ## What is backed up and what is rebuilt
@@ -20,11 +20,11 @@ platform is rebuilt in the paired region, and only the data is restored into it.
 | Stateful cluster | **Persistent volumes only** (Azure Backup for AKS, vault tier) | The cluster, its node pools, StorageClasses, operators and every manifest (pipeline from the fleet repository) |
 | Stateless clusters | – (they hold no data) | Everything |
 | Zone Key Vaults `kv-<env>-<zone>` | **Secrets that cannot be issued again** (third-party API keys, partner credentials) | The vaults, their role assignments and ABAC conditions; secrets the platform can issue again |
-| Platform Key Vault `kv-<env>-platform` | Only customer-managed keys that backed-up data depends on (for example a PaaS service's TDE key, if one is used) | Certificates (issued again by the renewal job), the cluster KMS and disk keys (new clusters get new keys, [section 18](18-encryption-at-rest-and-customer-managed-keys.md)), the Grafana tokens |
+| Platform Key Vault `kv-<env>-platform` | Only customer-managed keys that backed-up data depends on (for example a PaaS service's TDE key, if one is used) | Certificates (issued again by the renewal job), the cluster KMS and disk keys (new clusters get new keys, [section 16](16-encryption-at-rest-and-customer-managed-keys.md)), the Grafana tokens |
 | ACR | prd: the registry is **geo-replicated to the paired region** (ACR Premium), so every deployed digest stays valid and image builds leave the critical path of the prd recovery ([decision D35](decisions.md#decision-matrix)) | dev and acc: images are built again by CI from the Git commits that the fleet repository deploys |
 | Messaging (Service Bus, Event Hubs) and caches (Redis) | – (in-flight data and caches, not records) | Namespaces, queues, topics and caches |
 | Hub, management VNet, Firewall, Traffic Manager, DNS, identities, policies | – | Everything (IaC repository and guardrails repository) |
-| Git, GitHub environments, Grafana Cloud | Not in the region ([section 19](19-observability-with-grafana-cloud.md#network-grafana-cloud-through-private-link)) | – |
+| Git, GitHub environments, Grafana Cloud | Not in the region ([section 21](21-observability-with-grafana-cloud.md#network-grafana-cloud-through-private-link)) | – |
 
 **Every data store is named at onboarding.** The onboarding request lists each data store of the application
 with its type, the backup mechanism from the table below, the RPO and RTO the business expects of it and the team
@@ -50,7 +50,7 @@ zone**, so the copies of different countries stay apart like the data itself (R3
 - **No platform or agent identity can delete.** The vaults' managed identities get the roles Azure Backup needs on
   each data source they protect, and nothing else. The backup subscription grants
   the platform's IaC identity only `Backup Operator` (start a backup or restore, never delete), and grants the AI agents nothing
-  ([section 15](15-ai-driven-day-2-operations.md#identities-and-access-rights)).
+  ([section 20](20-ai-driven-day-2-operations.md#identities-and-access-rights)).
 - **Retention** (example, to be agreed per data class): daily recovery points for 35 days, weekly for 12 weeks,
   monthly for 12 months in prd. acc keeps the same layout with 14 days, so the procedures can be rehearsed there.
   dev has none, because it holds synthetic data only; the restore drills use acc.
@@ -74,7 +74,7 @@ zone**, so the copies of different countries stay apart like the data itself (R3
   and may be deleted with it, so only the vault tier counts for region recovery. AKS backups are crash-consistent,
   so a database inside the stateful cluster also needs its operator's own application-consistent backup.
 - **Customer-managed keys.** A restored disk or database is encrypted again under the paired region's new keys
-  ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)). If backed-up data is encrypted under a key that
+  ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)). If backed-up data is encrypted under a key that
   the restore needs (for example SQL TDE with a customer-managed key), that key is in the Key Vault backup above and
   is restored first.
 - **Azure Policy enforces** the backup posture: every SQL server, PostgreSQL server and Cosmos DB account has
@@ -82,13 +82,13 @@ zone**, so the copies of different countries stay apart like the data itself (R3
   object replication policy to its zone's backup account; every backup vault is locked immutable with Cross Region
   Restore. A data store without protection is non-compliant and blocks the promotion of its application to prd.
 - **Monitoring**: failed backup jobs, replication lag and the age of the newest recovery point per data store are
-  alerts in Grafana Cloud ([section 19](19-observability-with-grafana-cloud.md)).
+  alerts in Grafana Cloud ([section 21](21-observability-with-grafana-cloud.md)).
 
 ## Region recovery
 
 A region loss is **declared by humans**: the platform lead together with the business owner, following the
 incident runbook. No agent and no automation may start a region recovery
-([safe actions](15-ai-driven-day-2-operations.md#safe-actions-without-a-pull-request)). The recovery rebuilds the
+([safe actions](20-ai-driven-day-2-operations.md#safe-actions-without-a-pull-request)). The recovery rebuilds the
 environment in the paired region, prd first:
 
 1. **Bootstrap**: GitHub-hosted runners with OIDC federation to the environment subscriptions run the IaC with
@@ -119,7 +119,7 @@ environment in the paired region, prd first:
 - **RTO** is measured, not assumed. It is the time of the rebuild drill below, and it is dominated by the database
   restores and the image builds. The target is set with the business ([sign-off H04](decisions.md#human-sign-offs-still-needed)).
 - **Address plan**: the paired region reuses the environment's own prefixes
-  ([address plan](08-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)), so Firewall rules, NSGs and
+  ([address plan](10-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)), so Firewall rules, NSGs and
   on-premises routes keep their meaning. That works only because the primary region's spokes are gone; a
   partial outage is handled by waiting for the region, not by running both at once.
 - **Failback** to the primary region is a planned migration later, done the same way in the other direction. It is
@@ -127,7 +127,7 @@ environment in the paired region, prd first:
 
 ## Tests
 
-Added to the acceptance tests ([section 17](17-implementation-project-and-acceptance-testing.md#rebuild-backup-and-recovery))
+Added to the acceptance tests ([section 23](23-implementation-project-and-acceptance-testing.md#rebuild-backup-and-recovery))
 and repeated **every six months in acc**:
 
 - **Immutability**: as `Owner` of the backup subscription, try to delete a recovery point, delete a blob version,

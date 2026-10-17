@@ -1,12 +1,12 @@
-# 18. Encryption at rest with customer-managed keys
+# 16. Encryption at rest with customer-managed keys
 
-![Encryption at rest](../images/18-encryption-at-rest.svg)
+![Encryption at rest](../images/16-encryption-at-rest.svg)
 
 All data at rest in the clusters is encrypted with **customer-managed keys (CMK)**, not Microsoft-managed keys.
 Every cluster's control plane has its own key, and so do the disks of its nodes. In the stateful cluster, every
 isolation zone also has its own key for its persistent volumes. All keys live in the **platform Key Vault** of the
 cluster's exposure, `kv-<env>-<exposure>-platform` – `kv-<env>-platform` for short, [requirements](requirements.md) –
-next to the certificates ([section 13](13-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
+next to the certificates ([section 15](15-encryption-in-transit-and-tls.md#certificates-issued-centrally-distributed-through-the-platform-key-vault)).
 
 ## Keys
 
@@ -39,9 +39,9 @@ zone the same way ([verification V15](decisions.md#azure-capability-and-verifica
 - Every cluster runs with `--enable-azure-keyvault-kms`, `--azure-keyvault-kms-key-vault-network-access Private`, the
   platform vault as `--azure-keyvault-kms-key-vault-resource-id` and its own `key-<cluster>-kms`.
 - **Private key vault works because of API Server VNet Integration**, which every cluster has
-  ([section 3](03-control-plane.md)); KMS does not support Konnectivity with a private vault. AKS creates its own
+  ([section 4](04-control-plane.md)); KMS does not support Konnectivity with a private vault. AKS creates its own
   private endpoint to the vault in the node resource group, and the NSG on `snet-apiserver` allows TCP 443 from the
-  API server to it ([section 5](05-allowed-and-blocked-flows.md)).
+  API server to it ([section 6](06-allowed-and-blocked-flows.md)).
 - KMS requires a **user-assigned** control plane identity (`id-aks-<env>-<cluster>`), created by the cluster module
   before the cluster. It gets **Key Vault Crypto User scoped to its own KMS key** and, because AKS creates the private
   link for a private vault itself, **Key Vault Contributor on the platform vault**. See the trade-off below.
@@ -57,7 +57,7 @@ zone the same way ([verification V15](decisions.md#azure-capability-and-verifica
   vault's mode unchanged, then `Private`); AKS rewrites every Secret as `aksService`, which the `secrets-via-eso`
   policy exempts. Once on, it cannot be turned off.
 - Everything that ends up in etcd is encrypted with the cluster's key: the application secrets and certificates
-  delivered as Kubernetes Secrets by External Secrets Operator ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)),
+  delivered as Kubernetes Secrets by External Secrets Operator ([section 7](07-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)),
   the zone gateways' certificates, Flux and platform Secrets.
 
 ## Nodes: disk encryption set per cluster
@@ -72,7 +72,7 @@ zone the same way ([verification V15](decisions.md#azure-capability-and-verifica
 - **Encryption at host** is enabled on every node (`--enable-encryption-at-host` on classic node pools,
   `security.encryptionAtHost: true` in every `AKSNodeClass`), so temp disks and disk caches on the VM host are
   encrypted as well. Azure Policy enforces it like the VM size allow-list. The allow-list may therefore contain only
-  SKUs that support **both** VNet encryption and encryption at host ([section 4](04-node-pools.md)).
+  SKUs that support **both** VNet encryption and encryption at host ([section 5](05-node-pools.md)).
 - The disk encryption set can only be set when a cluster is created, so **every cluster is created with CMK from the
   start** by the cluster module. The cluster module must never create a cluster without it, because adding it later
   would mean rebuilding the cluster.
@@ -89,10 +89,10 @@ zone the same way ([verification V15](decisions.md#azure-capability-and-verifica
   `key-sf-pv-<zone>`), and the zone's Azure Files StorageClass points at it (`storageAccount` parameter).
 - **Backups** (Azure Backup for AKS) are disk snapshots that keep the disk's encryption set, so a zone's snapshots
   are under the same key as its data. The vault-tier copies that protect against a region loss are restored into
-  volumes under the paired region's new zone keys ([section 20](20-backup-and-region-recovery.md#per-data-store)).
+  volumes under the paired region's new zone keys ([section 22](22-backup-and-region-recovery.md#per-data-store)).
 - A disk encryption set on a StorageClass applies only to **new** volumes. The per-zone classes therefore exist
   before the first workload is onboarded. Adding a country adds the zones' keys, disk encryption sets and
-  StorageClasses ([adding a country](08-cluster-types-stateless-and-stateful.md#adding-a-country-online)).
+  StorageClasses ([adding a country](10-cluster-types-stateless-and-stateful.md#adding-a-country-online)).
 
 ## Rotation and lifecycle
 
@@ -114,7 +114,7 @@ zone the same way ([verification V15](decisions.md#azure-capability-and-verifica
   cluster, and the old versions are disabled once the old cluster is deleted.
 - **Revocation (crypto-shredding)** is the reason to use CMK: disabling a key makes the data under it unreadable. It
   takes the platform team's PIM role on the vault and is part of the incident runbook. It is tested in dev in the
-  build tenant ([section 17](17-implementation-project-and-acceptance-testing.md#security-reviews)).
+  build tenant ([section 23](23-implementation-project-and-acceptance-testing.md#security-reviews)).
 
 ## Trade-off: cluster identities on the shared platform vault
 

@@ -1,6 +1,6 @@
-# 3. Control plane
+# 4. Control plane
 
-![Control plane](../images/03-control-plane.svg)
+![Control plane](../images/04-control-plane.svg)
 
 The API server uses **API Server VNet Integration**: it is projected as an internal load balancer into a
 dedicated, delegated `snet-apiserver` (/28) that contains nothing else. The cluster is **private** (public
@@ -14,7 +14,7 @@ no DNS). The system node pool (tainted `CriticalAddonsOnly`, fixed node count) r
   accounts enabled.
 - **Open: VNet integration and VNet encryption exclude each other** (H14): Azure refuses API Server VNet Integration on
   an encrypted virtual network with v4 and newer VM sizes, and the cells' networks are encrypted
-  ([section 13](13-encryption-in-transit-and-tls.md)); the private vault for KMS ([section 18](18-encryption-at-rest-and-customer-managed-keys.md))
+  ([section 15](15-encryption-in-transit-and-tls.md)); the private vault for KMS ([section 16](16-encryption-at-rest-and-customer-managed-keys.md))
   depends on VNet integration.
 - **The build tenant's dev lab runs them private too** (D58), over Private Link (a classic private cluster, the
   endpoint in the cell's `snet-system`), its public FQDN resolving to the private address (no private DNS zone, since
@@ -22,4 +22,4 @@ no DNS). The system node pool (tainted `CriticalAddonsOnly`, fixed node count) r
   lab firewall's VPN, which the lab's GitHub-hosted runners join.
 - **No SSH to nodes** (`--ssh-access disabled` on every node pool): nodes are replaced, never logged into. Node-level
   diagnosis uses `kubectl debug node/…` or a kernel-level tracing tool, through break-glass only
-  ([section 19](19-observability-with-grafana-cloud.md#security-detections-and-forensics)).
+  ([section 21](21-observability-with-grafana-cloud.md#security-detections-and-forensics)).

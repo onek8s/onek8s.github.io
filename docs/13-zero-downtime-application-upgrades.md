@@ -1,4 +1,4 @@
-# 11. Zero-downtime application upgrades
+# 13. Zero-downtime application upgrades
 
 The same rules apply in every cluster and are **enforced by admission policy** (Azure Policy add-on), so no
 application can be deployed in a way that breaks a zero-downtime rollout or a node drain:
@@ -11,13 +11,13 @@ application can be deployed in a way that breaks a zero-downtime rollout or a no
 | Rollout strategy | `RollingUpdate`, `maxUnavailable: 0`, `maxSurge: 25%` | `RollingUpdate` (optionally `partition` for canary) or operator-managed |
 | Probes | readiness + liveness (+ startup) required | readiness gated on replication / quorum |
 | Graceful shutdown | `preStop` delay + `terminationGracePeriodSeconds` longer than the gateway / traffic layer drain time | same, plus clean leader hand-over |
-| Resources | requests required (HPA and NAP depend on them); resized in place by the VPA within Git bounds ([section 4](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)) | requests = limits for memory; VPA recommendations only |
+| Resources | requests required (HPA and NAP depend on them); resized in place by the VPA within Git bounds ([section 5](05-node-pools.md#pod-right-sizing-vertical-scaling-in-place)) | requests = limits for memory; VPA recommendations only |
 | Images | by digest, from the environment's ACR only | same |
 
 - **Scaling on load** (stateless): HPA on CPU/memory or KEDA on queue length / request rate; NAP adds nodes for
   pods that do not fit and consolidates them away again. `maxReplicas` and the NAP `NodePool` limits are sized so that
   one cluster can take the full load. Vertically, the VPA resizes running pods **in place** – no new pod, usually no
-  restart – within the bounds in Git ([pod right-sizing](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)),
+  restart – within the bounds in Git ([pod right-sizing](05-node-pools.md#pod-right-sizing-vertical-scaling-in-place)),
   so following the load needs no release; only changing the bounds does.
 - **No scaling on load in the stateful cluster**: replica counts and node pool sizes are fixed and changed as planned
   changes through the pipeline and IaC.
@@ -31,13 +31,13 @@ application can be deployed in a way that breaks a zero-downtime rollout or a no
 
 A release – a new signed fleet artifact `fleet:<git-sha>` with any number of application changes – moves through the
 cells of an environment **one cell at a time**, with the same *drain → change → test → return* procedure as a
-cluster upgrade ([section 12](12-zero-downtime-cluster-upgrades.md#stateless-clusters)). External applications run in
+cluster upgrade ([section 14](14-zero-downtime-cluster-upgrades.md#stateless-clusters)). External applications run in
 every cell behind Traffic Manager's DNS affinity; internal applications run only in their home cell
-([incoming traffic](08-cluster-types-stateless-and-stateful.md#incoming-traffic-from-outside-and-from-inside)).
+([incoming traffic](10-cluster-types-stateless-and-stateful.md#incoming-traffic-from-outside-and-from-inside)).
 Either way, every interactive user switches from the old to the new version **exactly once and never back**:
 
 1. **Stateful stage first** (only if the environment has a stateful cluster): providers before consumers
-   ([section 10](10-keeping-clusters-in-sync.md)).
+   ([section 12](12-keeping-clusters-in-sync.md)).
 2. **Drain cell 1**: disable its Traffic Manager endpoints and wait for the DNS answers to expire and the cell's
    connections to drain. Its external users move to the other cells, which still run the old version, so nobody
    sees a change yet. Internal applications whose home is cell 1 keep serving.
@@ -48,7 +48,7 @@ Either way, every interactive user switches from the old to the new version **ex
 4. **Test** through the per-cell test host names (external zones) and against the cell's gateway IPs with the
    applications' real host names (internal zones): smoke and synthetic tests over the real TLS path.
 5. **Return** the cell to Traffic Manager: its external clients come back in steps, a quarter of its address blocks at a time,
-   and this is the moment they switch to the new version. The pipeline watches the error-rate and latency SLOs per cell in Grafana Cloud ([SLO gates](19-observability-with-grafana-cloud.md#what-grafana-cloud-does));
+   and this is the moment they switch to the new version. The pipeline watches the error-rate and latency SLOs per cell in Grafana Cloud ([SLO gates](21-observability-with-grafana-cloud.md#what-grafana-cloud-does));
    on a breach it drains the cell again – its external clients fall back to the old version in the other cells – and
    moves the tag back, which also rolls back the cell's internal applications.
 6. **Soak**, then repeat for the next cell. After the last cell all clients are on the new version.

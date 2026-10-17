@@ -1,23 +1,23 @@
-# 2. Network layout
+# 3. Network layout
 
-![Network subnets](../images/02-network-subnets.svg)
+![Network subnets](../images/03-network-subnets.svg)
 
 An Azure VNet can have several non-overlapping **address spaces**, and AKS only requires that a cluster's subnets
 are in the same VNet, not in the same address space. The design uses this: the control plane zone and **every
 isolation zone get their own `/20` address space** in the spoke VNet, taken from that zone's prefix of the
-environment ([address plan](08-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)). The zone's subnets for nodes, internal load balancers and
+environment ([address plan](10-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)). The zone's subnets for nodes, internal load balancers and
 private endpoints live inside that address space. A new zone is added online as a new address space, so the
 existing ones never change. Whether the zone also has a pod subnet depends on the cluster type's CNI:
 
 | | Stateful cluster | Stateless clusters |
 |---|---|---|
 | CNI | Azure CNI, VNet-integrated with dynamic pod IP allocation, powered by Cilium | Azure CNI Overlay, powered by Cilium |
-| [ACNS](16-advanced-networking-and-fqdn-egress.md) | FQDN egress policies + observability + eBPF host routing | Same |
+| [ACNS](17-advanced-networking-and-fqdn-egress.md) | FQDN egress policies + observability + eBPF host routing | Same |
 | Pod IPs | From `snet-<zone>-pods` – routable in the VNet, visible to NSGs and the firewall | From a private overlay CIDR outside the VNet (the same CIDR can be reused in every stateless cluster) |
 | Pod traffic leaving the cluster | Keeps the pod IP | SNAT to the node IP (eBPF masquerading), so NSGs and the firewall see the zone's `snet-<zone>-nodes` |
-| Which application may leave the cluster | Cilium FQDN policy per application ([section 16](16-advanced-networking-and-fqdn-egress.md)) | Same – the firewall sees only the zone, so the per-application control is in Cilium |
+| Which application may leave the cluster | Cilium FQDN policy per application ([section 17](17-advanced-networking-and-fqdn-egress.md)) | Same – the firewall sees only the zone, so the per-application control is in Cilium |
 | `snet-<zone>-pods` | Yes | Not needed |
-| `snet-<zone>-ilb` | Internal load balancers of the applications' `LoadBalancer` Services | Internal load balancer of the zone's gateway (internal zones; an external zone's gateway has a public load balancer, [section 8](08-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)) |
+| `snet-<zone>-ilb` | Internal load balancers of the applications' `LoadBalancer` Services | Internal load balancer of the zone's gateway (internal zones; an external zone's gateway has a public load balancer, [section 10](10-cluster-types-stateless-and-stateful.md#external-zones-active-active-with-dns-affinity)) |
 
 Zone isolation works the same with both CNIs because every zone has its own nodes in its own node subnet (a NAP
 `NodePool` whose `AKSNodeClass` points at the zone's subnet, or AKS node pools in the stateful cluster): a packet from

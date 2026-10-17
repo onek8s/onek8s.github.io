@@ -1,9 +1,9 @@
-# 9. Environments (fourteen to twenty clusters)
+# 11. Environments (fourteen to twenty clusters)
 
-![Environments](../images/09-environments.svg)
+![Environments](../images/11-environments.svg)
 
 Every environment has **two subscriptions, one per exposure** ([decision D52](decisions.md#decision-matrix),
-[section 8](08-cluster-types-stateless-and-stateful.md#internal-and-external-separate-subscriptions-and-clusters)),
+[section 10](10-cluster-types-stateless-and-stateful.md#internal-and-external-separate-subscriptions-and-clusters)),
 and each has its own cells and optional stateful cluster with the zones of that exposure:
 
 | Environment | Exposure | Subscription | Stateless | Stateful | Clusters |
@@ -21,7 +21,7 @@ the same in both. dev and acc must have the *same topology* as prd per exposure 
 a three-AZ stateful cluster if prd has one), otherwise the upgrade procedures cannot be rehearsed there; they can use
 lower NAP `NodePool` limits and smaller stateful node pools.
 
-> **The build tenant's dev lab** ([section 17](17-implementation-project-and-acceptance-testing.md)) runs the
+> **The build tenant's dev lab** ([section 23](23-implementation-project-and-acceptance-testing.md)) runs the
 > internal exposure only, in germanywestcentral: `sub-aks-dev` plays the role of `sub-aks-dev-int`, with one cell per
 > egress model under test - `aks-dev-int-stateless-az2` (Finland's `int-fi`) and `aks-dev-int-stateless-az3`
 > (Sweden's `int-se`) - behind a small firewall VM that enforces the designed Firewall Policies
@@ -44,7 +44,7 @@ Basic for a few images.
 ## Cost and capacity model
 
 The cost of an environment has three parts. The numbers are measured in the build tenant at idle and at prd peak
-([section 17](17-implementation-project-and-acceptance-testing.md#operations)) and recorded per environment and
+([section 23](23-implementation-project-and-acceptance-testing.md#operations)) and recorded per environment and
 isolation zone in Grafana Cloud; this page only fixes the structure, so the estimate and the budget are the platform
 owner's sign-off ([H05](decisions.md#human-sign-offs-still-needed)).
 
@@ -65,13 +65,13 @@ Capacity rules that the cost model must leave room for, all of them checked in a
 - **Reservations and savings plans** cover only the steady baseline (system pools, stateful pools, the on-demand
   share that always runs), proposed by the cost agent as purchases for the platform owner.
 - **Who pays**: OpenCost splits each cell's cost by namespace, and so by the namespaces' `platform/team` and
-  `platform/cost-center` labels ([section 7](07-application-multi-tenancy.md#ownership-and-cost)); a monthly
+  `platform/cost-center` labels ([section 8](08-application-multi-tenancy.md#ownership-and-cost)); a monthly
   budget per environment subscription alerts its owners at 80 % and 100 % of actual cost and at a 100 % forecast.
   GPU nodes are the variable part's most expensive item: they exist only while a GPU pod runs
-  ([section 4](04-node-pools.md#gpus-chosen-by-the-application)).
+  ([section 5](05-node-pools.md#gpus-chosen-by-the-application)).
 
 > **The stateful cluster is optional.** It is not built until the first workload has an approved stateful-cluster
-> exception ([where does a workload run](08-cluster-types-stateless-and-stateful.md#where-does-a-workload-run)); until then every environment runs only the stateless
+> exception ([where does a workload run](10-cluster-types-stateless-and-stateful.md#where-does-a-workload-run)); until then every environment runs only the stateless
 > clusters and Azure PaaS. The backend network itself exists from day one, because it holds the PaaS private endpoints
 > and the ACR. Everything the stateful cluster needs later is already prepared, so adding it is an ordinary IaC change
 > with no impact on the running platform: its `/18` per zone is reserved in the address plan, the stateful cluster
@@ -84,15 +84,15 @@ Capacity rules that the cost model must leave room for, all of them checked in a
   and what must survive a cluster rebuild: the Key Vaults per zone (with the application secrets), the platform Key
   Vault (with the environment's certificates and their role assignments), the application managed identities, the
   ACR and the Azure Policy assignments – and, in the backup subscription, the zones' immutable backup vaults and
-  backup storage accounts in the paired region ([section 20](20-backup-and-region-recovery.md)). Two cluster modules (stateless, stateful) with `env` and `az` as parameters
+  backup storage accounts in the paired region ([section 22](22-backup-and-region-recovery.md)). Two cluster modules (stateless, stateful) with `env` and `az` as parameters
   create the cluster's customer-managed keys in the platform Key Vault, its control plane identity and disk encryption set
-  ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)), the VNet, cluster, system pool (and, in the stateful cluster, the zone node pools), private endpoints to the shared zone and platform Key Vaults, the federated
+  ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)), the VNet, cluster, system pool (and, in the stateful cluster, the zone node pools), private endpoints to the shared zone and platform Key Vaults, the federated
   credentials and – in stateless clusters – the Flux bootstrap. The IaC also writes a
   `cluster-vars` ConfigMap (`ENV`, `CLUSTER_TYPE`, `AZ`, `CLUSTER_NAME`, the zones' node subnet IDs) that Flux uses for substitutions (the
   stateful pipeline sets the same variables itself).
 - **Versions are the one intended difference.** Environments and cells run the same configuration but not always the
   same Kubernetes version or node image: patches move through dev → acc → prd with a delay, and `sl-az1` and `sl-az2`
-  run different minors by design ([update policy](12-zero-downtime-cluster-upgrades.md#update-policy)).
+  run different minors by design ([update policy](14-zero-downtime-cluster-upgrades.md#update-policy)).
 - **Everything inside a cluster comes from Git** – via Flux in the stateless clusters and via the deployment pipeline
   in the stateful cluster; no manual `kubectl apply`. Human access in acc and prd is read-only Kubernetes RBAC plus
   break-glass via PIM.
@@ -101,4 +101,4 @@ Capacity rules that the cost model must leave room for, all of them checked in a
   the image, so prd never pulls from the Internet and no cluster pulls across the exposures. CI signs every
   image it builds; promotion first verifies the signature, then copies it with the image (an OCI referrer, for
   example with `oras cp -r`). An unsigned image therefore never reaches the acc or prd registry
-  ([section 14](14-policy-enforcement.md)).
+  ([section 9](09-policy-enforcement.md)).

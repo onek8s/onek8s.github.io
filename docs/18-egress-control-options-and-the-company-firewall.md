@@ -1,4 +1,4 @@
-# 22. Egress control options and the company firewall
+# 18. Egress control options and the company firewall
 
 Who decides what an application may reach outside the landing zone - Cilium inside the cluster, the hub Firewall, or
 both - comes down to two independent choices, and both have a cost. This page puts the four combinations side by
@@ -6,7 +6,7 @@ side, proposes **overlay + Firewall only, without Advanced Container Networking 
 keep the cost in control ([decision D61](decisions.md#decision-matrix), proposed), and explains how the platform
 works with a company-wide firewall that another team owns.
 
-[Section 16](16-advanced-networking-and-fqdn-egress.md) describes the Cilium FQDN model in detail; which of the two
+[Section 17](17-advanced-networking-and-fqdn-egress.md) describes the Cilium FQDN model in detail; which of the two
 decision points - Cilium or the Firewall - the stateless cells take is still open ([D59](decisions.md#decision-matrix)),
 and both have run in the dev lab.
 
@@ -75,13 +75,13 @@ What it takes:
   the review, so a rule is removed with the application that asked for it.
 - **Without ACNS, Cilium has no DNS-aware rules.** The zone baseline's DNS rules (`matchPattern` on names, which run
   through the ACNS DNS proxy) become plain port 53 to kube-dns, and the `fqdn-egress` policy
-  ([section 14](14-policy-enforcement.md)) changes: applications write no egress policy, and a platform policy per
+  ([section 9](09-policy-enforcement.md)) changes: applications write no egress policy, and a platform policy per
   zone lets the zone's application namespaces out of the cluster (today's `firewall-egress` component).
 - **eBPF host routing and Hubble go too** (both are ACNS). Pod traffic uses the default iptables path; drops are read
   from Cilium's own counters and the Firewall log.
 - **The egress agent attributes by zone and node** (built 2026-10-16): a denial's source is a node address, so the agent finds the node,
   lists the application pods that ran there at the time, and checks the destination against each one's configuration
-  ([section 15](15-ai-driven-day-2-operations.md)). One match: a pull request in that application's name. Several or
+  ([section 20](20-ai-driven-day-2-operations.md)). One match: a pull request in that application's name. Several or
   none: a pull request for the zone that names the candidates, for the reviewers to settle.
 
 **When to choose something else**:
@@ -109,7 +109,7 @@ keeps its own address up to the hub Firewall (AKS's ip-masq-agent translates not
   (azure-landing-zone `firewall-applications/<env>-<exposure>/<namespace>.yaml`) whose source is the application's
   zone - the Firewall tells zones apart by their subnets, not applications within one zone - but its log names the
   pod, so a flow can be attributed.
-- **An AI egress agent proposes the rules** ([section 15](15-ai-driven-day-2-operations.md)): it reads the flows the
+- **An AI egress agent proposes the rules** ([section 20](20-ai-driven-day-2-operations.md)): it reads the flows the
   Firewall denied (Log Analytics), finds the pod behind each source address, checks the destination against the
   application's configuration, and opens one pull request per application with the evidence. Humans of the platform
   and security merge it; nothing is allowed automatically.
@@ -121,7 +121,7 @@ Built in the dev lab since 2026-10-15 as `aks-dev-int-stateless-az3` (Sweden's `
 
 **Making the shared destinations visible.** With A and C the Firewall opens a destination to the whole zone and
 cannot say which application uses it - but the per-application rule files can, because every rule names the
-application that asked for it, why, and the evidence. [Section 23](23-traffic-flow-documentation.md) generates from
+application that asked for it, why, and the evidence. [Section 19](19-traffic-flow-documentation.md) generates from
 them, and from the applications' own configuration, a picture per application (every destination with its status:
 named in the configuration, allowed but not named, named but denied) and a picture per zone (the union the Firewall
 opens, and who brought each name in) - the review a zone-wide rule needs.
@@ -130,7 +130,7 @@ opens, and who brought each name in) - the review a zone-wide rule needs.
 ACNS, its Cilium policies at layer 4, aks-hello on the zone's nodes fetching a weather forecast. The firewall denied it from
 the zone's node addresses, and the egress agent attributed the denial to the application on that node and opened the pull
 request for `int-fi-example`. So the lab runs A in az2 and C in az3 (`int-se`); B, the model for cells that keep ACNS
-([section 16](16-advanced-networking-and-fqdn-egress.md)), ran in az2 until then.
+([section 17](17-advanced-networking-and-fqdn-egress.md)), ran in az2 until then.
 
 ## Working with a company-wide firewall
 
@@ -174,7 +174,7 @@ Azure Firewall Policies are hierarchical, and this is Microsoft's documented way
   Group Author"): read rights plus `Microsoft.Network/firewallPolicies/ruleCollectionGroups/write` (and `.../delete`,
   which the example leaves out). Holders of the role cannot delete the firewall or the policy, change the hierarchy,
   DNS settings or threat intelligence, or touch any other policy.
-- The platform's deployment identity (the landing zone's apply identity, [section 9](09-environments.md)) gets that
+- The platform's deployment identity (the landing zone's apply identity, [section 11](11-environments.md)) gets that
   role and applies the rule files with Terraform - the same files as today. Its IP groups stay in its own resource
   group; the parent's owners need only read access to them if their rules refer to them.
 
@@ -226,7 +226,7 @@ the platform's own repository when an existing list only needs another zone. Poi
 ### What the platform needs from the firewall team, in any case
 
 - **Source addresses that stay stable**: the zones' and system subnets' prefixes come from the address plan
-  ([section 8](08-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)) and are published as IP groups, so
+  ([section 10](10-cluster-types-stateless-and-stateful.md#vnets-and-address-plan)) and are published as IP groups, so
   a new cell changes an IP group, not a rule.
 - **The platform's base rules** (AKS's required FQDNs, Entra ID, Azure Monitor, the GitOps sources) in the parent or a
   group of their own, reviewed once.

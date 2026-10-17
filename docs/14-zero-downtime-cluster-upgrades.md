@@ -1,4 +1,4 @@
-# 12. Zero-downtime cluster upgrades
+# 14. Zero-downtime cluster upgrades
 
 Cluster upgrades are triggered by pipelines in a fixed order: **dev → acc → prd**, with the waiting times of the
 [update policy](#update-policy) below, and within an environment as described per cluster type. Nothing is upgraded by
@@ -27,20 +27,20 @@ with data on disks) are harder to move and test.
 cluster – is created on **1.36** (AKS GA June 2026, also an LTS minor), and 1.36 is the **floor**: no cluster runs an
 older minor. The slow speed's "one minor behind `sl-az1`" therefore starts to apply only when `sl-az1` moves past
 1.36; until then `sl-az2` runs 1.36 too, with its slower patch timetable. The floor gives every cell in-place
-pod resize for containers (GA) and pod-level resources (beta), which [pod right-sizing](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)
-relies on, and meets the 1.33 requirement of eBPF host routing ([section 16](16-advanced-networking-and-fqdn-egress.md)).
+pod resize for containers (GA) and pod-level resources (beta), which [pod right-sizing](05-node-pools.md#pod-right-sizing-vertical-scaling-in-place)
+relies on, and meets the 1.33 requirement of eBPF host routing ([section 17](17-advanced-networking-and-fqdn-egress.md)).
 
 **Why two speeds in the stateless clusters.** At any moment one cell runs a version that is newer and less proven and
 the other cell(s) a version that `sl-az1` has already run in production – so a regression in a Kubernetes patch, a
 node image or a minor version reaches only the fast cell first, while the slow cell(s) keep serving
-([releases cell by cell](11-zero-downtime-application-upgrades.md#releases-cell-by-cell) uses the same idea for applications). Removed or changed Kubernetes
+([releases cell by cell](13-zero-downtime-application-upgrades.md#releases-cell-by-cell) uses the same idea for applications). Removed or changed Kubernetes
 APIs show up in `sl-az1` (dev first) a full minor cycle before they reach `sl-az2`. Applications and fleet manifests
 must therefore work on both minors; CI validates the rendered manifests against both (and against the stateful LTS
 version).
 
 **How the stateless timetable is run.** A scheduled **version pipeline** reads the Kubernetes versions and node images
 AKS offers in the region and the date each was released, computes the target version and node image of every
-stateless cluster from the table above, and the upgrade agent ([section 15](15-ai-driven-day-2-operations.md#agents)) opens it as a pull request to the IaC repository with a compatibility report. The cluster upgrade pipeline then
+stateless cluster from the table above, and the upgrade agent ([section 20](20-ai-driven-day-2-operations.md#agents)) opens it as a pull request to the IaC repository with a compatibility report. The cluster upgrade pipeline then
 applies it cell by cell with the drain procedure below; dev and acc run without approval, prd needs an approval only
 for minor upgrades. Rules:
 
@@ -78,22 +78,22 @@ cannot be made otherwise (e.g. a new Kubernetes minor).
 
 ## Stateless clusters
 
-![Stateless upgrade](../images/11-stateless-upgrade.svg)
+![Stateless upgrade](../images/14-stateless-upgrade.svg)
 
 One cell at a time is **taken out of traffic, upgraded and returned** – users never hit a cell that is being
-changed. It is the same procedure as an application release ([releases cell by cell](11-zero-downtime-application-upgrades.md#releases-cell-by-cell)), and the
+changed. It is the same procedure as an application release ([releases cell by cell](13-zero-downtime-application-upgrades.md#releases-cell-by-cell)), and the
 two never run in the same cell at the same time:
 
 1. pre-scale the remaining cluster(s) to full-load capacity;
 2. take the cell out of traffic: move the internal applications whose home is this cell to another cell with the
-   **migration workflow** ([internal zones](08-cluster-types-stateless-and-stateful.md#internal-zones-one-home-cell-per-application-moved-by-migration)),
+   **migration workflow** ([internal zones](10-cluster-types-stateless-and-stateful.md#internal-zones-one-home-cell-per-application-moved-by-migration)),
    then disable the cell's Traffic Manager endpoints and wait for the DNS answers to expire and the connections to
    drain;
 3. upgrade the control plane and the system pool; NAP then replaces the zone nodes with the new node image and
    version through drift (the cell's `NodePool` disruption budgets are opened for this while it is out of traffic) – or, for large changes (new VNet, CNI, OS SKU), **create a fresh cluster**
    from IaC and let Flux bootstrap it (blue/green at cluster level);
 4. wait until all Flux Kustomizations are `Ready`, run smoke and synthetic tests through the cell's per-cell test
-   host names ([incoming traffic](08-cluster-types-stateless-and-stateful.md#incoming-traffic-from-outside-and-from-inside));
+   host names ([incoming traffic](10-cluster-types-stateless-and-stateful.md#incoming-traffic-from-outside-and-from-inside));
 5. return the cell's external clients on Traffic Manager in steps of address blocks while watching error-rate and latency
    SLOs; on breach take the cell out again and stop. After the soak, migrate the internal applications back to their
    chosen home cell;
@@ -108,7 +108,7 @@ cluster to carry the whole environment.
 
 ## Stateful cluster
 
-![Stateful upgrade](../images/12-stateful-upgrade.svg)
+![Stateful upgrade](../images/14-stateful-upgrade.svg)
 
 There is only one stateful cluster, so it is upgraded **in place** and protected by zone redundancy:
 

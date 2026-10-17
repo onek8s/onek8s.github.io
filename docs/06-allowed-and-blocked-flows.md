@@ -1,6 +1,6 @@
-# 5. Allowed and blocked flows
+# 6. Allowed and blocked flows
 
-![Allowed flows](../images/05-allowed-flows.svg)
+![Allowed flows](../images/06-allowed-flows.svg)
 
 Only the flows Kubernetes needs to function are allowed between a workload zone and the rest of the platform:
 
@@ -10,26 +10,26 @@ Only the flows Kubernetes needs to function are allowed between a workload zone 
 | ② | `snet-apiserver` | Zone nodes | TCP 10250 | logs, exec, port-forward |
 | ③ | Zone pods | CoreDNS (system pods) | UDP/TCP 53 | name resolution |
 | ④ | metrics-server (system pods) | Zone nodes | TCP 10250 | resource metrics |
-| ⑤ | The zone's External Secrets Operator (`<zone>-secrets` pods) | Own zone Key Vault PE | TCP 443 | application secrets; application pods never reach a Key Vault ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)) |
+| ⑤ | The zone's External Secrets Operator (`<zone>-secrets` pods) | Own zone Key Vault PE | TCP 443 | application secrets; application pods never reach a Key Vault ([section 7](07-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)) |
 | ⑤b | The zone's External Secrets Operator (`<zone>-secrets` pods) | Platform Key Vault PE in `snet-platform-pe` | TCP 443 | certificates for the zone gateways and TLS-terminating apps; Cilium policy allows only these pods, RBAC only their zone's certificates |
 | ⑥ | Zone nodes + pods | The exposure's Azure Firewall ([D53](decisions.md#decision-matrix)) | per FQDN | AKS required FQDNs, MCR, Entra ID (workload identity token exchange); pods only to the FQDNs of their application's egress policy |
-| ⑥b | Zone nodes (Grafana Alloy of the node) | Grafana Cloud private endpoint in the hub, through the Firewall | TCP 443 | Metrics, logs and traces of the node's own pods; never over the Internet ([section 19](19-observability-with-grafana-cloud.md)) |
+| ⑥b | Zone nodes (Grafana Alloy of the node) | Grafana Cloud private endpoint in the hub, through the Firewall | TCP 443 | Metrics, logs and traces of the node's own pods; never over the Internet ([section 21](21-observability-with-grafana-cloud.md)) |
 | ⑦ | Zone nodes | All nodes | TCP 4240, ICMP | Cilium health (optional) |
 | – | AzureLoadBalancer | `snet-apiserver` | TCP 9988 | API server health probe |
-| – | `snet-apiserver` | Platform Key Vault private endpoint created by AKS for KMS | TCP 443 | etcd encryption with the cluster's KMS key ([section 18](18-encryption-at-rest-and-customer-managed-keys.md)) |
+| – | `snet-apiserver` | Platform Key Vault private endpoint created by AKS for KMS | TCP 443 | etcd encryption with the cluster's KMS key ([section 16](16-encryption-at-rest-and-customer-managed-keys.md)) |
 
 **Everything else between zones is blocked** – pod-to-pod, pod-to-other-zone Key Vault and direct Internet –
 enforced three times: NSG (L3/L4), Azure Firewall (L3–L7, logged), Cilium cluster-wide policy (pod identity).
 
 Inside the allowed flows, a pod reaches a destination outside the cluster only if its application has declared that
-destination by **FQDN** in its own Cilium egress policy ([section 16](16-advanced-networking-and-fqdn-egress.md)): the
+destination by **FQDN** in its own Cilium egress policy ([section 17](17-advanced-networking-and-fqdn-egress.md)): the
 Firewall decides what a *zone* may reach, the FQDN policy what an *application* may reach.
 
 ## Isolation matrix
 
 What each principal can reach, per isolation zone. "Own" means the zone, namespace or application the principal
 belongs to; everything not listed is blocked, and the negative tests of
-[section 17](17-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) try every blocked
+[section 23](23-implementation-project-and-acceptance-testing.md#requirement-and-isolation-tests) try every blocked
 cell of this table after every change.
 
 | Principal | Kubernetes API | Network | Azure identities | Secrets | Certificates | Application data |

@@ -1,4 +1,4 @@
-# 14. Policy enforcement with the Azure Policy add-on
+# 9. Policy enforcement with the Azure Policy add-on
 
 **The AKS-native [Azure Policy add-on](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes)
 is the single policy engine**, enabled by the cluster IaC in every cluster. It runs Gatekeeper, but AKS installs and
@@ -20,7 +20,7 @@ No Gatekeeper is installed by Flux.
   in dev, then `deny`, then promoted to acc and prd with the rest of the platform change.
 - **Exemptions expire.** An Azure Policy exemption always has an owner, a reason, a ticket and an `expiresOn` date
   (at most 6 months). The security agent reports exemptions that expire within 30 days, and renewing one is a new
-  pull request in the high tier ([section 15](15-ai-driven-day-2-operations.md#risk-tiers)). Exceptions should stay
+  pull request in the high tier ([section 20](20-ai-driven-day-2-operations.md#risk-tiers)). Exceptions should stay
   visible and a little uncomfortable, not pile up silently.
 - **Continuous evidence, not a one-time hardening.** The compliance state of the assignments is the drift signal.
   Next to it, a weekly CIS Kubernetes benchmark scan of the nodes (kube-bench as a platform `CronJob` in
@@ -30,12 +30,12 @@ No Gatekeeper is installed by Flux.
   hardening guidance are the reference controls, and the checklist is repeated with every Kubernetes minor upgrade,
   because new minors can change defaults. The full benchmark – nodes (kube-bench), Kubernetes policies (Kubescape)
   and the cluster's Azure settings – also runs as a pipeline stage after every cell change, with every accepted
-  failure listed with its reason ([section 17](17-implementation-project-and-acceptance-testing.md#cis-benchmark)).
+  failure listed with its reason ([section 23](23-implementation-project-and-acceptance-testing.md#cis-benchmark)).
 - **Platform namespaces**: `kube-system` and `gatekeeper-system` are excluded by the add-on; `flux-system` and other
   platform namespaces are excluded from application rules through the definitions' namespace exclusion parameters.
   The zones' own platform namespaces, `<zone>-gateway` (the zone's App Routing gateway) and `<zone>-secrets`
   (External Secrets Operator), run on the system pool so that a zone without applications has no nodes
-  ([section 4](04-node-pools.md)); they are excluded from zone pinning and the other application rules, and their
+  ([section 5](05-node-pools.md)); they are excluded from zone pinning and the other application rules, and their
   policies are the platform's own. The `<zone>-gateway` namespaces enforce the Pod Security Standard *baseline* and
   only audit and warn on *restricted*: App Routing's gateway pods set no seccomp profile, and their `securityContext`
   cannot be customised.
@@ -52,7 +52,7 @@ Limits of the add-on and how the design handles them:
 
 | Limit | Consequence in this design |
 |---|---|
-| Needs `data.policy.core.windows.net`, `store.policy.core.windows.net`, `dc.services.visualstudio.com` (+ Entra ID); no Private Link | Firewall application rules for these FQDNs, also from the stateful cluster (exception to "no Internet", see [flows](08-cluster-types-stateless-and-stateful.md#flows-between-frontend-and-backend)) |
+| Needs `data.policy.core.windows.net`, `store.policy.core.windows.net`, `dc.services.visualstudio.com` (+ Entra ID); no Private Link | Firewall application rules for these FQDNs, also from the stateful cluster (exception to "no Internet", see [flows](10-cluster-types-stateless-and-stateful.md#flows-between-frontend-and-backend)) |
 | Custom definitions cannot use Gatekeeper data replication (no lookups of other objects) | Zone rules match the namespace name prefix `<zone>-*`; "PDB exists for every Deployment / StatefulSet" is checked in CI on the rendered manifests, because Flux and the stateful pipeline only apply validated artifacts |
 | Policies are synced from Azure every 15 minutes | The stateless cluster bootstrap keeps the Flux `apps` Kustomization suspended until all assigned constraint templates and constraints are present in the cluster; the stateful pipeline checks the same before every run |
 | Gatekeeper config cannot be changed | No custom Gatekeeper settings; defaults are fine for this design |
@@ -70,20 +70,20 @@ local accounts and SSH off, CMK). Everything else in the table starts in `audit`
 | Policy | All clusters | Stateless | Stateful |
 |---|---|---|---|
 | Namespace `<zone>-*` has label `platform/zone=<zone>`; pod nodeSelector / toleration match the prefix, no other zone's and not the system pool (mutation + validation) | ✔ | | |
-| `platform/arch` / `platform/capacity` labels: inject the architecture `nodeSelector` and the spot toleration + preferred affinity (mutation); reject unknown values, own `kubernetes.io/arch` / `karpenter.sh/capacity-type` selectors and spot tolerations without the label ([section 4](04-node-pools.md#cpu-architecture-and-spot-chosen-by-the-application)) | ✔ | all values | defaults only (`amd64`, `on-demand`) |
-| `platform/accelerator: nvidia-gpu`: inject the toleration of the zone's GPU `NodePool` (mutation); reject an `nvidia.com/gpu` request without the label, the label without a request, a GPU pod that is not amd64 and the GPU toleration without the label ([section 4](04-node-pools.md#gpus-chosen-by-the-application)) | | ✔ | no GPUs |
-| Namespace carries `platform/team`, `platform/cost-center` and the annotation `platform/contact` (all but AKS's own namespaces; [section 7](07-application-multi-tenancy.md#ownership-and-cost)) – `audit` first, then `deny` | ✔ | | |
+| `platform/arch` / `platform/capacity` labels: inject the architecture `nodeSelector` and the spot toleration + preferred affinity (mutation); reject unknown values, own `kubernetes.io/arch` / `karpenter.sh/capacity-type` selectors and spot tolerations without the label ([section 5](05-node-pools.md#cpu-architecture-and-spot-chosen-by-the-application)) | ✔ | all values | defaults only (`amd64`, `on-demand`) |
+| `platform/accelerator: nvidia-gpu`: inject the toleration of the zone's GPU `NodePool` (mutation); reject an `nvidia.com/gpu` request without the label, the label without a request, a GPU pod that is not amd64 and the GPU toleration without the label ([section 5](05-node-pools.md#gpus-chosen-by-the-application)) | | ✔ | no GPUs |
+| Namespace carries `platform/team`, `platform/cost-center` and the annotation `platform/contact` (all but AKS's own namespaces; [section 8](08-application-multi-tenancy.md#ownership-and-cost)) – `audit` first, then `deny` | ✔ | | |
 | Images by digest from the environment's ACR only | ✔ | | |
 | Images signed by the platform's CI (a Notation signature with a Key Vault key, stored next to the image in the ACR). **Enforced at promotion**: the promotion pipeline verifies the signature before it imports an image into the next environment's ACR, and only that pipeline can write to the acc and prd registries, so an unsigned image never reaches them. **Audited at admission** with [Image Integrity](https://learn.microsoft.com/en-us/azure/aks/image-integrity) (Ratify on Gatekeeper), which today is preview and supports only the `audit` effect; it moves to `deny` when that is supported ([decision D37](decisions.md#decision-matrix)). Ratify trusts the platform's certificate by its subject and reads it from `kv-<env>-platform`, and the signatures from the ACR, as one shared identity per environment. In the dev lab the registry builds the images itself (ACR tasks) and a platform workflow signs each new one right after | ✔ | | |
 | ServiceAccount used by application pods carries the workload identity client ID and is not `secrets-reader`; no `imagePullSecrets` | ✔ | | |
-| Secrets only through External Secrets Operator ([section 6](06-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)): in application namespaces and `<zone>-gateway`, `Secret`s may be created or changed only by the zone's ESO controller ServiceAccount (`system:serviceaccount:<zone>-secrets:external-secrets`, checked on the admission request's user) – Helm release Secrets excepted; no `SecretProviderClass` and no `secrets-store.csi.k8s.io` volumes anywhere (platform namespaces included) | ✔ | | |
+| Secrets only through External Secrets Operator ([section 7](07-workload-identity-and-secrets.md#delivered-only-by-external-secrets-operator)): in application namespaces and `<zone>-gateway`, `Secret`s may be created or changed only by the zone's ESO controller ServiceAccount (`system:serviceaccount:<zone>-secrets:external-secrets`, checked on the admission request's user) – Helm release Secrets excepted; no `SecretProviderClass` and no `secrets-store.csi.k8s.io` volumes anywhere (platform namespaces included) | ✔ | | |
 | ESO objects in application namespaces and `<zone>-gateway`: `SecretStore` only `azurekv` with the own zone vault or `kv-<env>-platform`, `authType: WorkloadIdentity`, `serviceAccountRef: secrets-reader`, `controller: <zone>`; `ExternalSecret` only against a `SecretStore` (not `ClusterSecretStore`), `remoteRef.key` / `dataFrom` names with the application's prefix or its `cert-<zone>-…`; `ClusterSecretStore`, `ClusterExternalSecret`, `PushSecret` platform only | ✔ | | |
 | Requests set, probes set, no privileged / hostNetwork / hostPath for applications | ✔ | | |
 | Beyond the *restricted* pod security standard: `readOnlyRootFilesystem: true` (writable paths only as `emptyDir`), `automountServiceAccountToken: false` for application pods (they do not call the Kubernetes API; workload identity uses its own projected token) – `audit` first, then `deny` | ✔ | | |
-| `VerticalPodAutoscaler`: `updateMode` `Off` / `Initial` / `InPlaceOrRecreate`, `controlledValues: RequestsOnly`, `maxAllowed` set for every controlled resource ([pod right-sizing](04-node-pools.md#pod-right-sizing-vertical-scaling-in-place)); also checked by the merge gate against `limits.yaml`. Every Deployment has one, in `InPlaceOrRecreate` unless its pods carry `platform/rightsizing: off` (CI check on the rendered manifests) | ✔ | all three modes | `Off` only |
-| Egress out of the cluster only by FQDN: application `CiliumNetworkPolicy` egress limited to `toEndpoints`, in-cluster `toServices` and `toFQDNs` with ports (no `toCIDR`/`toCIDRSet`/`toEntities`); no bare or too broad wildcards; DNS rules only for declared names; no `NetworkPolicy` egress `ipBlock`; `CiliumClusterwideNetworkPolicy` and Cilium CIDR / egress gateway objects platform only; `dnsPolicy: ClusterFirst` ([section 16](16-advanced-networking-and-fqdn-egress.md)) | ✔ | | |
-| Cluster: Cilium dataplane, ACNS enabled, Azure Linux 3.0 on all node pools / `AKSNodeClass` `imageFamily: AzureLinux`; eBPF host routing (`BpfVeth`); Key Vault secrets provider (Secrets Store CSI) add-on disabled; local accounts disabled; SSH access disabled ([section 3](03-control-plane.md)) | ✔ | | |
-| Replica and rollout guardrails (PDB existence: CI check) of [section 11](11-zero-downtime-application-upgrades.md): `replicas` / HPA `minReplicas`, `topologySpreadConstraints`, `RollingUpdate` with `maxUnavailable: 0`, PodDisruptionBudgets with `maxUnavailable` ≥ 1 (never `minAvailable`, which can block every drain) | ✔ | ≥ 2 replicas, spread over nodes | ≥ 3 replicas, zone spread |
+| `VerticalPodAutoscaler`: `updateMode` `Off` / `Initial` / `InPlaceOrRecreate`, `controlledValues: RequestsOnly`, `maxAllowed` set for every controlled resource ([pod right-sizing](05-node-pools.md#pod-right-sizing-vertical-scaling-in-place)); also checked by the merge gate against `limits.yaml`. Every Deployment has one, in `InPlaceOrRecreate` unless its pods carry `platform/rightsizing: off` (CI check on the rendered manifests) | ✔ | all three modes | `Off` only |
+| Egress out of the cluster only by FQDN: application `CiliumNetworkPolicy` egress limited to `toEndpoints`, in-cluster `toServices` and `toFQDNs` with ports (no `toCIDR`/`toCIDRSet`/`toEntities`); no bare or too broad wildcards; DNS rules only for declared names; no `NetworkPolicy` egress `ipBlock`; `CiliumClusterwideNetworkPolicy` and Cilium CIDR / egress gateway objects platform only; `dnsPolicy: ClusterFirst` ([section 17](17-advanced-networking-and-fqdn-egress.md)) | ✔ | | |
+| Cluster: Cilium dataplane, ACNS enabled, Azure Linux 3.0 on all node pools / `AKSNodeClass` `imageFamily: AzureLinux`; eBPF host routing (`BpfVeth`); Key Vault secrets provider (Secrets Store CSI) add-on disabled; local accounts disabled; SSH access disabled ([section 4](04-control-plane.md)) | ✔ | | |
+| Replica and rollout guardrails (PDB existence: CI check) of [section 13](13-zero-downtime-application-upgrades.md): `replicas` / HPA `minReplicas`, `topologySpreadConstraints`, `RollingUpdate` with `maxUnavailable: 0`, PodDisruptionBudgets with `maxUnavailable` ≥ 1 (never `minAvailable`, which can block every drain) | ✔ | ≥ 2 replicas, spread over nodes | ≥ 3 replicas, zone spread |
 | Reject `PersistentVolumeClaim` | | ✔ | |
 | NAP `NodePool` / `AKSNodeClass`: subnet, `platform/zone` label, taint and AZ of its zone; only allowed VNet-encryption-capable VM sizes (amd64 and arm64); a spot `NodePool` must carry the `platform/capacity=spot:NoSchedule` taint; the zone's GPU `NodePool` (`<zone>gpu`) on-demand, amd64, NC H100 v5 only, with the `platform/accelerator=nvidia-gpu:NoSchedule` taint | | ✔ | |
 | Reject `Ingress`; only HTTPS `Gateway` listeners; `HTTPRoute` only to the zone's HTTPS listener and zone domain | | ✔ | |

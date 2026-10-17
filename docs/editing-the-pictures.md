@@ -27,8 +27,9 @@ the Markdown in `docs/` and `README.md` is published as is, without front matter
 | `assets/js/site.js` | Progressive enhancements only: the theme toggle, pictures as figures with their caption and a full-screen view on click |
 
 To add a page: create the Markdown in `docs/`, add it to `_data/nav.yml` and to the Contents of `README.md`, and run
-`scripts/check.sh`. The section numbers are stable identifiers (the decision log and the implementation repositories
-cite "section 14"), so a new section takes the next free number and the navigation places it by topic.
+`scripts/check.sh`. The sections are numbered in reading order and the pictures carry the number of the section that
+shows them, so a new section in the middle renumbers what follows it - the files, the headings, the pictures and every
+"section N" in the text. The implementation repositories cite sections by number too, so tell them.
 
 ## Building the site locally
 

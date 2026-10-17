@@ -1,6 +1,6 @@
-# 19. Observability with Grafana Cloud
+# 21. Observability with Grafana Cloud
 
-![Observability with Grafana Cloud](../images/19-observability.svg)
+![Observability with Grafana Cloud](../images/21-observability.svg)
 
 All metrics, logs and traces of the clusters and applications go to **[Grafana Cloud](https://grafana.com/products/cloud/)**,
 one stack per environment. Grafana Cloud also runs the dashboards, alerting, on-call paging (Grafana IRM), SLOs and
@@ -19,7 +19,7 @@ diagnosing problems fast. The access rule decides who gets into a stack, and the
 | Stack | Holds | Who can sign in |
 |---|---|---|
 | `<org>-dev`, `<org>-acc`, `<org>-prd` | All telemetry of that environment: every cluster, cell, zone and application, plus the Azure Monitor data source of the environment subscription | Members of `grp-grafana-<env>` (platform team, application teams, SOC, AI agents' service accounts). There are no per-team folders with restricted data and no label-based access policies |
-| `<org>-build` | The build tenant ([section 17](17-implementation-project-and-acceptance-testing.md)), synthetic data only | Implementation project team |
+| `<org>-build` | The build tenant ([section 23](23-implementation-project-and-acceptance-testing.md)), synthetic data only | Implementation project team |
 
 - **Sign-in with Entra ID** (SAML single sign-on) through one enterprise application per stack. A user's Grafana role
   comes from a group: `Viewer` for everyone in `grp-grafana-<env>`, `Editor` for the platform team in dev and acc,
@@ -31,7 +31,7 @@ diagnosing problems fast. The access rule decides who gets into a stack, and the
   |---|---|---|---|
   | `grafana-<env>-write` | Fleet Management, `metrics:write`, `logs:write`, `traces:write` on its own stack | `kv-<env>-platform` | Alloy in every cluster of the environment |
   | `grafana-<env>-opencost` | `metrics:read`, limited by a label-based access policy to the cluster's own series | `kv-<env>-platform` | OpenCost in every cluster of the environment |
-  | `grafana-<env>-read-<agent>` | Viewer service account | The agent's own secret store | One per AI agent and environment ([section 15](15-ai-driven-day-2-operations.md#identities-and-access-rights)) |
+  | `grafana-<env>-read-<agent>` | Viewer service account | The agent's own secret store | One per AI agent and environment ([section 20](20-ai-driven-day-2-operations.md#identities-and-access-rights)) |
   | `grafana-<env>-gate` | `metrics:read` | GitHub environment secret | Release and upgrade pipelines (SLO gates) |
   | `grafana-<env>-iac` | Stack administration | GitHub environment secret, `main` only | The Terraform pipeline that applies dashboards, alerts and SLOs |
 
@@ -51,13 +51,13 @@ namespace `infra-observability`, configured from the stack with **Grafana Cloud 
 configuration, [decision D48](decisions.md#decision-matrix)): the chart's values only start the collectors and
 point them at Fleet Management; their pipelines – what is collected, how it is labelled and where it goes – are
 managed there by the platform team. Flux installs it in the stateless clusters and the pipeline in the stateful
-cluster, from `infrastructure/base` ([section 10](10-keeping-clusters-in-sync.md)). **Every collector works only on
+cluster, from `infrastructure/base` ([section 12](12-keeping-clusters-in-sync.md)). **Every collector works only on
 its own node**, so telemetry never crosses from one isolation zone to another inside the cluster. A zone's data
 leaves the cluster from that zone's own nodes, through the Firewall rule of that zone:
 
 | Alloy instance | Runs on | Collects |
 |---|---|---|
-| **DaemonSet** `alloy-node` | Every node (tolerates every taint, including spot) | Pod logs from `/var/log/pods` (read-only `hostPath`); node journal; kubelet and cAdvisor metrics of its node; `PodMonitor` / `ServiceMonitor` targets **on its own node only** (discovery filtered by `spec.nodeName`); Cilium and Hubble metrics; ACNS container network logs from the node ([section 16](16-advanced-networking-and-fqdn-egress.md#observing-and-troubleshooting)); OTLP traces, metrics and logs pushed by the pods of its node |
+| **DaemonSet** `alloy-node` | Every node (tolerates every taint, including spot) | Pod logs from `/var/log/pods` (read-only `hostPath`); node journal; kubelet and cAdvisor metrics of its node; `PodMonitor` / `ServiceMonitor` targets **on its own node only** (discovery filtered by `spec.nodeName`); Cilium and Hubble metrics; ACNS container network logs from the node ([section 17](17-advanced-networking-and-fqdn-egress.md#observing-and-troubleshooting)); OTLP traces, metrics and logs pushed by the pods of its node |
 | **Deployment** `alloy-cluster` (2 replicas, clustered) | System pool | kube-state-metrics, Kubernetes events, API server and CoreDNS metrics, Flux and External Secrets Operator metrics, the zone gateways' Envoy metrics (Istio standard metrics) |
 
 - **OTLP endpoint for applications**: Service `alloy-otlp.infra-observability.svc`, ports 4317 (gRPC) and 4318
@@ -73,20 +73,20 @@ leaves the cluster from that zone's own nodes, through the Firewall rule of that
 - **Platform rules for Alloy** ([decision D48](decisions.md#decision-matrix)): Alloy and node-exporter run as Grafana's
   Fleet Management presets set them – privileged, on the host network and PID namespace, with the node's logs,
   cgroups and storage – so Alloy can instrument applications with eBPF (Beyla) and read the node; still no host
-  iptables rules (eBPF host routing, [section 16](16-advanced-networking-and-fqdn-egress.md)). Being on the host
+  iptables rules (eBPF host routing, [section 17](17-advanced-networking-and-fqdn-egress.md)). Being on the host
   network, they are outside Cilium's pod policies; the namespace's other pods (kube-state-metrics, Beyla's cache,
   OpenCost) keep a platform-owned policy. `infra-observability` is a platform namespace with a platform-owned egress policy (Grafana Cloud ingest
   host names only).
 - **Write token**: an `ExternalSecret` in `infra-observability` reads `grafana-<env>-write` from `kv-<env>-platform`.
   It is reconciled by the platform's own External Secrets Operator controller in `platform-secrets`, which serves
   platform namespaces only, and its reader identity has Key Vault Secrets User on that one secret
-  ([section 6](06-workload-identity-and-secrets.md#platform-components-may-use-key-vault-directly)).
+  ([section 7](07-workload-identity-and-secrets.md#platform-components-may-use-key-vault-directly)).
 - **Buffering**: Alloy keeps a write-ahead log on the node (an `emptyDir`), so a short Grafana Cloud or Private Link
   outage loses no data. A longer outage drops the oldest data first, and it never blocks the applications.
 - **OpenCost**, part of the same chart, prices every node from Azure's retail prices (spot nodes at the spot price)
   and splits each cell's cost by namespace and pod; kube-state-metrics exports the namespaces' `platform/team`,
   `platform/cost-center` and `platform/zone` labels, so cost is reported per team and cost centre
-  ([section 7](07-application-multi-tenancy.md#ownership-and-cost), [decision D46](decisions.md#decision-matrix)).
+  ([section 8](08-application-multi-tenancy.md#ownership-and-cost), [decision D46](decisions.md#decision-matrix)).
   OpenCost reads the cluster's usage back from the stack's Prometheus API with a token of its own that has only
   `metrics:read`.
 - **Dev lab, today** (aks-fluxcd-platform `infrastructure/observability`, chart 4.5.2): the stack is reached over the
@@ -113,7 +113,7 @@ Telemetry never goes over the Internet. This matters most for the stateful clust
   environment's exposure → the hub's Grafana private endpoint, TCP 443*. The management VNet gets the same rule for the pipelines' SLO gate queries and the synthetic monitoring
   private probes. No Grafana FQDN is on any Internet allow-list.
 - **The stacks live outside the platform's region**: they are hosted in an Azure region other than the primary one
-  (preferably the paired region of [section 20](20-backup-and-region-recovery.md)). The private endpoint reaches
+  (preferably the paired region of [section 22](22-backup-and-region-recovery.md)). The private endpoint reaches
   them across regions, so losing the primary region does not take observability, its history or the alerting with it.
 - **Users** open the Grafana UI over the Internet. Entra ID sign-in, with a Conditional Access policy (compliant
   device, MFA) on each stack's enterprise application, is the only way in.
@@ -127,11 +127,11 @@ Telemetry never goes over the Internet. This matters most for the stateful clust
 | Traces | Grafana Cloud Traces (Tempo), OpenTelemetry | Applications use the OpenTelemetry SDK with W3C `traceparent`. The zone's gateway (Envoy, which supports W3C `traceparent`) creates the first span of every request. Head sampling is set in the SDK: 100 % in dev and acc, a default of 10 % in prd that applications may raise. Errors are always kept, and logs carry `trace_id` so that logs, metrics (exemplars) and traces link to each other |
 | SLOs | Grafana SLO | Every `HTTPRoute` gets two **default SLOs** from the gateway's Envoy metrics (Istio standard metrics `istio_requests_total` and request duration), without any application code: availability (share of non-5xx responses) and latency (share of requests under the application's threshold). Teams set the objectives in `apps/<app>/observability/slo.yaml` and may add their own SLIs |
 | Alerting and on-call | Grafana Alerting, Grafana IRM | Multi-window, multi-burn-rate alerts on every SLO. Notification policies route by `team`: platform alerts go to the platform on-call, application alerts to the application team's escalation chain. Every alert links to its runbook and dashboard |
-| Synthetic monitoring | Grafana Synthetic Monitoring | Public probes for every external application's Traffic Manager host name and its per-cell host names. Private probes run in the management VNet against every internal application and against the cells' gateway health routes; they drive the cell health alert ([cell failure](08-cluster-types-stateless-and-stateful.md#internal-zones-one-home-cell-per-application-moved-by-migration)) |
-| Cost and usage | Usage attribution by label, Adaptive Metrics and Adaptive Logs | Usage is reported per `team` and `zone`. The capacity and cost agent ([section 15](15-ai-driven-day-2-operations.md)) proposes dropping unused metrics. Compute efficiency is shown per zone and team with two ratios: **request efficiency** (usage ÷ requests) and **allocation efficiency** (requests ÷ node allocatable). Either one alone hides waste: right-sized pods can still pack badly onto the chosen VM sizes |
+| Synthetic monitoring | Grafana Synthetic Monitoring | Public probes for every external application's Traffic Manager host name and its per-cell host names. Private probes run in the management VNet against every internal application and against the cells' gateway health routes; they drive the cell health alert ([cell failure](10-cluster-types-stateless-and-stateful.md#internal-zones-one-home-cell-per-application-moved-by-migration)) |
+| Cost and usage | Usage attribution by label, Adaptive Metrics and Adaptive Logs | Usage is reported per `team` and `zone`. The capacity and cost agent ([section 20](20-ai-driven-day-2-operations.md)) proposes dropping unused metrics. Compute efficiency is shown per zone and team with two ratios: **request efficiency** (usage ÷ requests) and **allocation efficiency** (requests ÷ node allocatable). Either one alone hides waste: right-sized pods can still pack badly onto the chosen VM sizes |
 
-**SLO gates.** Releases ([section 11](11-zero-downtime-application-upgrades.md#releases-cell-by-cell)) and cluster
-upgrades ([section 12](12-zero-downtime-cluster-upgrades.md)) are gated on these SLOs, per cell. The pipeline queries
+**SLO gates.** Releases ([section 13](13-zero-downtime-application-upgrades.md#releases-cell-by-cell)) and cluster
+upgrades ([section 14](14-zero-downtime-cluster-upgrades.md)) are gated on these SLOs, per cell. The pipeline queries
 the burn rate of the cell's applications from the stack's Prometheus API, with the `grafana-<env>-gate` token,
 through the private endpoint. A missing signal counts as a failed gate: no data means no promotion.
 
@@ -152,7 +152,7 @@ enforces:
   the environment subscription, a certificate credential, and rotation by IaC. The access rule applies here too:
   every stack user can query these logs from Grafana.
 - Defender for Cloud and Defender for Containers alerts go to the SOC tooling as before
-  ([section 17](17-implementation-project-and-acceptance-testing.md#security-reviews)), and are also shown in Grafana.
+  ([section 23](23-implementation-project-and-acceptance-testing.md#security-reviews)), and are also shown in Grafana.
 
 ## Security detections and forensics
 
@@ -163,9 +163,9 @@ must **never happen** in it. Each detection has an owner who answers it:
 |---|---|
 | A role assignment, PIM activation or federated credential change outside the IaC, guardrails and onboarding pipelines (Activity Log, Entra ID audit log) | Security team |
 | Any write to a production resource by an identity that is not a deployment identity, or a human sign-in to a cluster outside break-glass (Activity Log, `kube-audit-admin`) | Platform on-call |
-| A key, vault, backup vault or Resource Guard change ([section 18](18-encryption-at-rest-and-customer-managed-keys.md), [section 20](20-backup-and-region-recovery.md)) | Security team |
+| A key, vault, backup vault or Resource Guard change ([section 16](16-encryption-at-rest-and-customer-managed-keys.md), [section 22](22-backup-and-region-recovery.md)) | Security team |
 | A workload identity used from an unexpected cluster or IP, or reading resources outside its zone (Entra ID sign-in logs) | Security team, application team informed |
-| Rising Cilium policy drops or DNS refusals in acc / prd ([section 16](16-advanced-networking-and-fqdn-egress.md#observing-and-troubleshooting)) | Application team, platform on-call |
+| Rising Cilium policy drops or DNS refusals in acc / prd ([section 17](17-advanced-networking-and-fqdn-egress.md#observing-and-troubleshooting)) | Application team, platform on-call |
 | Defender for Containers runtime alerts (reverse shell, crypto mining, unexpected binaries) | SOC, platform on-call |
 
 The detections are Grafana alert rules on the Log Analytics data source and Sentinel analytics rules in the SOC
