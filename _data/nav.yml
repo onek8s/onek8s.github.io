@@ -124,3 +124,6 @@
     - path: docs/8.2-editing-the-pictures.md
       number: "8.2"
       title: Editing the pictures and the site
+    - path: docs/8.3-release-notes.md
+      number: "8.3"
+      title: Release notes

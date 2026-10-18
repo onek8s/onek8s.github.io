@@ -47,6 +47,9 @@
 <span>{{ site.title }}</span><span class="brand-sub">Platform design</span>
 </a>
 <div class="header-actions">
+{%- assign notes = site.pages | where: "path", "docs/8.3-release-notes.md" | first %}
+<a class="version-link" href="{{ notes.url | relative_url }}" title="Release notes">v{{ site.version }}</a>
+<a class="pdf-link" href="{{ '/onek8s-design.pdf' | relative_url }}" download="onek8s-design-v{{ site.version }}.pdf" title="Download the whole design as one PDF"><svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z"/><path d="M7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/></svg><span>PDF</span></a>
 <label for="nav-toggle" class="menu-button" aria-label="Show the list of pages">Pages</label>
 <button type="button" id="theme-toggle" hidden></button>
 <a class="edit-link" href="https://github.com/{{ site.repository }}/edit/{{ site.branch }}/{{ page.path }}" title="Edit this page on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 0 0-.064.108l-.558 1.953 1.953-.558a.253.253 0 0 0 .108-.064Zm1.238-3.763a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 0 0 0-.354Z"/></svg><span>Edit this page</span></a>

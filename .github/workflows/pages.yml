@@ -21,6 +21,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
       - uses: actions/jekyll-build-pages@v1
+      - name: PDF of the whole design
+        run: |
+          sudo chown -R "$(id -u)" _site
+          python3 scripts/pdf.py _site _site/onek8s-design.pdf
       - uses: actions/upload-pages-artifact@v3
 
   deploy:
