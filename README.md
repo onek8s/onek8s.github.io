@@ -40,7 +40,7 @@ egress (Cilium FQDN policies with ACNS, or pod addresses in the Firewall's rules
 |---|---|
 | A reviewer or sponsor who has to decide or sign off | [1.0 Summary](docs/1.0-summary.md) (also a [PDF](https://onek8s.github.io/onek8s-design-summary.pdf)), then the [sign-offs](docs/7.2-decisions.md#human-sign-offs-still-needed) |
 | The security team | Parts 2 (inside a cluster), 4 (encryption) and 5 (egress control), then [2.4](docs/2.4-allowed-and-blocked-flows.md)'s isolation matrix and [7.1](docs/7.1-implementation-project-and-acceptance-testing.md#security-reviews)'s reviews |
-| An application team | [1.3](docs/1.3-open-standards-and-portability.md) (the contract), [2.6](docs/2.6-application-multi-tenancy.md), [3.4](docs/3.4-zero-downtime-application-upgrades.md), and the policy table of [2.7](docs/2.7-policy-enforcement.md) |
+| An application team | [1.4 The application contract](docs/1.4-application-contract.md), then [1.3](docs/1.3-open-standards-and-portability.md) for why it is portable |
 | An operator | Parts 3 (the fleet) and 6 (operations) |
 
 The design is three PDFs, rebuilt with every publish: the [summary](https://onek8s.github.io/onek8s-design-summary.pdf),
@@ -61,6 +61,8 @@ The sections are numbered by part and page in reading order; the decision log an
   isolation zones, cells, the Key Vaults.
 - [1.3 Open standards and portability](docs/1.3-open-standards-and-portability.md) – what is the same in every cloud,
   the thin cloud-specific layer, the PaaS services every cloud offers, sovereignty and exit.
+- [1.4 The application contract](docs/1.4-application-contract.md) – what an application team has to do, and nothing
+  more: manifests, traffic, identity and secrets, the labels, observability, onboarding.
 
 **2. Inside a cluster**
 
