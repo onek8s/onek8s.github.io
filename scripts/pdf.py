@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Build one PDF of the whole design from the built site.
+"""Build a PDF of the design, or of a selection of its pages, from the built site.
 
 Takes the pages of the built Jekyll site (_site) in the reading order of _data/nav.yml, joins their content into one
 HTML document - a cover with the version, a contents list, then every page on a new sheet - and prints it with
-headless Chrome. Links between pages and to their headings become links inside the PDF: every id is prefixed with its
+headless Chrome. With --only the PDF holds a selection: parts (`1-6`, `7`), pages (`1.0`) or `intro` (README.md),
+separated by commas; links to pages outside the selection go to the published site. Links between pages and to their headings become links inside the PDF: every id is prefixed with its
 page's key (s2-1--<id>, intro--<id> for README.md), so the same heading on two pages stays two targets. Links to files
 that are not pages go to the published site, or to GitHub when the site does not publish them (diagrams/, scripts/).
 The build fails when an internal link has no target.
 
-Usage: scripts/pdf.py <site dir> <output .pdf>   (run from the repository root; needs python3 and Chrome / Chromium,
-found on PATH or given as CHROME=<path>)
+Usage: scripts/pdf.py <site dir> <output .pdf> [--only <selection>] [--subtitle <text>]
+(run from the repository root; needs python3 and Chrome / Chromium, found on PATH or given as CHROME=<path>)
 """
 import datetime
 import html
@@ -56,11 +57,37 @@ def key_of(page):
     return 's' + page['number'].replace('.', '-') if 'number' in page else 'intro'
 
 
-def main(site, out):
+def selected(parts, only):
+    """The parts and pages --only names: `intro`, a part number, a range of parts `a-b`, or a page number."""
+    if not only:
+        return parts
+    wanted = set()
+    for item in only.split(','):
+        item = item.strip()
+        if m := re.fullmatch(r'(\d+)-(\d+)', item):
+            wanted |= {str(n) for n in range(int(m[1]), int(m[2]) + 1)}
+        else:
+            wanted.add(item)
+    result = []
+    for part in parts:
+        pages = [p for p in part['pages'] if part['number'] in wanted or p.get('number') in wanted
+                 or (p['path'] == 'README.md' and 'intro' in wanted)]
+        if pages:
+            result.append(dict(part, pages=pages))
+    return result
+
+
+def main(site, out, only=None, subtitle=None):
     cfg = config()
     repo = f"https://github.com/{cfg['repository']}"
-    parts = nav()
+    all_parts = nav()
+    parts = selected(all_parts, only)
+    if not parts:
+        print(f'--only {only} selects no page', file=sys.stderr)
+        return 1
+    all_pages = [dict(p, part=part) for part in all_parts for p in part['pages']]
     pages = [dict(p, part=part) for part in parts for p in part['pages']]
+    site_pages = {url_of(p['path']): p for p in all_pages}
     by_url = {url_of(p['path']): p for p in pages}
 
     def rewrite_href(href, page):
@@ -74,6 +101,8 @@ def main(site, out):
         if target.path in by_url:
             key = key_of(by_url[target.path])
             return f'#{key}--{target.fragment}' if target.fragment else f'#{key}'
+        if target.path in site_pages:  # a page of the design outside this PDF's selection
+            return SITE_URL + target.path + (f'#{target.fragment}' if target.fragment else '')
         local = target.path.lstrip('/')
         if local and os.path.isfile(os.path.join(site, local)):
             return SITE_URL + target.path
@@ -112,7 +141,8 @@ def main(site, out):
     sha = os.environ.get('GITHUB_SHA') or subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True,
                                                          text=True).stdout.strip()
     today = datetime.date.today().isoformat()
-    notes = next(p for p in pages if p['path'].endswith('-release-notes.md'))
+    notes = next(p for p in all_pages if p['path'].endswith('-release-notes.md'))
+    notes_href = f'#{key_of(notes)}' if notes in pages else SITE_URL + url_of(notes['path'])
     contents = ''.join(
         f'<li><span class="part-title">{part["number"]}. {html.escape(part["part"])}</span><ul>'
         + ''.join(f'<li><a href="#{key_of(p)}">{html.escape(p.get("number", ""))} {html.escape(p["title"])}</a></li>'
@@ -121,11 +151,12 @@ def main(site, out):
     cover = f'''<section class="cover">
 <p class="cover-title">{html.escape(cfg["title"])}</p>
 <p class="cover-sub">{html.escape(cfg["description"])}</p>
-<p class="cover-meta">Platform design, version {html.escape(cfg["version"])}, built {today} from commit
+<p class="cover-meta">{html.escape(subtitle or "Platform design")}, version {html.escape(cfg["version"])}, built {today} from commit
 <a href="{repo}/commit/{sha}">{sha[:7]}</a>.<br>The current version is published at <a href="{SITE_URL}/">{SITE_URL}</a>;
-the changes between versions are in <a href="#{key_of(notes)}">{notes["number"]} {html.escape(notes["title"])}</a>.</p>
-</section>
-<section class="contents"><h1 id="contents">Contents</h1><ul>{contents}</ul></section>'''
+the changes between versions are in <a href="{notes_href}">{notes["number"]} {html.escape(notes["title"])}</a>.</p>
+</section>'''
+    if len(pages) > 1:
+        cover += f'<section class="contents"><h1 id="contents">Contents</h1><ul>{contents}</ul></section>'
 
     css = 'file://' + os.path.abspath(os.path.join(site, 'assets/css/site.css'))
     document = f'''<!doctype html>
@@ -179,6 +210,11 @@ table {{ font-size: 8.5pt; }}
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        sys.exit(__doc__)
-    sys.exit(main(sys.argv[1], sys.argv[2]))
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('site')
+    parser.add_argument('out')
+    parser.add_argument('--only', help='parts, part ranges, page numbers or intro, separated by commas')
+    parser.add_argument('--subtitle', help='what the cover calls this PDF (default: Platform design)')
+    args = parser.parse_args()
+    sys.exit(main(args.site, args.out, args.only, args.subtitle))

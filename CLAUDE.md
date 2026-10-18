@@ -14,9 +14,11 @@ design adds the next minor version (v1.1, v1.2, ...; a major version only when a
 `docs/8.3-release-notes.md` - `## v1.N - <date>`, then one short sentence per change ending in the link to the pull
 request (`[#NN](https://github.com/onek8s/onek8s.github.io/pull/NN)`) - and sets the same `version:` in `_config.yml`, in
 the same pull request; create the pull request first if its number is not known yet, then add the entry. `check.sh`
-fails when the two disagree or an entry has no pull request link. **The whole design is also one PDF** (`/onek8s-design.pdf`,
-linked as *PDF* in every page's header): `scripts/pdf.py` builds it from `_site` in `_data/nav.yml` order with headless
-Chrome in the Pages workflow (and on every pull request in `Check`, attached as the `onek8s-design-pdf` artifact); links
+fails when the two disagree or an entry has no pull request link. **The design is three PDFs** - the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone, the page a
+reviewer reads instead of the rest: every line links a section, it adds nothing of its own), the design (`/onek8s-design.pdf`,
+parts 1-6, linked as *PDF* in every page's header) and the reference (`/onek8s-design-reference.pdf`, parts 7-8):
+`scripts/pdf.py --only` builds them from `_site` in `_data/nav.yml` order with headless Chrome in the Pages workflow (and
+on every pull request in `Check`, attached as the `onek8s-design-pdf` artifact); links
 between pages and headings stay links inside the PDF and the build fails when one has no target - keep links as relative
 Markdown links (`x.md#heading`) so they work on the site and in the PDF alike.
 When an implementation decision changes the design, update the affected sections here in the same

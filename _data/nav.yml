@@ -9,6 +9,9 @@
   pages:
     - path: README.md
       title: Introduction
+    - path: docs/1.0-summary.md
+      number: "1.0"
+      title: Summary
     - path: docs/1.1-overview.md
       number: "1.1"
       title: Overview

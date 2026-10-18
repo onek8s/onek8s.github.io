@@ -32,8 +32,20 @@ egress (Cilium FQDN policies with ACNS, or pod addresses in the Firewall's rules
 ([D61](docs/7.2-decisions.md#decision-matrix), [section 5.2](docs/5.2-egress-control-options-and-the-company-firewall.md)).
 
 > Status: **draft** for review ([release notes](docs/8.3-release-notes.md)). Country codes `fi` / `se` and
-> all IP ranges are examples. The whole design is also one [PDF](https://onek8s.github.io/onek8s-design.pdf), rebuilt with
-> every publish.
+> all IP ranges are examples.
+
+**Where to start.** Nobody reads all of it; enter from the side:
+
+| You are | Read |
+|---|---|
+| A reviewer or sponsor who has to decide or sign off | [1.0 Summary](docs/1.0-summary.md) (also a [PDF](https://onek8s.github.io/onek8s-design-summary.pdf)), then the [sign-offs](docs/7.2-decisions.md#human-sign-offs-still-needed) |
+| The security team | Parts 2 (inside a cluster), 4 (encryption) and 5 (egress control), then [2.4](docs/2.4-allowed-and-blocked-flows.md)'s isolation matrix and [7.1](docs/7.1-implementation-project-and-acceptance-testing.md#security-reviews)'s reviews |
+| An application team | [1.3](docs/1.3-open-standards-and-portability.md) (the contract), [2.6](docs/2.6-application-multi-tenancy.md), [3.4](docs/3.4-zero-downtime-application-upgrades.md), and the policy table of [2.7](docs/2.7-policy-enforcement.md) |
+| An operator | Parts 3 (the fleet) and 6 (operations) |
+
+The design is three PDFs, rebuilt with every publish: the [summary](https://onek8s.github.io/onek8s-design-summary.pdf),
+the [design](https://onek8s.github.io/onek8s-design.pdf) (parts 1 to 6) and the
+[reference](https://onek8s.github.io/onek8s-design-reference.pdf) (parts 7 and 8: decisions, outlook, appendix).
 
 ## Contents
 
@@ -41,6 +53,8 @@ The sections are numbered by part and page in reading order; the decision log an
 
 **1. Start here**
 
+- [1.0 Summary](docs/1.0-summary.md) – the whole design in a few pages: what it is, the bets, the decisions that
+  shape it, built today against target, the sign-offs, the cost structure.
 - [1.1 Overview](docs/1.1-overview.md) – the hub-and-spoke landing zone with a hub per exposure, and the inner layout
   every cluster shares.
 - [1.2 Requirements](docs/1.2-requirements.md) – the requirements and how the design meets each; the vocabulary: exposures,
