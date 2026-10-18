@@ -93,7 +93,7 @@ The sections are numbered by part and page in reading order; the decision log an
 - [5.1 Advanced networking: eBPF host routing and FQDN egress](docs/5.1-advanced-networking-and-fqdn-egress.md) –
   Advanced Container Networking Services with per-application Cilium FQDN egress policies.
 - [5.2 Egress control options and the company firewall](docs/5.2-egress-control-options-and-the-company-firewall.md)
-  – overlay or node subnet, Cilium or the hub firewall: the four combinations and a fifth, one AKS Automatic
+  – overlay or pod subnet, Cilium or the hub firewall: the four combinations and a fifth, one AKS Automatic
   cluster per zone; the default (pod subnet + the hub Firewall), and working with a firewall another team owns.
 - [5.3 Traffic flow documentation: a picture per application and per zone](docs/5.3-traffic-flow-documentation.md)
   – generated from Git, every destination with its status.
