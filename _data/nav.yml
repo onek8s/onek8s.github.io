@@ -21,6 +21,9 @@
     - path: docs/1.3-open-standards-and-portability.md
       number: "1.3"
       title: Open standards and portability
+    - path: docs/1.4-application-contract.md
+      number: "1.4"
+      title: The application contract
 
 - number: 2
   part: Inside a cluster
