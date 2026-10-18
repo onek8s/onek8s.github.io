@@ -26,8 +26,9 @@ zone changes no table) to the Firewall, never its own slot (a UDR applies to int
 the slots on the system subnet's table too - gateway answers come from the system pool). Limit: the tables route VNet
 addresses, so pod-to-pod between the zones of an overlay cell stays Cilium's alone (Azure's overlay routing domain); a
 node-subnet cell's pods are in the slot and meet the Firewall (H16, with H15). Built in aks-terraform `shared/cells.tf`
-(route table `zone`, naming `route_table/<cell>/<zone>`, root locals grant Network Contributor per zone table), NOT
-applied to the lab yet; V31 verifies. **The non-overlay cell is a pod-subnet cell (D74, the user, 2026-10-18, design only)**:
+(route table `zone`, naming `route_table/<cell>/<zone>`, root locals grant Network Contributor per zone table),
+applied to the lab 2026-10-18 (traffic verified); V31 verifies the denial. V28 and V30 hold in the lab, V29 fails (Go's ALPN
+fallback, golang/go#46310) - D70 needs a new decision; Kestrel needs an Http2-only port for h2c (aks-hello 0.5.2). **The non-overlay cell is a pod-subnet cell (D74, the user, 2026-10-18, design only)**:
 Azure CNI Pod Subnet with dynamic IP allocation + Cilium, `snet-<zone>-pods` as the first half of the zone's slot (nodes the
 sixth eighth, ILB the fifth as everywhere), classic node pools per zone x capacity x arch with the cluster autoscaler
 (priority expander spot first, min 0, pools in cluster IaC) **until NAP supports the pod subnet** (karpenter-provider-azure
