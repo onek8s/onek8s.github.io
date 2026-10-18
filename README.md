@@ -52,8 +52,8 @@ The sections are numbered by part and page in reading order; the decision log an
   VNet; NSGs and routes through the exposure's firewall.
 - [2.2 Control plane](docs/2.2-control-plane.md) – a private API server in its own subnet, reached only from the
   management network; no local accounts, no SSH.
-- [2.3 Node pools](docs/2.3-node-pools.md) – node auto provisioning per zone in the stateless clusters, fixed pools in
-  the stateful one; arm64, spot and GPUs chosen by the application; pods right-sized in place.
+- [2.3 Node pools](docs/2.3-node-pools.md) – node auto provisioning per zone in the stateless clusters (classic pools in the
+  default pod-subnet cell until NAP supports it), fixed pools in the stateful one; arm64, spot and GPUs chosen by the application; pods right-sized in place.
 - [2.4 Allowed and blocked flows](docs/2.4-allowed-and-blocked-flows.md) – the few flows Kubernetes needs between a
   zone and the platform, and the isolation matrix of what each principal can reach.
 - [2.5 Workload identity first, Key Vault secrets only when needed](docs/2.5-workload-identity-and-secrets.md) –
@@ -92,7 +92,7 @@ The sections are numbered by part and page in reading order; the decision log an
   Advanced Container Networking Services with per-application Cilium FQDN egress policies.
 - [5.2 Egress control options and the company firewall](docs/5.2-egress-control-options-and-the-company-firewall.md)
   – overlay or node subnet, Cilium or the hub firewall: the four combinations and a fifth, one AKS Automatic
-  cluster per zone; the proposed default, and working with a firewall another team owns.
+  cluster per zone; the default (pod subnet + the hub Firewall), and working with a firewall another team owns.
 - [5.3 Traffic flow documentation: a picture per application and per zone](docs/5.3-traffic-flow-documentation.md)
   – generated from Git, every destination with its status.
 
