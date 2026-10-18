@@ -124,9 +124,6 @@
 - number: 8
   part: Appendix
   pages:
-    - path: docs/8.1-editing-the-pictures.md
+    - path: docs/8.1-release-notes.md
       number: "8.1"
-      title: Editing the pictures and the site
-    - path: docs/8.2-release-notes.md
-      number: "8.2"
       title: Release notes

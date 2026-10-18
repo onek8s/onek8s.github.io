@@ -1,8 +1,11 @@
-# 8.1 Editing the pictures and the site
+# Editing the pictures and the site
+
+How this repository is edited and built; the design itself is in `docs/` and published at
+[onek8s.github.io](https://onek8s.github.io/).
 
 ## The pictures
 
-Sources are Mermaid files in [`diagrams/`](../diagrams); rendered SVGs live in [`images/`](../images), two per
+Sources are Mermaid files in [`diagrams/`](diagrams); rendered SVGs live in [`images/`](images), two per
 source: `<name>.svg` for light mode and `<name>.dark.svg` for dark mode. The documents link the light one; the site
 shows the dark one when the page is dark (and the light one in print). After editing a source, regenerate both with:
 
@@ -22,7 +25,8 @@ locally to see the same result.
 ## The site
 
 The site is plain [GitHub Pages with Jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll):
-the Markdown in `docs/` and `README.md` is published as is, without front matter, and one layout wraps every page.
+the Markdown in `docs/` and `README.md` is published as is, without front matter, and one layout wraps every page;
+this file, `CLAUDE.md`, `reviews/`, `diagrams/` and `scripts/` are excluded.
 
 | File | Holds |
 |---|---|
@@ -51,7 +55,7 @@ GitHub for what the site does not publish. The build fails when a link inside a 
 builds the same PDFs on every pull request and attaches them to the run as `onek8s-design-pdf`.
 
 The design is versioned from v1.0 on. A pull request that changes the design adds the next minor version to
-[8.2 Release notes](8.2-release-notes.md) - one short sentence per change with the link to the pull request - and sets
+[8.1 Release notes](docs/8.1-release-notes.md) - one short sentence per change with the link to the pull request - and sets
 the same `version` in `_config.yml`; `scripts/check.sh` fails when the two disagree or an entry has no pull request
 link.
 

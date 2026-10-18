@@ -5,7 +5,7 @@
 #  2. every relative Markdown link and image reference resolves to a file;
 #  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree, and every page's
 #     <part>.<page> number is the same in its file name, its first heading and the navigation;
-#  4. the newest version in docs/8.2-release-notes.md is the version in _config.yml, and every entry links a pull request.
+#  4. the newest version in docs/8.1-release-notes.md is the version in _config.yml, and every entry links a pull request.
 # Usage: scripts/check.sh   (run from anywhere; needs git and python3)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -113,7 +113,7 @@ python3 -I - <<'PY' || status=1
 import re, sys
 bad = 0
 version = re.search(r'^version:\s*"?([^"\n]+)"?', open('_config.yml', encoding='utf-8').read(), re.M)
-notes = open('docs/8.2-release-notes.md', encoding='utf-8').read()
+notes = open('docs/8.1-release-notes.md', encoding='utf-8').read()
 versions = re.findall(r'^## v(\d+\.\d+) - \d{4}-\d{2}-\d{2}$', notes, re.M)
 if not version or not versions or versions[0] != version[1].strip():
     print(f'  NOTES    _config.yml version {version[1] if version else "(none)"} is not the newest release note '
