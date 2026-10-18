@@ -2,8 +2,9 @@
 %% One address space per cell, cut into sixteen equal slots: slot 0 the system subnet, slots 1-14 the isolation
 %% zones by their index (the same index in every cell of the exposure), slot 15 reserved for the delegated API
 %% server subnet of VNet integration (H14). In a zone's slot the first half is the node subnet and the fifth eighth
-%% the load balancer subnet; the rest is reserve (address plan, section 3.1). A node-subnet cell (D59) is the same
-%% with a /16 of 100.64.0.0/10 and its pods in the node subnets. Private endpoints are not in the cells (snet-shared-pe).
+%% the load balancer subnet; the rest is reserve (address plan, section 3.1). A pod-subnet cell (D74) is the same
+%% with a /16 of 100.64.0.0/10, the pod subnet as the first half of the slot and the nodes in the sixth eighth; the lab's
+%% az3 still runs the legacy node subnet (D59) until it is rebuilt. Private endpoints are not in the cells (snet-shared-pe).
 %% Internal and external are separate clusters and subscriptions (D52): an external cell's VNet is the same layout
 %% with ext-fi / ext-se in its slots and public load balancers for its zone gateways. Since D73 (2026-10-18) a zone's node
 %% subnet routes every other zone's slot to the hub Firewall, so zone-to-zone traffic that carries node addresses is denied
@@ -41,7 +42,7 @@ flowchart TB
     hub["Hub VNet of the exposure<br/>Azure Firewall Premium (labfw in the dev lab)<br/>DNS proxy, SNAT, per-zone IP groups"]
     rt["Route tables, BGP propagation off (D73)<br/>rt-&lt;cell&gt; on snet-system: 0.0.0.0/0 → hub Firewall<br/>rt-&lt;cell&gt;-&lt;zone&gt; on each zone's node subnet: 0.0.0.0/0 + every other zone's slot → hub Firewall<br/>(a zone's own slot and slot 0 stay on the VNet's route; overlay pod addresses are routed by Azure's overlay - Cilium's alone)"]
     nsg["NSG per subnet nsg-&lt;cell&gt;-&lt;subnet&gt;<br/>deny-all inbound last; allows only kubelet 10250 from snet-system, Cilium health, DNS,<br/>the overlay pod range between node subnets, LB probes, 443 from Internet / VirtualNetwork"]
-    cni["Overlay cell: Azure CNI Overlay powered by Cilium<br/>pods in 100.201.0.0/16 (every cell), services 100.202.0.0/16;<br/>a pod leaving the cluster carries its zone's node address.<br/>Node-subnet cell: pods in the zone's node subnet (/21 of a /16)"]
+    cni["Overlay cell: Azure CNI Overlay powered by Cilium<br/>pods in 100.201.0.0/16 (every cell), services 100.202.0.0/16;<br/>a pod leaving the cluster carries its zone's node address.<br/>Pod-subnet cell (D74): pods in snet-&lt;zone&gt;-pods, the first half of the zone's slot (/21 of a /16);<br/>classic node pools until NAP supports it (az3 runs the legacy node subnet until rebuilt)"]
     rt -.-> VNET
     nsg -.-> VNET
     cni -.-> VNET
