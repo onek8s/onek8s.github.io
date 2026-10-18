@@ -35,7 +35,13 @@ sixth eighth, ILB the fifth as everywhere), classic node pools per zone x capaci
 issue 1351, open, the work on the AKS machine API side; the 7.4 watch list row) - node subnet is out as Microsoft's legacy
 mode (D64); D59 and D61 amended, H16 reworded, V32 verifies, section 2.3 has the pod-subnet cell's table. Implementation
 (az3 rebuilt as pod subnet, shared `pod_network` mode + pod subnets, root node pools + autoscaler) is left to a later
-session. section 5.2 has the ACNS/eBPF host routing deep dive and section 4.1 the service-mesh-or-not reasoning. **The design was validated against the implementation on 2026-10-17 (pull request #62)**: every page states what
+session. section 5.2 has the ACNS/eBPF host routing deep dive and section 4.1 the service-mesh-or-not reasoning. **Zone-specific AKS
+Automatic clusters as option E (D75, the user, 2026-10-18, proposed, nothing built)**: one Automatic cluster per isolation zone,
+exposure and environment instead of cells (section 5.2 "E.", V33, decided with H15 and H16): the zone is the cluster and its spoke
+VNet, overlay + the hub Firewall per zone, Microsoft's managed system pool (not billed), in-place `stable` upgrades inside
+maintenance windows, no VNet encryption (API Server VNet Integration is preconfigured), Standard tier without LTS so stateless
+only; 12 clusters with two countries, 6 more per country; list prices of 2026-10-18 in 5.2 (hosted control plane 0.16 USD/h +
+~0.01 per vCPU-hour); 7.4's Automatic rows and 2.1's "one cluster per zone" note point at it. **The design was validated against the implementation on 2026-10-17 (pull request #62)**: every page states what
 runs as "built today" and what the design intends as "target"; when something is built that the design describes
 differently, the design follows the implementation (the user's rule). Backup (6.3) is left open on purpose: it is
 built with the stateful cluster, stateless cells are rebuilt in a disaster. Known code-side gaps noted in the design:
