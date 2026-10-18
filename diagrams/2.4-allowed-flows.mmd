@@ -40,7 +40,7 @@ flowchart LR
     Z -->|"⑥ all egress via UDR"| fw
     fw -->|"FQDN allow-list"| azure
     fw -->|"⑥b TCP 443 Alloy telemetry<br/>(Private Link)"| gpe
-    Z x-.-x|"⛔ BLOCKED<br/>NSG + Firewall + Cilium policy<br/>(only ⑦ Cilium health TCP 4240 node↔node, optional)"| O
+    Z x-.-x|"⛔ BLOCKED<br/>Firewall (a route per zone slot, logged, D73) + NSG + Cilium policy<br/>(overlay pod-to-pod: Cilium alone; ⑦ Cilium health between zones fails)"| O
 
     linkStyle 9 stroke:#c62828,stroke-width:3px,stroke-dasharray:6 4
 
