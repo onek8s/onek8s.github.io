@@ -4,8 +4,8 @@ The shared working notes for all OneK8s repos (what is deployed, decisions, gotc
 `onek8s/aks-terraform/CLAUDE.md`. Read that first.
 
 This repo is the design, published with GitHub Pages (`docs/<part>.<page>-*.md`: `1.2-requirements.md`,
-`7.2-decisions.md` (decision log, capability matrix, human sign-offs), `7.3-open-questions.md` (only what still needs a
-human); diagrams in `diagrams/`, rendered as described in `docs/8.2-editing-the-pictures.md`; the site's reading order is
+`7.2-decisions.md` (decision log, capability matrix, human sign-offs), `7.3-open-questions.md` (only the open questions a person
+still has to weigh; the sign-offs live in 7.2 alone); diagrams in `diagrams/`, rendered as described in `docs/8.2-editing-the-pictures.md`; the site's reading order is
 `_data/nav.yml`, repeated with a description per page in `README.md`'s Contents - a new page goes into both). A decision goes into
 `7.2-decisions.md` with its options and justification; `scripts/check.sh` runs in CI (diagram freshness, links, release notes).
 
