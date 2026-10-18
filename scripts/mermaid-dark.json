@@ -1,0 +1,19 @@
+{
+  "theme": "dark",
+  "themeVariables": {
+    "background": "#161d26",
+    "primaryColor": "#1f2a36",
+    "primaryBorderColor": "#5b6b7d",
+    "primaryTextColor": "#e6edf3",
+    "lineColor": "#9aa7b4",
+    "textColor": "#e6edf3",
+    "clusterBkg": "#1a232e",
+    "clusterBorder": "#5b6b7d",
+    "edgeLabelBackground": "#161d26",
+    "titleColor": "#e6edf3",
+    "mainBkg": "#1f2a36",
+    "nodeBorder": "#5b6b7d",
+    "secondaryColor": "#1a232e",
+    "tertiaryColor": "#1a232e"
+  }
+}

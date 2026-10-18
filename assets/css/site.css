@@ -15,6 +15,7 @@
   --link: #0b5cad;
   --code-bg: #f1f3f6;
   --shadow: 0 1px 2px rgba(27, 31, 36, 0.06);
+  --figure-bg: #ffffff;
   --header-h: 3.5rem;
   --side-w: 17rem;
   --toc-w: 14rem;
@@ -37,6 +38,7 @@
   --link: #79b8ff;
   --code-bg: #1a222c;
   --shadow: none;
+  --figure-bg: #161d26;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -54,6 +56,7 @@
     --link: #79b8ff;
     --code-bg: #1a222c;
     --shadow: none;
+    --figure-bg: #161d26;
   }
 }
 
@@ -104,10 +107,11 @@ blockquote > :last-child { margin-bottom: 0; }
 
 img { max-width: 100%; height: auto; }
 
-/* Diagrams are drawn for a white background; keep them on one in dark mode too, framed as figures. */
-.figure { margin: 1.75rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; background: #ffffff; box-shadow: var(--shadow); text-align: center; }
+/* Diagrams come in two renderings (scripts/render.sh): site.js shows images/<name>.dark.svg in dark mode, drawn on
+   --figure-bg; without JavaScript the light one stays on white (below). Framed as figures. */
+.figure { margin: 1.75rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--figure-bg); box-shadow: var(--shadow); text-align: center; }
 .figure img { display: block; margin: 0 auto; cursor: zoom-in; border-radius: 4px; }
-.figure figcaption { margin-top: 0.75rem; font-size: 0.85rem; color: #59636e; text-align: left; }
+.figure figcaption { margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted); text-align: left; }
 .figure figcaption::before { content: "Picture: "; font-weight: 600; }
 main > p > img:only-child { background: #ffffff; border-radius: 6px; cursor: zoom-in; }
 
@@ -224,7 +228,7 @@ td > :last-child, th > :last-child { margin-bottom: 0; }
 
 /* ---- Lightbox ------------------------------------------------------------------------------------ */
 
-#lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: #ffffff; cursor: zoom-out; align-items: center; justify-content: center; padding: 1rem; }
+#lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: var(--figure-bg); cursor: zoom-out; align-items: center; justify-content: center; padding: 1rem; }
 #lightbox.open { display: flex; }
 #lightbox img { width: 100%; height: 100%; object-fit: contain; }
 
