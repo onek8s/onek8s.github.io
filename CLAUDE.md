@@ -46,7 +46,7 @@ only; 12 clusters with two countries, 6 more per country; list prices of 2026-10
 the countries' separation must hold when Cilium does not enforce it and an overlay cell separates the zones' pods by Cilium
 alone (no NSG rule or route reaches overlay addresses); H16 answered, D61 and D74 amended, R9b and R5 follow, 3.1/2.1/2.3/7.4
 updated; V32 gains whether az3's node-subnet cell can take pod-subnet node pools without a rebuild (then NAP on node subnet is
-the smaller interim); az2 stays overlay as the A reference; E (D75) is unaffected - a cluster per zone needs no pod subnet, and
+the smaller interim); **overlay is deprecated** (the user, the same day, on this study: no new overlay cell, back only by a new decision after the security discussion) but the lab keeps BOTH cells - az2 overlay (A) and az3 pod subnet (C) - for further tests and the security discussion (H15), so do not remove az2; E (D75) is unaffected - a cluster per zone needs no pod subnet, and
 the path to E is a rebuild per zone from either mode. **The design was validated against the implementation on 2026-10-17 (pull request #62)**: every page states what
 runs as "built today" and what the design intends as "target"; when something is built that the design describes
 differently, the design follows the implementation (the user's rule). Backup (6.3) is left open on purpose: it is
