@@ -135,7 +135,7 @@ The sections are numbered by part and page in reading order; the decision log an
 | [onek8s.github.io](https://github.com/onek8s/onek8s.github.io) | This design ([onek8s.github.io](https://onek8s.github.io/)) |
 | [azure-landing-zone](https://github.com/onek8s/azure-landing-zone) | The Azure landing zone of the build tenant: management groups, policy, hub, subscriptions, the public DNS zone |
 | [aks-terraform](https://github.com/onek8s/aks-terraform) | The AKS clusters and what an environment's clusters share: network, Key Vault, container registry, Traffic Manager |
-| [aks-fluxcd-platform](https://github.com/onek8s/aks-fluxcd-platform) | What Flux deploys into every cluster: the zones' Gateways (AKS App Routing), External Secrets, external-dns, policies, tenants |
+| [aks-fluxcd-platform](https://github.com/onek8s/aks-fluxcd-platform) | What Flux deploys into every cluster: the zones' Gateways, External Secrets, external-dns, policies, tenants |
 | [aks-fluxcd-example](https://github.com/onek8s/aks-fluxcd-example) | An application team's repository – cloud-neutral manifests |
 | [aks-hello](https://github.com/onek8s/aks-hello) | The example application, deployed in the dev lab's internal cells (`hello.int-fi.dev.onek8s.lol`, reachable over the lab's VPN) |
 | [aks-ai-agents](https://github.com/onek8s/aks-ai-agents) | AI agents for day-2 operations ([section 6.1](docs/6.1-ai-driven-day-2-operations.md)) |
