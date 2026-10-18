@@ -117,11 +117,13 @@ main > p > img:only-child { background: #ffffff; border-radius: 6px; cursor: zoo
 
 /* ---- Tables -------------------------------------------------------------------------------------- */
 
-table { border-collapse: collapse; display: block; width: fit-content; max-width: 100%; overflow-x: auto; margin: 0 0 1.5rem; font-size: 0.9rem; line-height: 1.5; border: 1px solid var(--border); border-radius: 8px; }
-thead th { background: var(--surface); color: var(--fg-strong); text-align: left; font-weight: 650; border-bottom: 2px solid var(--border-strong); }
+/* A table taller than the window scrolls inside its frame with the header row pinned to the top (the decision
+   matrix, the capability matrix). Separate borders, not collapsed ones, so the pinned header keeps its own lines. */
+table { border-collapse: separate; border-spacing: 0; display: block; width: fit-content; max-width: 100%; max-height: calc(100vh - var(--header-h) - 4rem); overflow: auto; margin: 0 0 1.5rem; font-size: 0.9rem; line-height: 1.5; border: 1px solid var(--border); border-radius: 8px; }
+thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); color: var(--fg-strong); text-align: left; font-weight: 650; border-bottom: 2px solid var(--border-strong); }
 th, td { padding: 0.55rem 0.8rem; border-top: 1px solid var(--border); border-left: 1px solid var(--border); vertical-align: top; }
 th:first-child, td:first-child { border-left: 0; }
-thead th { border-top: 0; }
+thead th, tbody tr:first-child td { border-top: 0; }
 tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface) 55%, var(--bg)); }
 td > :last-child, th > :last-child { margin-bottom: 0; }
 
@@ -267,7 +269,8 @@ td > :last-child, th > :last-child { margin-bottom: 0; }
   .toc-rail { display: none; }
   .toc-inline { display: block; background: none; }
   a { color: var(--fg); text-decoration: none; }
-  table { display: table; width: 100%; overflow: visible; border-radius: 0; }
+  table { display: table; width: 100%; max-height: none; overflow: visible; border-radius: 0; }
+  thead th { position: static; }
   pre { white-space: pre-wrap; overflow: visible; }
   .figure { box-shadow: none; }
   .figure img, main > p > img { cursor: auto; }
