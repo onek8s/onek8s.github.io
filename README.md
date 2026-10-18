@@ -114,8 +114,8 @@ The sections are numbered by part and page in reading order; the decision log an
   readiness gate.
 - [7.2 Decisions](docs/7.2-decisions.md) – the decision log with options and justification, the Azure capability and
   verification matrix, and the human sign-offs still needed.
-- [7.3 Open questions](docs/7.3-open-questions.md) – only what still needs a person: the sign-off list for the connection
-  readiness gate.
+- [7.3 Open questions](docs/7.3-open-questions.md) – the recently added features a person still has to weigh, each with
+  the design's default until then.
 - [7.4 Outlook: 2030 and the options kept open](docs/7.4-outlook-2030-and-the-options-kept-open.md) – what is meant
   to hold, what is changing, the rule that keeps the platform simple, and every feature left out today with its way in.
 
