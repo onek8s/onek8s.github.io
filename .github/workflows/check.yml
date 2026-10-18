@@ -17,3 +17,17 @@ jobs:
           fetch-depth: 0
       - name: Diagrams rendered and links resolve
         run: scripts/check.sh
+
+  pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/jekyll-build-pages@v1
+      - name: PDF of the whole design, every internal link with a target
+        run: |
+          sudo chown -R "$(id -u)" _site
+          python3 scripts/pdf.py _site onek8s-design.pdf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onek8s-design-pdf
+          path: onek8s-design.pdf

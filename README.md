@@ -31,7 +31,9 @@ leaves through the exposure's **hub Azure Firewall**, which decides per isolatio
 egress (Cilium FQDN policies with ACNS, or pod addresses in the Firewall's rules) is a per-cell choice
 ([D61](docs/7.2-decisions.md#decision-matrix), [section 5.2](docs/5.2-egress-control-options-and-the-company-firewall.md)).
 
-> Status: **draft** for review. Country codes `fi` / `se` and all IP ranges are examples.
+> Status: **draft** for review ([release notes](docs/8.3-release-notes.md)). Country codes `fi` / `se` and
+> all IP ranges are examples. The whole design is also one [PDF](https://onek8s.github.io/onek8s-design.pdf), rebuilt with
+> every publish.
 
 ## Contents
 
@@ -52,8 +54,8 @@ The sections are numbered by part and page in reading order; the decision log an
   VNet; NSGs and routes through the exposure's firewall.
 - [2.2 Control plane](docs/2.2-control-plane.md) – a private API server in its own subnet, reached only from the
   management network; no local accounts, no SSH.
-- [2.3 Node pools](docs/2.3-node-pools.md) – node auto provisioning per zone in the stateless clusters, fixed pools in
-  the stateful one; arm64, spot and GPUs chosen by the application; pods right-sized in place.
+- [2.3 Node pools](docs/2.3-node-pools.md) – node auto provisioning per zone in the stateless clusters (classic pools in the
+  default pod-subnet cell until NAP supports it), fixed pools in the stateful one; arm64, spot and GPUs chosen by the application; pods right-sized in place.
 - [2.4 Allowed and blocked flows](docs/2.4-allowed-and-blocked-flows.md) – the few flows Kubernetes needs between a
   zone and the platform, and the isolation matrix of what each principal can reach.
 - [2.5 Workload identity first, Key Vault secrets only when needed](docs/2.5-workload-identity-and-secrets.md) –
@@ -91,8 +93,8 @@ The sections are numbered by part and page in reading order; the decision log an
 - [5.1 Advanced networking: eBPF host routing and FQDN egress](docs/5.1-advanced-networking-and-fqdn-egress.md) –
   Advanced Container Networking Services with per-application Cilium FQDN egress policies.
 - [5.2 Egress control options and the company firewall](docs/5.2-egress-control-options-and-the-company-firewall.md)
-  – overlay or pod subnet, Cilium or the hub firewall: the four combinations, the proposed default, and working
-  with a firewall another team owns.
+  – overlay or pod subnet, Cilium or the hub firewall: the four combinations and a fifth, one AKS Automatic
+  cluster per zone; the default (pod subnet + the hub Firewall), and working with a firewall another team owns.
 - [5.3 Traffic flow documentation: a picture per application and per zone](docs/5.3-traffic-flow-documentation.md)
   – generated from Git, every destination with its status.
 
@@ -122,7 +124,9 @@ The sections are numbered by part and page in reading order; the decision log an
 - [8.1 Comparison with Wolkwacht](docs/8.1-wolkwacht-comparison.md) – where the design agrees with, differs from, or closed
   a gap raised by a well-known AKS blog.
 - [8.2 Editing the pictures and the site](docs/8.2-editing-the-pictures.md) – diagram sources and rendering, the site's
-  layout and navigation, building it locally.
+  layout and navigation, the PDF, building it locally.
+- [8.3 Release notes](docs/8.3-release-notes.md) – the design's versions from v1.0 on, one sentence and the pull request
+  per change.
 
 ## Repositories
 
