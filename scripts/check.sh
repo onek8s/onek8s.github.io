@@ -4,7 +4,8 @@
 #     that are at least as new in Git history;
 #  2. every relative Markdown link and image reference resolves to a file;
 #  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree, and every page's
-#     <part>.<page> number is the same in its file name, its first heading and the navigation.
+#     <part>.<page> number is the same in its file name, its first heading and the navigation;
+#  4. the newest version in docs/8.3-release-notes.md is the version in _config.yml, and every entry links a pull request.
 # Usage: scripts/check.sh   (run from anywhere; needs git and python3)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -104,6 +105,25 @@ for doc in docs:
         fail(f'{doc}: the first heading does not start with "# {number.group(1)} "')
 if 'README.md' not in paths:
     fail('README.md is not in _data/nav.yml')
+sys.exit(1 if bad else 0)
+PY
+
+echo "Release notes: the newest version is _config.yml's, every entry links its pull request"
+python3 -I - <<'PY' || status=1
+import re, sys
+bad = 0
+version = re.search(r'^version:\s*"?([^"\n]+)"?', open('_config.yml', encoding='utf-8').read(), re.M)
+notes = open('docs/8.3-release-notes.md', encoding='utf-8').read()
+versions = re.findall(r'^## v(\d+\.\d+) - \d{4}-\d{2}-\d{2}$', notes, re.M)
+if not version or not versions or versions[0] != version[1].strip():
+    print(f'  NOTES    _config.yml version {version[1] if version else "(none)"} is not the newest release note '
+          f'(v{versions[0] if versions else "?"})'); bad += 1
+if len(set(versions)) != len(versions):
+    print('  NOTES    a version is listed twice'); bad += 1
+# An entry is a list item, up to the next item or heading.
+for entry in re.findall(r'^- .*?(?=^- |^#|\Z)', notes, re.M | re.S):
+    if not re.search(r'\(https://github\.com/onek8s/[^)]+/pull/\d+\)', entry):
+        print(f'  NOTES    no pull request link: {entry.splitlines()[0]}'); bad += 1
 sys.exit(1 if bad else 0)
 PY
 
