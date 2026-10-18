@@ -27,7 +27,14 @@ the slots on the system subnet's table too - gateway answers come from the syste
 addresses, so pod-to-pod between the zones of an overlay cell stays Cilium's alone (Azure's overlay routing domain); a
 node-subnet cell's pods are in the slot and meet the Firewall (H16, with H15). Built in aks-terraform `shared/cells.tf`
 (route table `zone`, naming `route_table/<cell>/<zone>`, root locals grant Network Contributor per zone table), NOT
-applied to the lab yet; V31 verifies. section 5.2 has the ACNS/eBPF host routing deep dive and section 4.1 the service-mesh-or-not reasoning. **The design was validated against the implementation on 2026-10-17 (pull request #62)**: every page states what
+applied to the lab yet; V31 verifies. **The non-overlay cell is a pod-subnet cell (D74, the user, 2026-10-18, design only)**:
+Azure CNI Pod Subnet with dynamic IP allocation + Cilium, `snet-<zone>-pods` as the first half of the zone's slot (nodes the
+sixth eighth, ILB the fifth as everywhere), classic node pools per zone x capacity x arch with the cluster autoscaler
+(priority expander spot first, min 0, pools in cluster IaC) **until NAP supports the pod subnet** (karpenter-provider-azure
+issue 1351, open, the work on the AKS machine API side; the 7.4 watch list row) - node subnet is out as Microsoft's legacy
+mode (D64); D59 and D61 amended, H16 reworded, V32 verifies, section 2.3 has the pod-subnet cell's table. Implementation
+(az3 rebuilt as pod subnet, shared `pod_network` mode + pod subnets, root node pools + autoscaler) is left to a later
+session. section 5.2 has the ACNS/eBPF host routing deep dive and section 4.1 the service-mesh-or-not reasoning. **The design was validated against the implementation on 2026-10-17 (pull request #62)**: every page states what
 runs as "built today" and what the design intends as "target"; when something is built that the design describes
 differently, the design follows the implementation (the user's rule). Backup (6.3) is left open on purpose: it is
 built with the stateful cluster, stateless cells are rebuilt in a disaster. Known code-side gaps noted in the design:
