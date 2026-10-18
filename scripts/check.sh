@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # CI checks for the design repository:
-#  1. every diagram source (diagrams/*.mmd) has a rendering (images/*.svg) that is at least as new in Git history;
+#  1. every diagram source (diagrams/*.mmd) has a light and a dark rendering (images/<name>.svg, images/<name>.dark.svg)
+#     that are at least as new in Git history;
 #  2. every relative Markdown link and image reference resolves to a file;
 #  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree, and every page's
 #     <part>.<page> number is the same in its file name, its first heading and the navigation.
@@ -9,9 +10,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 status=0
 
-echo "Diagrams: every .mmd rendered, and not newer than its .svg"
+echo "Diagrams: every .mmd rendered for light and dark, and not newer than either .svg"
 for src in diagrams/*.mmd; do
-  out="images/$(basename "${src%.mmd}").svg"
+ for out in "images/$(basename "${src%.mmd}").svg" "images/$(basename "${src%.mmd}").dark.svg"; do
   if [[ ! -f "$out" ]]; then
     echo "  MISSING  $out (render with scripts/render.sh)"; status=1; continue
   fi
@@ -25,6 +26,7 @@ for src in diagrams/*.mmd; do
     echo "  STALE    $src ($(date -u -d @"$src_time" +%F)) is newer than $out ($(date -u -d @"$out_time" +%F)); run scripts/render.sh"
     status=1
   fi
+ done
 done
 
 echo "Links: every relative link and image in *.md resolves"

@@ -5,9 +5,28 @@
   // Light / dark toggle. The system setting is the default; a choice overrides it and is remembered per browser.
   var root = document.documentElement;
   var btn = document.getElementById('theme-toggle');
+  var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+  var current = function () { return root.getAttribute('data-theme') || (systemDark.matches ? 'dark' : 'light'); };
+
+  // Pictures: every images/<name>.svg has a images/<name>.dark.svg drawn for a dark background (scripts/render.sh);
+  // show the one that matches the page, and the light one in print.
+  var pictures = Array.prototype.filter.call(document.querySelectorAll('main img'), function (img) {
+    return /\/images\/[^/]+\.svg$/.test(img.getAttribute('src') || '') && !/\.dark\.svg$/.test(img.getAttribute('src'));
+  });
+  var showPictures = function (scheme) {
+    pictures.forEach(function (img) {
+      var light = img.getAttribute('data-light-src') || img.getAttribute('src');
+      img.setAttribute('data-light-src', light);
+      var want = scheme === 'dark' ? light.replace(/\.svg$/, '.dark.svg') : light;
+      if (img.getAttribute('src') !== want) { img.setAttribute('src', want); }
+    });
+  };
+  showPictures(current());
+  systemDark.addEventListener('change', function () { showPictures(current()); });
+  window.addEventListener('beforeprint', function () { showPictures('light'); });
+  window.addEventListener('afterprint', function () { showPictures(current()); });
+
   if (btn) {
-    var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
-    var current = function () { return root.getAttribute('data-theme') || (systemDark.matches ? 'dark' : 'light'); };
     var label = function () {
       var next = current() === 'dark' ? 'light' : 'dark';
       btn.textContent = next === 'dark' ? '☾ Dark' : '☀ Light';
@@ -18,6 +37,7 @@
       root.setAttribute('data-theme', next);
       try { localStorage.setItem('theme', next); } catch (e) { /* storage may be blocked */ }
       label();
+      showPictures(next);
     });
     systemDark.addEventListener('change', label);
     label();
