@@ -31,7 +31,7 @@ leaves through the exposure's **hub Azure Firewall**, which decides per isolatio
 egress (Cilium FQDN policies with ACNS, or pod addresses in the Firewall's rules) is a per-cell choice
 ([D61](docs/7.2-decisions.md#decision-matrix), [section 5.2](docs/5.2-egress-control-options-and-the-company-firewall.md)).
 
-> Status: **draft** for review ([release notes](docs/8.3-release-notes.md)). Country codes `fi` / `se` and
+> Status: **draft** for review ([release notes](docs/8.2-release-notes.md)). Country codes `fi` / `se` and
 > all IP ranges are examples.
 
 **Where to start.** Nobody reads all of it; enter from the side:
@@ -137,12 +137,13 @@ The sections are numbered by part and page in reading order; the decision log an
 
 **8. Appendix**
 
-- [8.1 Comparison with Wolkwacht](docs/8.1-wolkwacht-comparison.md) – where the design agrees with, differs from, or closed
-  a gap raised by a well-known AKS blog.
-- [8.2 Editing the pictures and the site](docs/8.2-editing-the-pictures.md) – diagram sources and rendering, the site's
+- [8.1 Editing the pictures and the site](docs/8.1-editing-the-pictures.md) – diagram sources and rendering, the site's
   layout and navigation, the PDF, building it locally.
-- [8.3 Release notes](docs/8.3-release-notes.md) – the design's versions from v1.0 on, one sentence and the pull request
+- [8.2 Release notes](docs/8.2-release-notes.md) – the design's versions from v1.0 on, one sentence and the pull request
   per change.
+
+Reviews of the design against outside sources are kept in [`reviews/`](https://github.com/onek8s/onek8s.github.io/tree/main/reviews) on GitHub and are not part of the
+published design.
 
 ## Repositories
 

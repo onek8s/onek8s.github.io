@@ -5,13 +5,13 @@ The shared working notes for all OneK8s repos (what is deployed, decisions, gotc
 
 This repo is the design, published with GitHub Pages (`docs/<part>.<page>-*.md`: `1.2-requirements.md`,
 `7.2-decisions.md` (decision log, capability matrix, human sign-offs), `7.3-open-questions.md` (only the open questions a person
-still has to weigh; the sign-offs live in 7.2 alone); diagrams in `diagrams/`, rendered as described in `docs/8.2-editing-the-pictures.md`; the site's reading order is
+still has to weigh; the sign-offs live in 7.2 alone); diagrams in `diagrams/`, rendered as described in `docs/8.1-editing-the-pictures.md`; the site's reading order is
 `_data/nav.yml`, repeated with a description per page in `README.md`'s Contents - a new page goes into both). A decision goes into
 `7.2-decisions.md` with its options and justification; `scripts/check.sh` runs in CI (diagram freshness, links, release notes).
 
 **Versions and release notes (the user, 2026-10-18): the design as of #81 is v1.0.** Every pull request that changes the
 design adds the next minor version (v1.1, v1.2, ...; a major version only when a human says so) at the top of
-`docs/8.3-release-notes.md` - `## v1.N - <date>`, then one short sentence per change ending in the link to the pull
+`docs/8.2-release-notes.md` - `## v1.N - <date>`, then one short sentence per change ending in the link to the pull
 request (`[#NN](https://github.com/onek8s/onek8s.github.io/pull/NN)`) - and sets the same `version:` in `_config.yml`, in
 the same pull request; create the pull request first if its number is not known yet, then add the entry. `check.sh`
 fails when the two disagree or an entry has no pull request link. **The design is three PDFs** - the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone, the page a
@@ -85,4 +85,5 @@ Old → new: 1→1, 2→3, 3→4, 4→5,
 3 The fleet, 4 Encryption, 5 Egress control, 6 Operations, 7 Delivery and decisions, 8 Appendix). From the single
 numbers of #58: 1→1.1, 2→1.3, 3→2.1, 4→2.2, 5→2.3, 6→2.4, 7→2.5, 8→2.6, 9→2.7, 10→3.1, 11→3.2, 12→3.3, 13→3.4,
 14→3.5, 15→4.1, 16→4.2, 17→5.1, 18→5.2, 19→5.3, 20→6.1, 21→6.2, 22→6.3, 23→7.1; requirements 1.2, decisions 7.2,
-open questions 7.3, the Wolkwacht comparison 8.1, editing the pictures 8.2.
+open questions 7.3, editing the pictures 8.1 (8.2 until 2026-10-18), release notes 8.2 (8.3 until then); the Wolkwacht
+comparison left the published design for `reviews/wolkwacht-comparison.md` on 2026-10-18.
