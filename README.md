@@ -90,7 +90,7 @@ The sections are numbered by part and page in reading order; the decision log an
 - [3.2 Environments (fourteen to twenty clusters)](docs/3.2-environments.md) – dev, acc and prd with two subscriptions
   each, and the cost and capacity model.
 - [3.3 Keeping clusters in sync: Flux for stateless, pipelines for stateful](docs/3.3-keeping-clusters-in-sync.md) –
-  one fleet repository and one signed artifact, delivered by Flux and by a pipeline.
+  a platform repository and one per team, every change a pull request, delivered from Git by Flux and by a pipeline.
 - [3.4 Zero-downtime application upgrades](docs/3.4-zero-downtime-application-upgrades.md) – rollout guardrails
   enforced by policy; releases that move through the cells one at a time.
 - [3.5 Zero-downtime cluster upgrades](docs/3.5-zero-downtime-cluster-upgrades.md) – the update policy with two
