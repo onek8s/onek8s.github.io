@@ -27,8 +27,8 @@ jobs:
         run: |
           sudo chown -R "$(id -u)" _site
           python3 scripts/pdf.py _site onek8s-design-summary.pdf --only 1.0 --subtitle Summary
-          python3 scripts/pdf.py _site onek8s-design.pdf --only 1-6
-          python3 scripts/pdf.py _site onek8s-design-reference.pdf --only 7-8 --subtitle "Decisions and reference"
+          python3 scripts/pdf.py _site onek8s-design.pdf --only 1-5
+          python3 scripts/pdf.py _site onek8s-design-reference.pdf --only 8 --subtitle "Release notes"
       - uses: actions/upload-artifact@v4
         with:
           name: onek8s-design-pdf
