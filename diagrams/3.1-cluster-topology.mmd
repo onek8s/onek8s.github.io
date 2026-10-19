@@ -3,47 +3,38 @@
 %% frontend network, an optional zone-redundant stateful cluster in the backend network next to the Azure PaaS services.
 flowchart TB
     internet(("Internet"))
-    corp["Corporate network<br/>(via hub Firewall)"]
+    corp["Corporate network<br/>(via the hub Firewall)"]
 
-    subgraph EDGE["Entry points – outside the cells"]
-        direction LR
-        waf["Azure Traffic Manager<br/>external zones · <b>active-active</b><br/>client network blocks → cell (Subnet routing)<br/>endpoints: the zone gateways' public LBs"]
-        agw_in["Hub Private DNS · internal zones<br/>&lt;app&gt;.int-fi.&lt;env&gt;.example.com → zone gateway IP of its <b>home cell</b><br/>records kept by ExternalDNS in the cells<br/>migration workflow moves apps between cells"]
+    subgraph EDGE["Entry points, outside the cells"]
+        waf["Traffic Manager · external zones · <b>active-active</b><br/>client network blocks → cell (Subnet routing)<br/>endpoints: the zone gateways' public load balancers"]
+        agw_in["Hub Private DNS · internal zones<br/>&lt;app&gt;.int-fi.&lt;env&gt;.example.com → the zone gateway of its <b>home cell</b><br/>records kept by ExternalDNS in the cells, moved by the migration workflow"]
     end
 
-    subgraph FRONT["Frontend network of the exposure's subscription sub-aks-&lt;env&gt;-&lt;int|ext&gt; – stateless clusters, one per availability zone"]
-        direction LR
-        sl1["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az1</b><br/>vnet-&lt;env&gt;-&lt;x&gt;-sl-az1 (VNet encryption)<br/>all nodes in AZ 1<br/>the exposure's zones: int-fi, int-se – or ext-fi, ext-se<br/>Azure CNI Pod Subnet · Gateway API (HTTPS only)<br/>≥ 2 replicas per app · HPA / KEDA<br/>cluster autoscaler"]
-        sl2["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az2</b><br/>vnet-&lt;env&gt;-&lt;x&gt;-sl-az2 (VNet encryption)<br/>all nodes in AZ 2<br/>identical apps and config<br/>≥ 2 replicas per app · HPA / KEDA<br/>cluster autoscaler"]
-        sl3["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az3</b> (optional)<br/>vnet-&lt;env&gt;-&lt;x&gt;-sl-az3<br/>all nodes in AZ 3"]
-        sl1 ~~~ sl2 ~~~ sl3
+    subgraph FRONT["Frontend network of the exposure's subscription: stateless clusters, one per availability zone"]
+        direction TB
+        sl1["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az1</b><br/>own VNet (VNet encryption) · all nodes in AZ 1<br/>the exposure's zones: int-fi, int-se or ext-fi, ext-se<br/>Azure CNI Pod Subnet · Gateway API, HTTPS only<br/>≥ 2 replicas per app · HPA / KEDA · cluster autoscaler"]
+        sl2["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az2</b><br/>own VNet · all nodes in AZ 2<br/>identical apps and configuration"]
+        sl3["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az3</b> (optional)<br/>all nodes in AZ 3"]
     end
 
-    fw["Hub: Azure Firewall Premium<br/>Internet egress allow-list (frontend only)<br/>+ east-west inspection"]
+    fw["Hub: Azure Firewall Premium<br/>Internet egress allow-list (frontend only) + east-west inspection"]
 
-    subgraph BACK["Backend network – no Internet route in either direction"]
-        direction LR
-        sf["<b>aks-&lt;env&gt;-&lt;x&gt;-sf</b> (optional, last option –<br/>built with the first approved exception)<br/>vnet-&lt;env&gt;-&lt;x&gt;-sf<br/>AKS LTS · Premium tier<br/>fixed-size node pools in AZ 1, 2, 3 (no autoscaling)<br/>the exposure's zones<br/>network isolated: outbound type none<br/>Azure CNI (VNet) · no Gateway API, no Ingress<br/>internal LB Services · TLS by the application"]
-        subgraph PAAS["Azure PaaS – first choice for data, private endpoints only"]
-            direction TB
-            db["Azure SQL / PostgreSQL<br/>(zone-redundant)"]
-            st["Storage (ZRS), Service Bus,<br/>Event Hubs, Cosmos DB"]
-            acr["ACR Premium (zone-redundant), one per exposure<br/>images, charts, Flux artifacts"]
-            kv["Key Vault per isolation zone (app secrets)<br/>+ the exposure's platform Key Vault (certificates)"]
-        end
+    subgraph BACK["Backend network: no Internet route in either direction"]
+        sf["<b>aks-&lt;env&gt;-&lt;x&gt;-sf</b> (optional, the last option,<br/>built with the first approved exception)<br/>own VNet · AKS LTS · Premium tier · the exposure's zones<br/>fixed-size node pools in AZ 1, 2, 3 (no autoscaling)<br/>network isolated (outbound type none) · Azure CNI (VNet)<br/>no Gateway API, no Ingress:<br/>internal LB Services, TLS by the application"]
+        paas["Azure PaaS: the first choice for data, private endpoints only<br/>Azure SQL / PostgreSQL (zone-redundant)<br/>Storage (ZRS) · Service Bus · Event Hubs · Cosmos DB<br/>ACR Premium (zone-redundant), one per exposure<br/>Key Vault per isolation zone (app secrets)<br/>+ the exposure's platform Key Vault (certificates, keys)"]
     end
 
     blocked(("Internet"))
 
     internet ==>|"DNS"| waf
     corp ==> agw_in
-    EDGE ==>|"HTTPS to the zone gateway (TLS ends there)<br/>external: every cell, Traffic Manager answers each client network with one cell, failure or drain moves its clients<br/>internal: straight to the app's home cell (ILB), moved by migration"| FRONT
+    EDGE ==>|"HTTPS to the zone gateway,<br/>TLS ends there"| FRONT
     FRONT -->|"egress + east-west"| fw
-    fw -->|"TLS only: PaaS private endpoints (preferred),<br/>stateful app internal LBs"| BACK
-    sf --> PAAS
+    fw -->|"TLS only: PaaS private endpoints<br/>(preferred), stateful app internal LBs"| BACK
+    sf --> paas
     BACK x-.-x|"⛔ blocked: no public IP, no outbound type,<br/>UDR 0/0 → Firewall deny-all"| blocked
 
-    linkStyle 8 stroke:#c62828,stroke-width:3px,stroke-dasharray:6 4
+    linkStyle 6 stroke:#c62828,stroke-width:3px,stroke-dasharray:6 4
 
     classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
     classDef sl fill:#e0f2f1,stroke:#00695c,color:#000
@@ -55,5 +46,5 @@ flowchart TB
     class sl1,sl2 sl
     class sl3 opt
     class sf sf
-    class db,st,acr,kv paas
+    class paas paas
     class blocked off

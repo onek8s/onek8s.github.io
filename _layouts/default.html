@@ -64,11 +64,12 @@
 <ul>
 {%- for item in part.pages -%}
   {%- assign target = site.pages | where: "path", item.path | first -%}
-<li{% if item.path == page.path %} class="current"{% endif %}><a href="{{ target.url | relative_url }}"{% if item.path == page.path %} aria-current="page"{% endif %}>{% if item.number %}<span class="num">{{ item.number }}</span>{% endif %}<span>{{ item.title }}</span></a></li>
+<li{% if item.path == page.path %} class="current"{% endif %}><a href="{{ target.url | relative_url }}"{% if item.path == page.path %} aria-current="page"{% endif %}>{% if item.number %}<span class="num">{{ item.number }}</span>{% endif %}<span>{{ item.title }}</span>{% if item.pdf == "design" %}<span class="pdf-tag" title="In the design PDF">PDF</span>{% elsif item.pdf %}<span class="pdf-tag own" title="A PDF of its own: the {{ item.pdf }} PDF">own PDF</span>{% endif %}</a></li>
 {%- endfor %}
 </ul>
 </div>
 {%- endfor %}
+<p class="legend"><span class="pdf-tag">PDF</span> in the <a href="{{ '/onek8s-design.pdf' | relative_url }}">design PDF</a> · <span class="pdf-tag own">own PDF</span> a PDF of its own · no tag: online only</p>
 </nav>
 {%- comment -%}
   "On this page", built at Jekyll build time from the h2/h3 headings so it is plain HTML (works without

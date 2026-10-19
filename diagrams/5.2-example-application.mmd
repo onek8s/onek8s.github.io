@@ -1,21 +1,18 @@
 %% Example of a generated per-application picture (section 5.2): int-se-orders in an internal dev cell where the hub
 %% Firewall decides egress (D61). Names and addresses are examples.
-flowchart LR
+flowchart TB
     client["Corporate network"]
-    subgraph CELL["Cell aks-dev-int-stateless-az1 - pod subnet + hub Firewall: the Firewall sees the pod's own address"]
-        direction LR
+    subgraph CELL["Cell aks-dev-int-stateless-az1: pod subnet + hub Firewall, the Firewall sees the pod's own address"]
         gw["Gateway int-se-gateway/int-se<br/>orders-aks-dev-int-stateless-az1.int-se.dev.example.com<br/>orders.int-se.dev.example.com"]
-        subgraph NS["namespace int-se-orders - team orders"]
-            direction TB
+        subgraph NS["namespace int-se-orders, team orders"]
             svc_orders["Service orders"]
             wl_orders["Deployment orders x2<br/>acrdevint.azurecr.io/orders@sha256:…"]
         end
         dns["CoreDNS"]
-        eso["ESO int-se - Key Vault share int-se-orders--*"]
+        eso["ESO int-se<br/>Key Vault share int-se-orders--*"]
     end
     fw["Hub Firewall<br/>rule collection group dev-int-applications"]
     subgraph OUT["Outside the landing zone"]
-        direction TB
         d_api_partner_example["api.partner.example:443"]
     end
     client --> gw

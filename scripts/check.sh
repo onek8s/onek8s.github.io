@@ -3,8 +3,9 @@
 #  1. every diagram source (diagrams/*.mmd) has a light and a dark rendering (images/<name>.svg, images/<name>.dark.svg)
 #     that are at least as new in Git history;
 #  2. every relative Markdown link and image reference resolves to a file;
-#  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree, and every page's
-#     <part>.<page> number is the same in its file name, its first heading and the navigation;
+#  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree, every page's
+#     <part>.<page> number is the same in its file name, its first heading and the navigation, and README.md marks
+#     (PDF) exactly the pages whose `pdf:` is `design`;
 #  4. the newest version in docs/8.1-release-notes.md is the version in _config.yml, and every entry links a pull request.
 # Usage: scripts/check.sh   (run from anywhere; needs git and python3)
 set -euo pipefail
@@ -79,6 +80,11 @@ for line in open('_data/nav.yml', encoding='utf-8'):
     m = re.match(r'\s+number: "(\d+\.\d+)"', line)
     if m and nav:
         nav[-1]['number'] = m.group(1)
+    m = re.match(r'\s+pdf: (\w+)', line)
+    if m and nav:
+        nav[-1]['pdf'] = m.group(1)
+        if m.group(1) not in ('design', 'summary', 'reference'):
+            fail(f'{nav[-1]["path"]}: pdf: {m.group(1)} is not design, summary or reference')
 paths = [item['path'] for item in nav]
 for path in paths:
     if not os.path.exists(path):
@@ -93,6 +99,11 @@ for doc in docs:
         fail(f'{doc} is not in _data/nav.yml')
     if doc not in linked:
         fail(f'{doc} is not linked from the Contents of README.md')
+    marked = re.search(r'\]\(' + re.escape(doc) + r'\) \(PDF\)', readme) is not None
+    in_design = next((i.get('pdf') == 'design' for i in nav if i['path'] == doc), False)
+    if marked != in_design:
+        fail(f'{doc}: README.md marks it {"(PDF)" if marked else "online only"}, _data/nav.yml says '
+             f'{"pdf: design" if in_design else "it is not in the design PDF"}')
     number = re.match(r'docs/(\d+\.\d+)-', doc)
     item = next((i for i in nav if i['path'] == doc), None)
     if not number:

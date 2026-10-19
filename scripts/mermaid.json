@@ -1,0 +1,17 @@
+{
+  "flowchart": {
+    "nodeSpacing": 30,
+    "rankSpacing": 36,
+    "padding": 10,
+    "subGraphTitleMargin": {
+      "top": 2,
+      "bottom": 2
+    },
+    "wrappingWidth": 360
+  },
+  "sequence": {
+    "actorMargin": 40,
+    "messageMargin": 30,
+    "width": 130
+  }
+}

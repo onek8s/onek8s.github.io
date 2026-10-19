@@ -3,6 +3,10 @@
 # A page is numbered <part>.<page>, and the pictures carry the number of the page that shows them. The layout builds
 # the sidebar and the previous / next links from this list; README.md repeats it with a one-line description per
 # page, and scripts/check.sh fails when the two lists or the files in docs/ disagree.
+#
+# `pdf:` names the PDF a page is printed in - `design` (onek8s-design.pdf, the sidebar marks these pages PDF),
+# `summary` (onek8s-design-summary.pdf) or `reference` (onek8s-design-reference.pdf); scripts/pdf.py --only <name>
+# selects them. A page without `pdf:` is online only, and README.md marks the design PDF's pages the same way.
 
 - number: 1
   part: Start here
@@ -12,18 +16,23 @@
     - path: docs/1.0-summary.md
       number: "1.0"
       title: Summary
+      pdf: summary
     - path: docs/1.1-overview.md
       number: "1.1"
       title: Overview
+      pdf: design
     - path: docs/1.2-requirements.md
       number: "1.2"
       title: Requirements
+      pdf: design
     - path: docs/1.3-open-standards-and-portability.md
       number: "1.3"
       title: Open standards and portability
+      pdf: design
     - path: docs/1.4-application-contract.md
       number: "1.4"
       title: The application contract
+      pdf: design
 
 - number: 2
   part: Inside a cluster
@@ -31,24 +40,31 @@
     - path: docs/2.1-network-layout.md
       number: "2.1"
       title: Network layout
+      pdf: design
     - path: docs/2.2-control-plane.md
       number: "2.2"
       title: Control plane
+      pdf: design
     - path: docs/2.3-node-pools.md
       number: "2.3"
       title: Node pools
+      pdf: design
     - path: docs/2.4-allowed-and-blocked-flows.md
       number: "2.4"
       title: Allowed and blocked flows
+      pdf: design
     - path: docs/2.5-workload-identity-and-secrets.md
       number: "2.5"
       title: Workload identity and secrets
+      pdf: design
     - path: docs/2.6-application-multi-tenancy.md
       number: "2.6"
       title: Application multi-tenancy
+      pdf: design
     - path: docs/2.7-policy-enforcement.md
       number: "2.7"
       title: Policy enforcement
+      pdf: design
 
 - number: 3
   part: The fleet
@@ -56,18 +72,23 @@
     - path: docs/3.1-cluster-types-stateless-and-stateful.md
       number: "3.1"
       title: "Cluster types: stateless and stateful"
+      pdf: design
     - path: docs/3.2-environments.md
       number: "3.2"
       title: Environments
+      pdf: design
     - path: docs/3.3-keeping-clusters-in-sync.md
       number: "3.3"
       title: Keeping clusters in sync
+      pdf: design
     - path: docs/3.4-zero-downtime-application-upgrades.md
       number: "3.4"
       title: Zero-downtime application upgrades
+      pdf: design
     - path: docs/3.5-zero-downtime-cluster-upgrades.md
       number: "3.5"
       title: Zero-downtime cluster upgrades
+      pdf: design
 
 - number: 4
   part: Encryption
@@ -75,9 +96,11 @@
     - path: docs/4.1-encryption-in-transit-and-tls.md
       number: "4.1"
       title: Encryption in transit and TLS
+      pdf: design
     - path: docs/4.2-encryption-at-rest-and-customer-managed-keys.md
       number: "4.2"
       title: Encryption at rest
+      pdf: design
 
 - number: 5
   part: Egress control
@@ -85,9 +108,11 @@
     - path: docs/5.1-egress-control-and-the-company-firewall.md
       number: "5.1"
       title: Egress control and the company firewall
+      pdf: design
     - path: docs/5.2-traffic-flow-documentation.md
       number: "5.2"
       title: Traffic flow documentation
+      pdf: design
 
 - number: 6
   part: Operations
@@ -127,3 +152,4 @@
     - path: docs/8.1-release-notes.md
       number: "8.1"
       title: Release notes
+      pdf: reference

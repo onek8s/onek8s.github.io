@@ -16,7 +16,10 @@ scripts/render.sh diagrams/2.2-control-plane.mmd   # or only the ones you change
 
 The dark rendering uses Mermaid's dark theme (`scripts/mermaid-dark.json`) and turns the colours of the `classDef`,
 `style` and `linkStyle` lines dark (`scripts/dark-mmd.py`: the same hue, a dark fill, a light stroke and text), so
-write the colours for a white background as before - one source serves both.
+write the colours for a white background as before - one source serves both. The light rendering uses the spacing of
+`scripts/mermaid.json`; keep a picture at most about 1 200 px wide (and 1 500 px tall), because the PDF scales it to
+the page and the 16 px labels turn unreadable beyond that - stack subgraphs (`a ~~~ b`), keep edge labels to a few
+words and prefer `flowchart TB` with two or three columns to a wide `LR` row.
 
 A pull request fails the `Check` workflow when a `.mmd` is newer in Git than either `.svg`, when a relative link in
 the documents is broken, or when the navigation and the files in `docs/` disagree (below); run `scripts/check.sh`
@@ -31,13 +34,13 @@ this file, `CLAUDE.md`, `reviews/`, `diagrams/` and `scripts/` are excluded.
 | File | Holds |
 |---|---|
 | `_config.yml` | The title, the design's `version` (shown in the header and on the PDF's cover), the repository the "Edit this page" links point at, and what is not published (`CLAUDE.md`, `diagrams/`, `scripts/`) |
-| `_data/nav.yml` | The reading order of the pages in parts. The layout builds the sidebar, the part shown above each title and the previous / next links from it; the Contents of `README.md` repeat it with a one-line description per page, and `scripts/check.sh` fails when the two lists or the files in `docs/` disagree |
+| `_data/nav.yml` | The reading order of the pages in parts, and per page the PDF it is printed in (`pdf: design`, `summary` or `reference`; none = online only). The layout builds the sidebar (with the PDF tags and their legend), the part shown above each title and the previous / next links from it; the Contents of `README.md` repeat it with a one-line description per page and *(PDF)* on the design PDF's pages, and `scripts/check.sh` fails when the lists, the markers or the files in `docs/` disagree |
 | `_layouts/default.html` | The page: header (with the version and the PDF link), sidebar, the "On this page" list built from the h2 / h3 headings at build time, the page, previous / next |
 | `assets/css/site.css` | The styles, light and dark (the reader's choice is remembered; the system setting is the default), print |
 | `assets/js/site.js` | Progressive enhancements only: the theme toggle, the dark rendering of each picture in dark mode, pictures as figures with their caption and a full-screen view on click |
 
-To add a page: create the Markdown in `docs/`, add it to `_data/nav.yml` and to the Contents of `README.md`, and run
-`scripts/check.sh`. A page is numbered `<part>.<page>` in reading order (`2.3` is the third page of part 2, *Inside a
+To add a page: create the Markdown in `docs/`, add it to `_data/nav.yml` (with `pdf: design` if it belongs in the
+design PDF) and to the Contents of `README.md` (with *(PDF)* in that case), and run `scripts/check.sh`. A page is numbered `<part>.<page>` in reading order (`2.3` is the third page of part 2, *Inside a
 cluster*) and the pictures carry the number of the page that shows them, so a new page in the middle of a part
 renumbers the pages after it - the files, the headings, the pictures and every "section N.M" in the text, here and in
 the implementation repositories, which cite sections by number too.
@@ -46,8 +49,9 @@ the implementation repositories, which cite sections by number too.
 
 Every publish also builds **three PDFs**: the summary (`/onek8s-design-summary.pdf`, page 1.0 alone), the design
 (`/onek8s-design.pdf`, sections 1.1 to 5.2, linked as *PDF* at the top of every page) and the reference
-(`/onek8s-design-reference.pdf`, part 8; the intro, the summary, parts 6 and 7 are left out of the design PDF for
-now, the `--only` ranges in the workflows). `scripts/pdf.py` takes the built pages in the order of `_data/nav.yml`
+(`/onek8s-design-reference.pdf`, part 8). Which PDF a page is in is its `pdf:` key in `_data/nav.yml` - the sidebar
+and the Contents of `README.md` mark the design PDF's pages; the intro and parts 6 and 7 have no key and stay online
+only for now - and `scripts/pdf.py --only <name>` selects by it. `scripts/pdf.py` takes the built pages in the order of `_data/nav.yml`
 (`--only` selects parts, part ranges or pages), puts a cover with the version and the commit and a contents list in
 front, and prints them with headless Chrome, each page on a new sheet, with an outline from the headings. Links between
 pages and to their headings stay links inside the PDF (each id is prefixed with its page, so the same heading on two
@@ -77,5 +81,5 @@ are not committed. The PDF from the built site:
 
 ```sh
 bundle exec jekyll build
-scripts/pdf.py _site _site/onek8s-design.pdf --only 1-6   # CHROME=<path> when Chrome / Chromium is not on PATH
+scripts/pdf.py _site _site/onek8s-design.pdf --only design   # CHROME=<path> when Chrome / Chromium is not on PATH
 ```
