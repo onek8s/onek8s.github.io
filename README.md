@@ -43,9 +43,10 @@ files ([D61](docs/7.2-decisions.md#decision-matrix), [section 5.1](docs/5.1-egre
 | An operator | Parts 3 (the fleet) and 6 (operations) |
 
 The design is three PDFs, rebuilt with every publish: the [summary](https://onek8s.github.io/onek8s-design-summary.pdf),
-the [design](https://onek8s.github.io/onek8s-design.pdf) (parts 1 to 5) and the
-[reference](https://onek8s.github.io/onek8s-design-reference.pdf) (part 8, the release notes). Parts 6 and 7 -
-operations, delivery and decisions - are left out of the PDFs until their review; the site shows them.
+the [design](https://onek8s.github.io/onek8s-design.pdf) (sections 1.1 to 5.2) and the
+[reference](https://onek8s.github.io/onek8s-design-reference.pdf) (part 8, the release notes). This introduction, the
+summary (its own PDF) and parts 6 and 7 - operations, delivery and decisions - are left out of the design PDF until
+their review; the site shows them.
 
 ## Contents
 
@@ -59,8 +60,8 @@ The sections are numbered by part and page in reading order; the decision log ci
   every cluster shares.
 - [1.2 Requirements](docs/1.2-requirements.md) – the requirements and how the design meets each; the vocabulary: exposures,
   isolation zones, cells, the Key Vaults.
-- [1.3 Open standards and portability](docs/1.3-open-standards-and-portability.md) – what is the same in every cloud,
-  the thin cloud-specific layer, the PaaS services every cloud offers, sovereignty and exit.
+- [1.3 Open standards and portability](docs/1.3-open-standards-and-portability.md) – what is the same in every cloud
+  and the thin cloud-specific layer.
 - [1.4 The application contract](docs/1.4-application-contract.md) – what an application team has to do, and nothing
   more: manifests, traffic, identity and secrets, the labels, observability, onboarding.
 
@@ -131,6 +132,8 @@ The sections are numbered by part and page in reading order; the decision log ci
   the design's default until then.
 - [7.4 Outlook: 2030 and the options kept open](docs/7.4-outlook-2030-and-the-options-kept-open.md) – what is meant
   to hold, what is changing, the rule that keeps the platform simple, and every feature left out today with its way in.
+- [7.5 Other clouds, sovereignty and exit](docs/7.5-other-clouds-and-exit.md) – the PaaS services every cloud offers,
+  what replaces the Azure specifics elsewhere, DORA and NIS2, the dependencies outside the tenant, adding a cloud.
 
 **8. Appendix**
 
