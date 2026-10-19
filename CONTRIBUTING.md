@@ -54,10 +54,13 @@ pages is two targets); links to pages outside a PDF's selection, and to files th
 GitHub for what the site does not publish. The build fails when a link inside a PDF has no target. The `Check` workflow
 builds the same PDFs on every pull request and attaches them to the run as `onek8s-design-pdf`.
 
-The design is versioned from v1.0 on. A pull request that changes the design adds the next minor version to
+The design is v2.0 since 2026-10-19 (the user's decision; v1.0 to v1.15 are in the `v1.15` tag). A pull request that
+changes the design adds the next minor version (v2.1, v2.2, ...; a major version only when a human says so) to
 [8.1 Release notes](docs/8.1-release-notes.md) - one short sentence per change with the link to the pull request - and sets
 the same `version` in `_config.yml`; `scripts/check.sh` fails when the two disagree or an entry has no pull request
-link.
+link. Every version is tagged `v<version>` in every repository at its default branch's head by aks-terraform's
+`Design tags` workflow (`design-tags.yml`, hourly and by hand), so merge the code pull requests of a round before the
+design's.
 
 ## Building the site locally
 
