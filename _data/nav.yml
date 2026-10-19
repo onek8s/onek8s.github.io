@@ -82,14 +82,11 @@
 - number: 5
   part: Egress control
   pages:
-    - path: docs/5.1-advanced-networking-and-fqdn-egress.md
+    - path: docs/5.1-egress-control-and-the-company-firewall.md
       number: "5.1"
-      title: Advanced networking and FQDN egress
-    - path: docs/5.2-egress-control-options-and-the-company-firewall.md
+      title: Egress control and the company firewall
+    - path: docs/5.2-traffic-flow-documentation.md
       number: "5.2"
-      title: Egress control options
-    - path: docs/5.3-traffic-flow-documentation.md
-      number: "5.3"
       title: Traffic flow documentation
 
 - number: 6

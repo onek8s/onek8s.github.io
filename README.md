@@ -27,9 +27,8 @@ that change the platform only through pull requests within human-defined guardra
 
 The platform is **private by default**: no PaaS service, vault, registry or API server takes public network access,
 and the only public endpoints are the external zones' gateways ([D60](docs/7.2-decisions.md#decision-matrix)). Egress
-leaves through the exposure's **hub Azure Firewall**, which decides per isolation zone by default; per-application
-egress (Cilium FQDN policies with ACNS) is a per-cell choice
-([D61](docs/7.2-decisions.md#decision-matrix), [section 5.2](docs/5.2-egress-control-options-and-the-company-firewall.md)).
+leaves through the exposure's **hub Azure Firewall**, which decides per isolation zone from per-application rule
+files ([D61](docs/7.2-decisions.md#decision-matrix), [section 5.1](docs/5.1-egress-control-and-the-company-firewall.md)).
 
 > Status: **draft** for review ([release notes](docs/8.1-release-notes.md)). Country codes `fi` / `se` and
 > all IP ranges are examples.
@@ -44,8 +43,9 @@ egress (Cilium FQDN policies with ACNS) is a per-cell choice
 | An operator | Parts 3 (the fleet) and 6 (operations) |
 
 The design is three PDFs, rebuilt with every publish: the [summary](https://onek8s.github.io/onek8s-design-summary.pdf),
-the [design](https://onek8s.github.io/onek8s-design.pdf) (parts 1 to 6) and the
-[reference](https://onek8s.github.io/onek8s-design-reference.pdf) (parts 7 and 8: decisions, outlook, appendix).
+the [design](https://onek8s.github.io/onek8s-design.pdf) (parts 1 to 5) and the
+[reference](https://onek8s.github.io/onek8s-design-reference.pdf) (part 8, the release notes). Parts 6 and 7 -
+operations, delivery and decisions - are left out of the PDFs until their review; the site shows them.
 
 ## Contents
 
@@ -106,12 +106,10 @@ The sections are numbered by part and page in reading order; the decision log ci
 
 **5. Egress control**
 
-- [5.1 Advanced networking: eBPF host routing and FQDN egress](docs/5.1-advanced-networking-and-fqdn-egress.md) –
-  Advanced Container Networking Services with per-application Cilium FQDN egress policies.
-- [5.2 Egress control options and the company firewall](docs/5.2-egress-control-options-and-the-company-firewall.md)
-  – Cilium or the hub firewall: the default (the hub Firewall, without ACNS), ACNS per cell, and working with a
+- [5.1 Egress control and the company firewall](docs/5.1-egress-control-and-the-company-firewall.md)
+  – the hub Firewall decides from per-application rule files; why not Cilium's FQDN policies; working with a
   firewall another team owns.
-- [5.3 Traffic flow documentation: a picture per application and per zone](docs/5.3-traffic-flow-documentation.md)
+- [5.2 Traffic flow documentation: a picture per application and per zone](docs/5.2-traffic-flow-documentation.md)
   – generated from Git, every destination with its status.
 
 **6. Operations**

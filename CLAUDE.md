@@ -29,21 +29,22 @@ freshness, links and anchors, navigation, release notes).
   has no pull request link. Every version is tagged `v<version>` in every repository by aks-terraform's `Design tags`
   workflow (`design-tags.yml`, hourly and by hand): merge a round's code pull requests before the design's.
 - **Three PDFs**: the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone - every line links a
-  section, it adds nothing of its own), the design (`/onek8s-design.pdf`, parts 1-6) and the reference
-  (`/onek8s-design-reference.pdf`, parts 7-8), built by `scripts/pdf.py --only` from `_site` in nav order with
+  section, it adds nothing of its own), the design (`/onek8s-design.pdf`, parts 1-5) and the reference
+  (`/onek8s-design-reference.pdf`, part 8; parts 6 and 7 are left out of the PDFs until the user asks for their
+  review - the `--only` ranges in `check.yml` and `pages.yml`), built by `scripts/pdf.py --only` from `_site` in nav order with
   headless Chrome (Pages workflow; `Check` attaches them as `onek8s-design-pdf`). The build fails on a link without a
   target, so keep links relative (`x.md#heading`) and fix every link to a renamed heading.
 - **History**: v1 - the options v2.0 removed, the two-cell lab and the section renumberings of 2026-10-17 that older
   commits and issues cite - is in the `v1.15` tag; v2.0 still carried the lab's state and the implementation's names,
-  removed in v2.1.
+  removed in v2.1; v2.2 removed ACNS and its page 5.1 (5.2 and 5.3 became 5.1 and 5.2), kept in the `v2.1` tag.
 
 ## The design in v2.0
 
 One cell network: Azure CNI Pod Subnet with dynamic IP allocation and Cilium (D74) - nodes and internal load
 balancers in `/24` slots of `address_space` (slot 0 the system pool, a slot per zone index), pods in
 `pod_address_space`, a `/16` of 100.64.0.0/10 with a `/20` per slot. The hub Firewall (one per exposure, D53) sees the
-pods' own addresses and decides egress per application rule file; ACNS (Cilium FQDN policies, eBPF host routing) is
-optional per cell, Hubble off in dev (D56, D61). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
+pods' own addresses and decides egress per application rule file in every cell; ACNS (FQDN filtering, Hubble, eBPF
+host routing) is not used, each part an option in 7.4 with a measured trigger (D61, D80). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
 nodes are classic node pools with the cluster autoscaler - `<zone>`, `<zone>spot`, `<zone>arm`, `<zone>armspot`, from
 zero, the priority expander putting spot first; GPUs a `<zone>gpu` pool on request (D42); node auto provisioning only
 when it supports the pod subnet (7.4 watch list). No AKS Automatic (D79). Private API servers over Private Link (D58,

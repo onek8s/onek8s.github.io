@@ -45,8 +45,9 @@ the implementation repositories, which cite sections by number too.
 ## The PDF and the release notes
 
 Every publish also builds **three PDFs**: the summary (`/onek8s-design-summary.pdf`, page 1.0 alone), the design
-(`/onek8s-design.pdf`, parts 1 to 6, linked as *PDF* at the top of every page) and the reference
-(`/onek8s-design-reference.pdf`, parts 7 and 8). `scripts/pdf.py` takes the built pages in the order of `_data/nav.yml`
+(`/onek8s-design.pdf`, parts 1 to 5, linked as *PDF* at the top of every page) and the reference
+(`/onek8s-design-reference.pdf`, part 8; parts 6 and 7 are left out of the PDFs for now, the `--only` ranges in the
+workflows). `scripts/pdf.py` takes the built pages in the order of `_data/nav.yml`
 (`--only` selects parts, part ranges or pages), puts a cover with the version and the commit and a contents list in
 front, and prints them with headless Chrome, each page on a new sheet, with an outline from the headings. Links between
 pages and to their headings stay links inside the PDF (each id is prefixed with its page, so the same heading on two

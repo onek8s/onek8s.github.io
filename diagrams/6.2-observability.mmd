@@ -7,7 +7,7 @@ flowchart LR
         subgraph NODE["Zone node (every node, every zone)"]
             direction TB
             app["Application pod<br/>stdout JSON logs · /metrics<br/>OpenTelemetry SDK"]
-            an["alloy-node (DaemonSet)<br/>own node only: pod logs, kubelet/cAdvisor,<br/>PodMonitors, Hubble flows + metrics,<br/>OTLP :4317/:4318 (internalTrafficPolicy Local)<br/>redaction · write-ahead log"]
+            an["alloy-node (DaemonSet)<br/>own node only: pod logs, kubelet/cAdvisor,<br/>PodMonitors, Cilium metrics,<br/>OTLP :4317/:4318 (internalTrafficPolicy Local)<br/>redaction · write-ahead log"]
         end
         ac["alloy-cluster (system pool)<br/>kube-state-metrics, events, API server,<br/>CoreDNS, zone gateways, Flux, ESO"]
         tok["grafana-&lt;env&gt;-write token<br/>ExternalSecret ← kv-&lt;env&gt;-platform<br/>(platform ESO controller)"]
