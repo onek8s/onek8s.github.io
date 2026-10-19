@@ -185,6 +185,10 @@ td > :last-child, th > :last-child { margin-bottom: 0; }
 .sidebar .num { flex: none; width: 1.9rem; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 .sidebar li.current > a { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .sidebar li.current .num { color: var(--accent); }
+.sidebar .pdf-tag { flex: none; align-self: center; margin-left: auto; padding: 0 0.3rem; border: 1px solid var(--accent); border-radius: 4px; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.04em; line-height: 1.5; color: var(--accent); background: var(--accent-soft); }
+.sidebar .pdf-tag.own { border-color: var(--border); color: var(--muted); background: transparent; }
+.sidebar .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; margin: 0 0.6rem; font-size: 0.72rem; line-height: 1.5; color: var(--muted); }
+.sidebar .legend .pdf-tag { margin-left: 0; }
 
 .content { grid-area: main; min-width: 0; max-width: var(--content-w); width: 100%; padding: 2rem 2.5rem 4rem; }
 .content > main > h1:first-child { margin-top: 0.25rem; }

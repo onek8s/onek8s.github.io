@@ -1,43 +1,43 @@
-%% OneK8s: one platform, every cloud. Everything above the line is the same in every cloud - applications, their
-%% manifests, the platform's Flux configuration and the open protocols they speak. Only the thin adapter layer and the
-%% cloud-specific IaC repository change when a cloud is added.
+%% OneK8s: one platform, one application contract for every cloud, built on Azure (AKS) first. Everything above the
+%% line is the same in every cloud - the applications, their manifests, the platform's Flux configuration and the open
+%% protocols they speak. Only the thin adapter layer and the cloud's infrastructure as code change when a cloud is added.
 flowchart TB
     subgraph PORT["The same in every cloud"]
         direction TB
-        app["Applications<br/>OCI images · 12-factor config · no cloud SDKs"]
+        app["Applications<br/>OCI images · 12-factor configuration · no cloud SDKs"]
         team["Team repositories<br/>Deployment · Service · HTTPRoute · ExternalSecret"]
-        plat["Platform repository<br/>Flux · Helm · Gateway API · External Secrets ·<br/>external-dns · NetworkPolicy · Pod Security · OpenTelemetry"]
-        proto["Open protocols to data services<br/>PostgreSQL · MySQL · Redis / Valkey · MongoDB wire ·<br/>Kafka · AMQP · S3 API · OIDC"]
+        plat["Platform repository<br/>Flux · Helm · Gateway API · External Secrets · external-dns<br/>NetworkPolicy · Pod Security · OpenTelemetry"]
+        proto["Open protocols to the data services<br/>PostgreSQL · MySQL · Redis / Valkey · MongoDB wire<br/>Kafka · AMQP · S3 API · OIDC"]
+        app --> team --> plat
+        app --> proto
     end
 
-    subgraph ADAPT["Cloud adapters - a few values per cluster (cluster-settings)"]
-        direction LR
+    subgraph ADAPT["Cloud adapters: a few values per cluster (cluster-settings)"]
         a_id["Workload identity<br/>OIDC federation"]
         a_sec["Secret store<br/>ESO provider"]
         a_dns["DNS<br/>external-dns provider"]
         a_lb["Gateway and load balancer<br/>GatewayClass · Service annotations"]
         a_disk["Storage<br/>CSI StorageClass"]
         a_reg["Registry<br/>OCI"]
-        a_id ~~~ a_sec ~~~ a_dns ~~~ a_lb ~~~ a_disk ~~~ a_reg
+        a_id ~~~ a_lb
+        a_sec ~~~ a_disk
+        a_dns ~~~ a_reg
     end
 
-    subgraph CLOUDS["Cloud-specific IaC - one repository per cloud"]
-        direction LR
-        az["Azure (today)<br/>azure-landing-zone · aks-terraform<br/>AKS · App Routing · Key Vault · Azure DNS · ACR ·<br/>Azure Database for PostgreSQL · Azure Managed Redis ·<br/>Cosmos DB for MongoDB"]
-        aws["AWS (target)<br/>landing zone · eks-terraform<br/>EKS · Secrets Manager · Route 53 · ECR ·<br/>RDS / Aurora PostgreSQL · ElastiCache · DocumentDB"]
-        gcp["Google Cloud (target)<br/>landing zone · gke-terraform<br/>GKE · Secret Manager · Cloud DNS · Artifact Registry ·<br/>Cloud SQL / AlloyDB · Memorystore · Firestore (MongoDB compat.)"]
+    subgraph CLOUDS["Cloud-specific infrastructure as code, one per cloud"]
+        az["Azure (AKS), the first cloud<br/>AKS · Traefik · Key Vault · Azure DNS · ACR<br/>Azure Database for PostgreSQL · Azure Managed Redis<br/>Cosmos DB for MongoDB"]
+        other["A second cloud (section 7.5)<br/>the same contract on its managed Kubernetes,<br/>secret store, DNS, registry and data services"]
     end
 
-    app --> team --> plat
-    app --> proto
-    plat --> ADAPT
+    PORT --> ADAPT
     ADAPT --> az
-    ADAPT --> aws
-    ADAPT --> gcp
+    ADAPT -.-> other
 
     classDef port fill:#e8f5e9,stroke:#2e7d32,color:#000
     classDef adapt fill:#fff3e0,stroke:#ef6c00,color:#000
     classDef cloud fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef opt fill:#f5f5f5,stroke:#9e9e9e,color:#000,stroke-dasharray: 5 5
     class app,team,plat,proto port
     class a_id,a_sec,a_dns,a_lb,a_disk,a_reg adapt
-    class az,aws,gcp cloud
+    class az cloud
+    class other opt

@@ -1,33 +1,30 @@
 %% Fourteen to twenty clusters: three environments x two exposures (internal, external - a subscription each, D52)
 %% x (two or three zonal stateless clusters + an optional stateful cluster), plus one platform Key Vault per
-%% environment and exposure that holds the certificates of that exposure's zones.
+%% environment and exposure that holds the certificates and keys of that exposure's clusters.
 %% Every environment and exposure is built from the same IaC modules and the same Flux configuration, only
 %% parameters differ.
 flowchart TB
-    src["Same source for every environment and exposure<br/>IaC modules (Terraform): one per cluster type, env + exposure + AZ as parameters<br/>Fleet Git repository: Flux configuration of everything inside the clusters"]
+    src["The same source for every environment and exposure<br/>IaC modules: one per cluster type, environment + exposure + AZ as parameters<br/>platform repository: the Flux configuration of everything inside the clusters"]
 
     subgraph DEV["dev"]
-        direction LR
         devi["<b>sub-aks-dev-int</b> · zones int-fi, int-se<br/>aks-dev-int-sl-az1 · AZ 1 · minor N-1<br/>aks-dev-int-sl-az2 · AZ 2 · minor N-2<br/>(aks-dev-int-sf · optional · LTS)<br/>kv-dev-int-platform"]
         deve["<b>sub-aks-dev-ext</b> · zones ext-fi, ext-se<br/>aks-dev-ext-sl-az1 · AZ 1 · minor N-1<br/>aks-dev-ext-sl-az2 · AZ 2 · minor N-2<br/>(aks-dev-ext-sf · optional · LTS)<br/>kv-dev-ext-platform"]
-        devi ~~~ deve
     end
     subgraph ACC["acc"]
-        direction LR
         acci["<b>sub-aks-acc-int</b> · zones int-fi, int-se<br/>aks-acc-int-sl-az1 · AZ 1 · minor N-1<br/>aks-acc-int-sl-az2 · AZ 2 · minor N-2<br/>(aks-acc-int-sf · optional · LTS)<br/>kv-acc-int-platform"]
         acce["<b>sub-aks-acc-ext</b> · zones ext-fi, ext-se<br/>aks-acc-ext-sl-az1 · AZ 1 · minor N-1<br/>aks-acc-ext-sl-az2 · AZ 2 · minor N-2<br/>(aks-acc-ext-sf · optional · LTS)<br/>kv-acc-ext-platform"]
-        acci ~~~ acce
     end
     subgraph PRD["prd"]
-        direction LR
         prdi["<b>sub-aks-prd-int</b> · zones int-fi, int-se<br/>aks-prd-int-sl-az1 · AZ 1 · minor N-1<br/>aks-prd-int-sl-az2 · AZ 2 · minor N-2<br/>aks-prd-int-sl-az3 · AZ 3 · minor N-2<br/>(aks-prd-int-sf · optional · LTS)<br/>kv-prd-int-platform"]
         prde["<b>sub-aks-prd-ext</b> · zones ext-fi, ext-se<br/>aks-prd-ext-sl-az1 · AZ 1 · minor N-1<br/>aks-prd-ext-sl-az2 · AZ 2 · minor N-2<br/>aks-prd-ext-sl-az3 · AZ 3 · minor N-2<br/>(aks-prd-ext-sf · optional · LTS)<br/>kv-prd-ext-platform"]
-        prdi ~~~ prde
     end
 
-    src -.->|"build (IaC) + deploy<br/>(Flux: stateless · pipeline: stateful)"| DEV
-    DEV ==>|"promote: automated tests passed<br/>(same image digests, same Flux artifact)"| ACC
-    ACC ==>|"promote: acceptance passed<br/>+ change approval"| PRD
+    src -.->|"build (IaC) + deploy<br/>(Flux: stateless · pipeline: stateful)"| devi
+    src -.-> deve
+    devi ==>|"promote: automated tests passed<br/>(same image digests, same commit)"| acci
+    deve ==> acce
+    acci ==>|"promote: acceptance passed<br/>+ change approval"| prdi
+    acce ==> prde
 
     classDef int fill:#e3f2fd,stroke:#1565c0,color:#000
     classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000

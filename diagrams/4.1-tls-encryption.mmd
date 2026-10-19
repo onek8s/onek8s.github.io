@@ -1,63 +1,43 @@
-%% Encryption in transit. Stateless: TLS ends at the zone's gateway (App Routing) (Let's Encrypt certificate for an internal
-%% name), node-to-node traffic is protected by Azure VNet encryption, so apps need no TLS, mTLS or service mesh.
-%% Stateful: no Gateway API and no Ingress at all, the application terminates TLS on its own internal load balancer.
-%% Certificates are issued once per zone and environment by a job per environment into the environment's single platform
-%% Key Vault and shared by all clusters of that environment.
-flowchart LR
-    client(("Client"))
+%% Encryption in transit. Stateless: TLS ends at the zone's gateway (Traefik; HTTP/2 and TLS 1.3 only, a Let's Encrypt
+%% certificate), the gateway speaks h2c to the pods and node-to-node traffic is protected by Azure VNet encryption, so the
+%% applications need no TLS, mTLS or service mesh. Stateful: no Gateway API and no Ingress, the application terminates TLS
+%% on its own internal load balancer. Certificates are issued once per environment and exposure by a renewal job into the
+%% platform Key Vault and shared by every cluster of that exposure.
+flowchart TB
+    client["Clients<br/>external zones: Traffic Manager picks the cell by DNS<br/>internal clients: straight to the gateway"]
 
     subgraph MGMT["Management network"]
-        job["Certificate renewal job of &lt;env&gt;<br/>(managed identity, Officer roles<br/>on kv-&lt;env&gt;-platform only)<br/>DNS-01 · renew 30 days before expiry"]
+        job["Certificate renewal job of the environment<br/>managed identity, Officer roles on the platform vault only<br/>DNS-01 · once a month, one certificate at a time"]
     end
-    le["Let's Encrypt<br/>ACME"]
-    pubdns["Public Azure DNS validation zone<br/>_acme-challenge TXT only"]
-    kv["Platform Key Vault kv-&lt;env&gt;-platform<br/>(once per environment)<br/>cert-ext-fi-wildcard<br/>*.ext-fi.&lt;env&gt;.example.com<br/>+ cert-int-fi-…, cert-*-se-…"]
+    le["Let's Encrypt (ACME, DNS-01)<br/>the _acme-challenge TXT records go into a public validation zone,<br/>nothing else is public"]
+    kv["Platform Key Vault of the exposure<br/>one wildcard certificate per isolation zone,<br/>e.g. *.int-fi.&lt;env&gt;.example.com"]
 
-    subgraph EDGE["Traffic layer"]
-        agw["Traffic Manager (external zones)<br/>DNS only: picks the cell<br/>internal clients connect to the gateway directly"]
-    end
-
-    subgraph SL["Stateless clusters sl-az1/2/3 · Azure CNI Pod Subnet · VNet encryption between nodes"]
-        direction TB
-        tr["Gateway (App Routing, zone ext-fi)<br/>listener HTTPS :443 only<br/>no :80<br/>cert Secret written by ESO"]
-        subgraph N1["node A"]
-            app1["app-a pod<br/>plain HTTP"]
-        end
-        subgraph N2["node B"]
-            app2["app-a pod<br/>plain HTTP"]
-        end
+    subgraph SL["Stateless cell · Azure CNI Pod Subnet · VNet encryption between the nodes"]
+        tr["Zone gateway (Traefik): one HTTPS listener on 443<br/>HTTP/2 and TLS 1.3 only · certificate Secret written by ESO<br/>no port 80: Azure Policy denies HTTP listeners"]
+        app["app-a pods on nodes A and B<br/>h2c (HTTP/2 cleartext), no TLS in the application"]
     end
 
-    subgraph SF["Stateful cluster · Azure CNI (VNet) · no Gateway API, no Ingress"]
-        direction TB
-        ilb["Internal LB Service<br/>snet-ext-fi-ilb"]
-        db["app-x pod<br/>terminates TLS itself<br/>same zone cert as PEM files (ESO Secret)"]
+    subgraph SF["Stateful cluster · no Gateway API, no Ingress"]
+        ilb["Internal load balancer Service, port 443 only"]
+        db["app-x pod terminates TLS itself<br/>the zone certificate as PEM files (ESO Secret)"]
     end
+    paas["Azure PaaS private endpoint<br/>TLS enforced"]
 
-    paas["Azure PaaS<br/>private endpoint<br/>TLS enforced"]
-    plain["Plain HTTP"]:::off
-
-    client -->|"DNS"| agw
-    client -->|"HTTPS, the zone's publicly trusted certificate"| tr
-    tr -->|"HTTP inside the node"| app1
-    tr -->|"HTTP, encrypted on the wire<br/>by VNet encryption"| app2
-    app1 & app2 -->|"TLS via Firewall"| ilb --> db
-    app1 & app2 -->|"TLS via Firewall"| paas
-    job -->|"order / renew"| le
-    job -->|"TXT record"| pubdns
-    job -->|"import certificate"| kv
-    kv -.->|"zone's External Secrets Operator,<br/>RBAC on this certificate only"| tr
-    kv -.->|"zone's External Secrets Operator,<br/>RBAC on this certificate only"| db
-    plain -.-x|"rejected: no listener, no LB port,<br/>Azure Policy denies HTTP listeners"| tr
-
-    linkStyle 14 stroke:#c62828,stroke-width:2px,stroke-dasharray:5 5
+    client -->|"HTTPS"| tr
+    tr -->|"same node:<br/>h2c in the host"| app
+    tr -->|"other node: h2c,<br/>VNet encryption on the wire"| app
+    app -->|"TLS via the hub Firewall"| ilb --> db
+    app -->|"TLS via the hub Firewall"| paas
+    job -->|"order, renew"| le
+    job -->|"imports the certificate"| kv
+    kv -.->|"the zone's ESO,<br/>RBAC on this certificate only"| tr
+    kv -.-> db
 
     classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
     classDef sl fill:#e0f2f1,stroke:#00695c,color:#000
     classDef sf fill:#fce4ec,stroke:#ad1457,color:#000
     classDef paas fill:#eceff1,stroke:#455a64,color:#000
-    classDef off fill:#ffebee,stroke:#c62828,color:#000,stroke-dasharray: 5 5
-    class agw,job hub
-    class tr,app1,app2 sl
+    class client,job hub
+    class tr,app sl
     class ilb,db sf
-    class paas,le,pubdns,kv paas
+    class paas,le,kv paas

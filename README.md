@@ -50,67 +50,69 @@ their review; the site shows them.
 
 ## Contents
 
-The sections are numbered by part and page in reading order; the decision log cites them by number.
+The sections are numbered by part and page in reading order; the decision log cites them by number. The pages
+marked **(PDF)** are the [design PDF](https://onek8s.github.io/onek8s-design.pdf); the summary and the release notes
+are PDFs of their own; the other pages are online only.
 
 **1. Start here**
 
 - [1.0 Summary](docs/1.0-summary.md) – the whole design in a few pages: what it is, the bets, the decisions that
   shape it, the sign-offs, the cost structure.
-- [1.1 Overview](docs/1.1-overview.md) – the hub-and-spoke landing zone with a hub per exposure, and the inner layout
+- [1.1 Overview](docs/1.1-overview.md) (PDF) – the hub-and-spoke landing zone with a hub per exposure, and the inner layout
   every cluster shares.
-- [1.2 Requirements](docs/1.2-requirements.md) – the requirements and how the design meets each; the vocabulary: exposures,
+- [1.2 Requirements](docs/1.2-requirements.md) (PDF) – the requirements and how the design meets each; the vocabulary: exposures,
   isolation zones, cells, the Key Vaults.
-- [1.3 Open standards and portability](docs/1.3-open-standards-and-portability.md) – what is the same in every cloud
+- [1.3 Open standards and portability](docs/1.3-open-standards-and-portability.md) (PDF) – what is the same in every cloud
   and the thin cloud-specific layer.
-- [1.4 The application contract](docs/1.4-application-contract.md) – what an application team has to do, and nothing
+- [1.4 The application contract](docs/1.4-application-contract.md) (PDF) – what an application team has to do, and nothing
   more: manifests, traffic, identity and secrets, the labels, observability, onboarding.
 
 **2. Inside a cluster**
 
-- [2.1 Network layout](docs/2.1-network-layout.md) – an address space and subnets per isolation zone in the cluster's
+- [2.1 Network layout](docs/2.1-network-layout.md) (PDF) – an address space and subnets per isolation zone in the cluster's
   VNet; NSGs and routes through the exposure's firewall.
-- [2.2 Control plane](docs/2.2-control-plane.md) – a private API server in its own subnet, reached only from the
+- [2.2 Control plane](docs/2.2-control-plane.md) (PDF) – a private API server in its own subnet, reached only from the
   management network; no local accounts, no SSH.
-- [2.3 Node pools](docs/2.3-node-pools.md) – classic pools per zone with the cluster autoscaler in the stateless clusters,
+- [2.3 Node pools](docs/2.3-node-pools.md) (PDF) – classic pools per zone with the cluster autoscaler in the stateless clusters,
   fixed pools in the stateful one; arm64, spot and GPUs chosen by the application; pods right-sized in place.
-- [2.4 Allowed and blocked flows](docs/2.4-allowed-and-blocked-flows.md) – the few flows Kubernetes needs between a
+- [2.4 Allowed and blocked flows](docs/2.4-allowed-and-blocked-flows.md) (PDF) – the few flows Kubernetes needs between a
   zone and the platform, and the isolation matrix of what each principal can reach.
-- [2.5 Workload identity first, Key Vault secrets only when needed](docs/2.5-workload-identity-and-secrets.md) –
+- [2.5 Workload identity first, Key Vault secrets only when needed](docs/2.5-workload-identity-and-secrets.md) (PDF) –
   workload identity wherever Entra ID is supported; secrets only through External Secrets Operator, separated per
   application with ABAC.
-- [2.6 Application multi-tenancy inside a zone](docs/2.6-application-multi-tenancy.md) – a namespace per application
+- [2.6 Application multi-tenancy inside a zone](docs/2.6-application-multi-tenancy.md) (PDF) – a namespace per application
   with default-deny policies, Entra ID groups per role, platform viewers, ownership and cost labels.
-- [2.7 Policy enforcement with the Azure Policy add-on](docs/2.7-policy-enforcement.md) – the single policy engine:
+- [2.7 Policy enforcement with the Azure Policy add-on](docs/2.7-policy-enforcement.md) (PDF) – the single policy engine:
   the day-1 rule set, mutations and validations per cluster type.
 
 **3. The fleet**
 
-- [3.1 Cluster types: stateless and stateful](docs/3.1-cluster-types-stateless-and-stateful.md) – where a workload
+- [3.1 Cluster types: stateless and stateful](docs/3.1-cluster-types-stateless-and-stateful.md) (PDF) – where a workload
   runs; internal and external in separate subscriptions; cells with DNS affinity, home cells and migration; the
   address plan; adding a country online.
-- [3.2 Environments (fourteen to twenty clusters)](docs/3.2-environments.md) – dev, acc and prd with two subscriptions
+- [3.2 Environments (fourteen to twenty clusters)](docs/3.2-environments.md) (PDF) – dev, acc and prd with two subscriptions
   each, and the cost and capacity model.
-- [3.3 Keeping clusters in sync: Flux for stateless, pipelines for stateful](docs/3.3-keeping-clusters-in-sync.md) –
+- [3.3 Keeping clusters in sync: Flux for stateless, pipelines for stateful](docs/3.3-keeping-clusters-in-sync.md) (PDF) –
   a platform repository and one per team, every change a pull request, delivered from Git by Flux and by a pipeline.
-- [3.4 Zero-downtime application upgrades](docs/3.4-zero-downtime-application-upgrades.md) – rollout guardrails
+- [3.4 Zero-downtime application upgrades](docs/3.4-zero-downtime-application-upgrades.md) (PDF) – rollout guardrails
   enforced by policy; releases that move through the cells one at a time.
-- [3.5 Zero-downtime cluster upgrades](docs/3.5-zero-downtime-cluster-upgrades.md) – the update policy with two
+- [3.5 Zero-downtime cluster upgrades](docs/3.5-zero-downtime-cluster-upgrades.md) (PDF) – the update policy with two
   speeds, drain-and-upgrade per cell, in-place upgrades of the stateful cluster.
 
 **4. Encryption**
 
-- [4.1 Encryption in transit and TLS](docs/4.1-encryption-in-transit-and-tls.md) – VNet encryption between nodes, an
+- [4.1 Encryption in transit and TLS](docs/4.1-encryption-in-transit-and-tls.md) (PDF) – VNet encryption between nodes, an
   HTTPS-only Gateway API gateway per zone, certificates issued centrally and distributed through the platform Key
   Vault.
-- [4.2 Encryption at rest with customer-managed keys](docs/4.2-encryption-at-rest-and-customer-managed-keys.md) – a
+- [4.2 Encryption at rest with customer-managed keys](docs/4.2-encryption-at-rest-and-customer-managed-keys.md) (PDF) – a
   key per control plane, per cluster's node disks and per zone's persistent volumes; rotation and revocation.
 
 **5. Egress control**
 
-- [5.1 Egress control and the company firewall](docs/5.1-egress-control-and-the-company-firewall.md)
+- [5.1 Egress control and the company firewall](docs/5.1-egress-control-and-the-company-firewall.md) (PDF)
   – the hub Firewall decides from per-application rule files; why not Cilium's FQDN policies; working with a
   firewall another team owns.
-- [5.2 Traffic flow documentation: a picture per application and per zone](docs/5.2-traffic-flow-documentation.md)
+- [5.2 Traffic flow documentation: a picture per application and per zone](docs/5.2-traffic-flow-documentation.md) (PDF)
   – generated from Git, every destination with its status.
 
 **6. Operations**

@@ -1,41 +1,30 @@
-%% Control plane access: private API server in a dedicated delegated subnet, reachable only via Private Link from management network
-flowchart LR
+%% The control plane: a private cluster over Private Link (D58), its endpoint in the cell's system subnet, no public
+%% endpoint, no local accounts, no SSH; reached only from the management network through the hub Firewall.
+flowchart TB
     subgraph MGMT["Management VNet"]
-        admins["Platform admins<br/>(Entra ID + PIM)"]
-        ci["CI/CD agents"]
-        pe["Private Endpoint"]
+        direction LR
+        admins["Platform admins<br/>Entra ID + PIM"]
+        ci["Pipelines, agents"]
     end
-
-    subgraph HUB["Hub VNet"]
-        dns["Private DNS zone<br/>privatelink.&lt;region&gt;.azmk8s.io"]
+    hub["Hub Firewall<br/>rule for the API server · DNS proxy<br/>resolves the API FQDN to its private address"]
+    subgraph CELL["Cell VNet"]
+        direction TB
+        pe["API server private endpoint<br/>snet-system (Private Link)"]
+        sys["System pool · CriticalAddonsOnly<br/>CoreDNS, metrics-server, Cilium operator,<br/>the zone gateways and ESOs"]
+        nodes["Zone nodes · kubelet"]
     end
-
-    subgraph SPOKE["AKS spoke VNet"]
-        subgraph CP["Control plane zone"]
-            pls["Private Link Service"]
-            ilb["API server ILB VIP<br/>snet-apiserver /28"]
-            sys["System node pool<br/>(CriticalAddonsOnly taint)"]
-            pkv["Platform Key Vault kv-&lt;env&gt;-platform<br/>key-&lt;cluster&gt;-kms<br/>(private endpoint created by AKS)"]
-        end
-        subgraph WL["Workload zones (int-fi, int-se, ext-fi, ext-se)"]
-            nodes["Zone nodes<br/>(node pools)<br/>kubelet"]
-        end
-    end
-
-    admins -->|"kubectl over Bastion / jump host"| pe
-    ci --> pe
-    pe -.->|"resolves via"| dns
-    pe -->|"TCP 443"| pls --> ilb
-    nodes -->|"TCP 443, 4443<br/>(direct to ILB IP, no DNS)"| ilb
-    ilb -->|"TCP 10250 kubelet<br/>+ webhook / aggregated API pods"| sys
-    ilb -->|"TCP 10250 kubelet<br/>(logs, exec, port-forward)"| nodes
-    ilb -->|"TCP 443 KMS<br/>etcd encryption (CMK)"| pkv
-
+    pkv["Platform Key Vault<br/>key-&lt;cluster&gt;-kms<br/>KMS data encryption, trusted service"]
     pub["Public API endpoint"]:::off
-    pub -.-x|"disabled<br/>(private cluster)"| ilb
+
+    admins & ci -->|"kubectl · TCP 443"| hub --> pe
+    sys -->|"TCP 443"| pe
+    nodes -->|"TCP 443"| pe
+    pe -->|"TCP 10250 (tunnel)<br/>logs, exec, port-forward"| nodes
+    pe -->|"TCP 443 · etcd keys"| pkv
+    pub -.-x|"disabled · no local accounts · no SSH"| pe
 
     classDef off fill:#ffebee,stroke:#c62828,color:#000,stroke-dasharray: 5 5
     classDef cp fill:#eceff1,stroke:#455a64,color:#000
     classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
-    class pls,ilb,sys,pkv cp
-    class admins,ci,pe,dns hub
+    class pe,sys,nodes,pkv cp
+    class admins,ci,hub hub

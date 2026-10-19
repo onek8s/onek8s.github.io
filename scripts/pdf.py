@@ -3,8 +3,9 @@
 
 Takes the pages of the built Jekyll site (_site) in the reading order of _data/nav.yml, joins their content into one
 HTML document - a cover with the version, a contents list, then every page on a new sheet - and prints it with
-headless Chrome. With --only the PDF holds a selection: parts (`1-6`, `7`), pages (`1.0`) or `intro` (README.md),
-separated by commas; links to pages outside the selection go to the published site. Links between pages and to their headings become links inside the PDF: every id is prefixed with its
+headless Chrome. With --only the PDF holds a selection: the name of a PDF as the pages' `pdf:` key in nav.yml gives it
+(`design`, `summary`, `reference`), parts (`1-6`, `7`), pages (`1.0`) or `intro` (README.md), separated by commas;
+links to pages outside the selection go to the published site. Links between pages and to their headings become links inside the PDF: every id is prefixed with its
 page's key (s2-1--<id>, intro--<id> for README.md), so the same heading on two pages stays two targets. Links to files
 that are not pages go to the published site, or to GitHub when the site does not publish them (diagrams/, scripts/).
 The build fails when an internal link has no target.
@@ -32,7 +33,7 @@ def config():
 
 
 def nav():
-    """_data/nav.yml as a list of parts with their pages (path, number, title)."""
+    """_data/nav.yml as a list of parts with their pages (path, number, title, pdf)."""
     parts = []
     for line in open('_data/nav.yml', encoding='utf-8'):
         if m := re.match(r'- number: (\d+)', line):
@@ -45,6 +46,8 @@ def nav():
             parts[-1]['pages'][-1]['number'] = m[1]
         elif m := re.match(r'\s+title: (.+)', line):
             parts[-1]['pages'][-1]['title'] = m[1].strip().strip('"')
+        elif m := re.match(r'\s+pdf: (\w+)', line):
+            parts[-1]['pages'][-1]['pdf'] = m[1]
     return parts
 
 
@@ -58,7 +61,8 @@ def key_of(page):
 
 
 def selected(parts, only):
-    """The parts and pages --only names: `intro`, a part number, a range of parts `a-b`, or a page number."""
+    """The parts and pages --only names: a PDF name (the pages' `pdf:` key), `intro`, a part number, a range of parts
+    `a-b`, or a page number."""
     if not only:
         return parts
     wanted = set()
@@ -71,7 +75,7 @@ def selected(parts, only):
     result = []
     for part in parts:
         pages = [p for p in part['pages'] if part['number'] in wanted or p.get('number') in wanted
-                 or (p['path'] == 'README.md' and 'intro' in wanted)]
+                 or p.get('pdf') in wanted or (p['path'] == 'README.md' and 'intro' in wanted)]
         if pages:
             result.append(dict(part, pages=pages))
     return result
@@ -219,7 +223,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('site')
     parser.add_argument('out')
-    parser.add_argument('--only', help='parts, part ranges, page numbers or intro, separated by commas')
+    parser.add_argument('--only', help='a PDF name (design, summary, reference), parts, part ranges, page numbers or '
+                        'intro, separated by commas')
     parser.add_argument('--subtitle', help='what the cover calls this PDF (default: Platform design)')
     args = parser.parse_args()
     sys.exit(main(args.site, args.out, args.only, args.subtitle))

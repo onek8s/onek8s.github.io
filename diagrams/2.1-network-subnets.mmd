@@ -1,51 +1,24 @@
-%% Subnet layout of an AKS spoke VNet, an internal cell as the example (10.100.0.0/16, pods 100.64.0.0/16).
-%% Nodes and load balancers: one address space per cell in sixteen equal slots - slot 0 the system subnet, slots 1-14 the
-%% isolation zones by their index (the same index in every cell of the exposure), slot 15 reserved for the delegated API
-%% server subnet of VNet integration (H14). In a zone's slot the first half is the node subnet and the fifth eighth the
-%% load balancer subnet; the rest is reserve (address plan, section 3.1). Pods (D74): a second address space, a /16 of
-%% 100.64.0.0/10 with a /20 per slot index (snet-system-pods, snet-<zone>-pods). Private endpoints are not in the cells
-%% (snet-shared-pe). Internal and external are separate clusters and subscriptions (D52): an external cell's VNet is the
-%% same layout with ext-fi / ext-se in its slots and public load balancers for its zone gateways. A zone's node and pod
-%% subnets route every other zone's node and pod slot to the hub Firewall (D73), so zone-to-zone traffic is denied and
-%% logged there; the system subnets keep the default route alone.
+%% Subnet layout of a cell's VNet (an internal cell as the example). Nodes and load balancers in sixteen /24 slots of one
+%% address space: slot 0 the system subnet, slots 1-14 the isolation zones by index, slot 15 reserved (H14). Pods in a
+%% second address space, a /20 per slot (D74). Every zone's node and pod subnets route the other zones' slots to the hub
+%% Firewall (D73). Private endpoints sit in the environment's shared network, not in the cell.
 flowchart TB
-    subgraph VNET["Cell VNet vnet-dev-int-stateless-az1 in sub-aks-dev-int – nodes and load balancers in /24 slots of 10.100.0.0/16, pods in /20 slots of 100.64.0.0/16"]
+    rt["Route tables (D73)<br/>system subnets: 0.0.0.0/0 → Firewall<br/>zone subnets: + every other zone's slots → Firewall"]
+    nsg["NSG per subnet · deny-all inbound last<br/>kubelet 10250 from snet-system<br/>443 from Internet / VirtualNetwork · LB probes"]
+    subgraph VNET["Cell VNet · nodes and LBs in /24 slots of 10.100.0.0/16 · pods in /20 slots of 100.64.0.0/16"]
         direction TB
-        subgraph S15["Slot 15 – 10.100.15.0/24"]
-            direction LR
-            api["snet-apiserver (reserved)<br/>delegated to Microsoft.ContainerService<br/>for API Server VNet Integration – not usable on an encrypted VNet with v4+ sizes (H14)"]
-        end
-        subgraph SF["Slots 3 to 14 – 10.100.3.0/24 … 10.100.14.0/24"]
-            direction LR
-            free["free: a new zone takes its index's slot in every cell,<br/>nothing existing is re-addressed"]
-        end
-        subgraph S2["Slot 2 – zone int-se (index 2) – 10.100.2.0/24, pods 100.64.32.0/20"]
-            direction LR
-            ise_n["snet-int-se-nodes<br/>10.100.2.0/25<br/>the zone's node pools"]
-            ise_i["snet-int-se-ilb<br/>10.100.2.128/27<br/>internal LB of the zone gateway"]
-            ise_p["snet-int-se-pods<br/>100.64.32.0/20"]
-        end
-        subgraph S1["Slot 1 – zone int-fi (index 1) – 10.100.1.0/24, pods 100.64.16.0/20"]
-            direction LR
-            ifi_n["snet-int-fi-nodes<br/>10.100.1.0/25"]
-            ifi_i["snet-int-fi-ilb<br/>10.100.1.128/27"]
-            ifi_p["snet-int-fi-pods<br/>100.64.16.0/20"]
-        end
-        subgraph S0["Slot 0 – 10.100.0.0/24, pods 100.64.0.0/20"]
-            direction LR
-            sys["snet-system<br/>10.100.0.0/24<br/>system pool, every zone's gateway pods and ESO,<br/>API server private endpoint (D58)"]
-            sys_p["snet-system-pods<br/>100.64.0.0/20"]
-        end
+        s0["Slot 0 · system<br/>snet-system 10.100.0.0/24: system pool, zone gateways, ESO, API server endpoint<br/>snet-system-pods 100.64.0.0/20"]
+        s1["Slot 1 · zone int-fi<br/>snet-int-fi-nodes 10.100.1.0/25 · snet-int-fi-ilb 10.100.1.128/27<br/>snet-int-fi-pods 100.64.16.0/20"]
+        s2["Slot 2 · zone int-se<br/>snet-int-se-nodes 10.100.2.0/25 · snet-int-se-ilb 10.100.2.128/27<br/>snet-int-se-pods 100.64.32.0/20"]
+        sf["Slots 3 to 14 · free<br/>a new zone takes its index's slot in every cell"]
+        s15["Slot 15 · reserved<br/>snet-apiserver for VNet integration (H14)"]
+        s0 ~~~ s1 ~~~ s2 ~~~ sf ~~~ s15
     end
+    hub["Hub VNet of the exposure · Azure Firewall Premium<br/>DNS proxy · SNAT · IP group per zone (node + pod slots)"]
+    shared["Environment network · snet-shared-pe<br/>private endpoints: Key Vaults, registry, IaC state"]
 
-    shared["Environment network vnet-aks-dev<br/>snet-shared-pe: private endpoints of the zone and platform Key Vaults,<br/>registry (prd), Terraform state, AI models – reached through the hub Firewall"]
-    hub["Hub VNet of the exposure<br/>Azure Firewall Premium (D53)<br/>DNS proxy, SNAT, per-zone IP groups (node + pod slots)"]
-    rt["Route tables, BGP propagation off (D73)<br/>rt-&lt;cell&gt; on the system subnets: 0.0.0.0/0 → hub Firewall<br/>rt-&lt;cell&gt;-&lt;zone&gt; on each zone's node and pod subnets: 0.0.0.0/0 + every other zone's node and pod slot → hub Firewall<br/>(a zone's own slots and slot 0 stay on the VNet's route)"]
-    nsg["NSG per subnet nsg-&lt;cell&gt;-&lt;subnet&gt;<br/>deny-all inbound last; allows only kubelet 10250 from snet-system, Cilium health, DNS,<br/>the cell's pod subnets between node subnets, LB probes, 443 from Internet / VirtualNetwork"]
-    cni["Azure CNI Pod Subnet (dynamic IP allocation) powered by Cilium (D74)<br/>every pod keeps its own address up to the hub Firewall;<br/>classic node pools with the cluster autoscaler"]
     rt -.-> VNET
     nsg -.-> VNET
-    cni -.-> VNET
     VNET <-->|"peering, encrypted"| hub
     hub <--> shared
 
@@ -54,8 +27,8 @@ flowchart TB
     classDef res fill:#f5f5f5,stroke:#9e9e9e,color:#000,stroke-dasharray: 4 4
     classDef note fill:#fffde7,stroke:#9e9d24,color:#000
     classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000
-    class sys,sys_p,api cp
-    class ifi_n,ifi_i,ifi_p,ise_n,ise_i,ise_p int
-    class free res
-    class rt,nsg,cni note
+    class s0 cp
+    class s1,s2 int
+    class sf,s15 res
+    class rt,nsg note
     class shared,hub ext

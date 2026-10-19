@@ -10,7 +10,8 @@ The design, published with GitHub Pages: `docs/<part>.<page>-*.md` (1 Start here
 log, capability matrix and human sign-offs; `7.3-open-questions.md` holds only the questions a person still has to
 weigh (the sign-offs live in 7.2 alone). Diagrams are `diagrams/*.mmd`, rendered to `images/<name>.svg` and
 `<name>.dark.svg` by `scripts/render.sh` (`CONTRIBUTING.md`). The reading order is `_data/nav.yml`, repeated with a
-description per page in `README.md`'s Contents - a new page goes into both. `scripts/check.sh` runs in CI (diagram
+description per page in `README.md`'s Contents - a new page goes into both, with `pdf: design` in `nav.yml` and
+`(PDF)` after its README link when it belongs in the design PDF (the sidebar tags those pages; `check.sh` compares the two). `scripts/check.sh` runs in CI (diagram
 freshness, links and anchors, navigation, release notes).
 
 - **Decisions**: a decision goes into `7.2-decisions.md` with its options and justification. D-numbers are never
@@ -30,10 +31,12 @@ freshness, links and anchors, navigation, release notes).
   workflow (`design-tags.yml`, hourly and by hand): merge a round's code pull requests before the design's.
 - **Three PDFs**: the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone - every line links a
   section, it adds nothing of its own), the design (`/onek8s-design.pdf`, sections 1.1 to 5.2, under 100 pages) and the reference
-  (`/onek8s-design-reference.pdf`, part 8; the intro, the summary, parts 6 and 7 and page 7.5 are left out of the
-  design PDF until the user asks for their review - the `--only` ranges in `check.yml` and `pages.yml`), built by `scripts/pdf.py --only` from `_site` in nav order with
-  headless Chrome (Pages workflow; `Check` attaches them as `onek8s-design-pdf`). The build fails on a link without a
-  target, so keep links relative (`x.md#heading`) and fix every link to a renamed heading.
+  (`/onek8s-design-reference.pdf`, part 8; the intro, parts 6 and 7 and page 7.5 are left out of the design PDF until
+  the user asks for their review). Membership is the `pdf:` key of each page in `_data/nav.yml` (`design`, `summary`,
+  `reference`), which `scripts/pdf.py --only <name>` selects, built from `_site` in nav order with headless Chrome
+  (Pages workflow; `Check` attaches them as `onek8s-design-pdf`). The build fails on a link without a target, so keep
+  links relative (`x.md#heading`) and fix every link to a renamed heading. Pictures in a PDF must stay readable at
+  page width: at most about 1 200 px wide (`CONTRIBUTING.md`).
 - **History**: v1 - the options v2.0 removed, the two-cell lab and the section renumberings of 2026-10-17 that older
   commits and issues cite - is in the `v1.15` tag; v2.0 still carried the lab's state and the implementation's names,
   removed in v2.1; v2.2 removed ACNS and its page 5.1 (5.2 and 5.3 became 5.1 and 5.2), kept in the `v2.1` tag;

@@ -1,44 +1,32 @@
-%% Application multi-tenancy inside one zone of a stateless cluster: namespace per application, default-deny
-%% network policies, AKS App Routing (approuting-istio) as the zone's Gateway API implementation (HTTPS only).
-flowchart LR
-    client(("Clients<br/>(Internet for ext-*,<br/>corporate for int-*)"))
+%% Application multi-tenancy inside one zone of a cell: a namespace per application with default-deny policies, the
+%% zone's Gateway (Traefik, D55) as the only way in, HTTPS only at the edge and h2c to the pods (D69).
+flowchart TB
+    client["Clients<br/>Internet (ext-*) · corporate (int-*)"]
+    http["Plain HTTP :80"]:::off
 
-    subgraph ZONE["Zone ext-fi (node pool extfi)"]
-        direction LR
-        appgw["Traffic Manager picks the cell (ext) /<br/>direct from corporate network (int)<br/>HTTPS only"]
-        subgraph ING["ns: ext-fi-gateway (platform)"]
-            ic["Gateway ext-fi (App Routing)<br/>listener HTTPS :443 only<br/>*.ext-fi.&lt;env&gt;.example.com<br/>(Let's Encrypt, from Key Vault via ESO)"]
-        end
-        subgraph A["ns: ext-fi-app-a"]
-            ra["HTTPRoute app-a"]
+    subgraph ZONE["Zone ext-fi"]
+        direction TB
+        ic["Gateway ext-fi · Traefik · ns ext-fi-gateway<br/>HTTPS :443 only · HTTP/2 · TLS 1.3<br/>*.ext-fi.&lt;env&gt;.example.com"]
+        subgraph A["ns ext-fi-app-a · HTTPRoute on the gateway"]
             a1["frontend"] --> a2["backend"]
         end
-        subgraph B["ns: ext-fi-app-b"]
-            rb["HTTPRoute app-b"]
+        subgraph B["ns ext-fi-app-b · HTTPRoute on the gateway"]
             b1["api"]
         end
     end
+    dns["CoreDNS · kube-system"]
 
-    subgraph SYS["kube-system"]
-        dns["CoreDNS"]
-    end
-
-    http["Plain HTTP :80"]:::off
-
-    client -->|"DNS"| appgw -->|"HTTPS (TLS ends at the zone gateway)"| ic
-    ic -->|"HTTP, allowed by policy"| a1
-    ic -->|"HTTP, allowed by policy"| b1
-    a1 & a2 & b1 -->|"DNS allowed"| dns
+    client -->|"HTTPS"| ic
+    http -.-x|"no listener"| ic
+    ic -->|"h2c"| a1
+    ic -->|"h2c"| b1
     a2 -.-x|"default deny"| b1
     b1 -.-x|"default deny"| a1
-    http -.-x|"no entry point, no LB port"| ic
-    ra -.->|"attaches"| ic
-    rb -.->|"attaches"| ic
-
-    linkStyle 8,9,10 stroke:#c62828,stroke-width:2px,stroke-dasharray:5 5
+    ZONE -->|"DNS"| dns
+    linkStyle 2,5,6 stroke:#c62828,stroke-width:2px,stroke-dasharray:5 5
 
     classDef ext fill:#fff3e0,stroke:#ef6c00,color:#000
     classDef cp fill:#eceff1,stroke:#455a64,color:#000
     classDef off fill:#ffebee,stroke:#c62828,color:#000,stroke-dasharray: 5 5
-    class appgw,ic,a1,a2,b1,ra,rb ext
-    class dns cp
+    class ic,a1,a2,b1 ext
+    class dns,client cp
