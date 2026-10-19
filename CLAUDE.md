@@ -55,6 +55,7 @@ zero, the priority expander putting spot first; GPUs a `<zone>gpu` pool on reque
 when it supports the pod subnet (7.4 watch list). No AKS Automatic (D79). Private API servers over Private Link (D58,
 VNet integration open as H14), no public endpoints (D60), KMS data encryption (D22), Traefik with HTTP/2 and TLS 1.3
 only at the edge and h2c upstream (D69-D71, V29 open), Flux's webhook only in a cell with a public entry point (D78),
-Git refs with one branch per cell (D77); other clouds, sovereignty and exit only on 7.5. The implementation project (7.1) builds and accepts the dev environment in a
+Git refs with one branch per cell (D77); no Microsoft Defender - the company's third-party security tool (D81); in the build tenant every
+Azure Policy assignment denies once it reports no non-compliant resource (D82); purge protection by policy in prd only (D83); other clouds, sovereignty and exit only on 7.5. The implementation project (7.1) builds and accepts the dev environment in a
 separate build tenant, starting with one internal cell behind a firewall VM that enforces the designed Firewall
 Policies (D57); the stateful cluster and backup (6.3) are built with the first approved stateful exception.
