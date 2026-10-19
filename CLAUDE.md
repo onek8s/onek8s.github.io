@@ -36,7 +36,7 @@ freshness, links and anchors, navigation, release notes).
   target, so keep links relative (`x.md#heading`) and fix every link to a renamed heading.
 - **History**: v1 - the options v2.0 removed, the two-cell lab and the section renumberings of 2026-10-17 that older
   commits and issues cite - is in the `v1.15` tag; v2.0 still carried the lab's state and the implementation's names,
-  removed in v2.1 together with ACNS and its page 5.1 (5.2 and 5.3 became 5.1 and 5.2); the `v2.0` tag keeps them.
+  removed in v2.1; v2.2 removed ACNS and its page 5.1 (5.2 and 5.3 became 5.1 and 5.2), kept in the `v2.1` tag.
 
 ## The design in v2.0
 
