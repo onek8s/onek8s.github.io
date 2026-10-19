@@ -180,7 +180,12 @@ main a {{ color: var(--link); }}
 .contents li {{ margin: 0; line-height: 1.45; }}
 .contents ul ul {{ padding-left: 1.5em; margin-bottom: .6em; }}
 .contents .part-title {{ font-weight: 700; }}
-img {{ max-width: 100%; height: auto; }}
+/* A picture fits one page: tall ones (3.1, 3.2, 3.5) scale down to the page's height instead of being split,
+   and a heading never ends a page without the text or picture that follows it. */
+img {{ max-width: 100%; max-height: 225mm; width: auto; height: auto; display: block; margin: 0.8em auto;
+  break-inside: avoid; }}
+h1, h2, h3, h4 {{ break-after: avoid; break-inside: avoid; }}
+figure, pre {{ break-inside: avoid; }}
 table {{ font-size: 8.5pt; }}
 </style></head>
 <body><main>
