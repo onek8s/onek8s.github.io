@@ -15,9 +15,12 @@ freshness, links and anchors, navigation, release notes).
 
 - **Decisions**: a decision goes into `7.2-decisions.md` with its options and justification. D-numbers are never
   renumbered or reused (D75 is retired, D59 and D76 are merged into D61 and D74).
-- **The design follows the implementation** (the user's rule): every page states what runs as "built today" and what
-  the design intends as "target"; when something is built differently, the design changes in the same round. When an
-  implementation decision changes the design, update the affected sections here too.
+- **The environments are built from the design** (the user's rule), never the other way round: the pages describe
+  the design, not the state of a lab or of the code. No "built today" against "target", no repository, file,
+  workflow or variable names of the implementation, no lab cluster names or addresses (example names only, as
+  `aks-prd-int-stateless-az1`); what the implementation still lacks is tracked with the implementation, not here.
+  A finding in an environment that changes the design is a design pull request first. The landing zone is out of
+  scope: refer to Microsoft's documentation instead of explaining it here.
 - **Versions** (the user): the design is **v2.0 since 2026-10-19**. Every pull request that changes the design adds
   the next minor version (v2.1, v2.2, ...; a major version only when a human says so) at the top of
   `docs/8.1-release-notes.md` - `## v2.N - <date>`, one short sentence per change ending in the pull request link
@@ -31,7 +34,8 @@ freshness, links and anchors, navigation, release notes).
   headless Chrome (Pages workflow; `Check` attaches them as `onek8s-design-pdf`). The build fails on a link without a
   target, so keep links relative (`x.md#heading`) and fix every link to a renamed heading.
 - **History**: v1 - the options v2.0 removed, the two-cell lab and the section renumberings of 2026-10-17 that older
-  commits and issues cite - is in the `v1.15` tag.
+  commits and issues cite - is in the `v1.15` tag; v2.0 still carried the lab's state and the implementation's names,
+  removed in v2.1.
 
 ## The design in v2.0
 
@@ -39,17 +43,12 @@ One cell network: Azure CNI Pod Subnet with dynamic IP allocation and Cilium (D7
 balancers in `/24` slots of `address_space` (slot 0 the system pool, a slot per zone index), pods in
 `pod_address_space`, a `/16` of 100.64.0.0/10 with a `/20` per slot. The hub Firewall (one per exposure, D53) sees the
 pods' own addresses and decides egress per application rule file; ACNS (Cilium FQDN policies, eBPF host routing) is
-optional per cell, Hubble off in the lab (D56, D61). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
+optional per cell, Hubble off in dev (D56, D61). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
 nodes are classic node pools with the cluster autoscaler - `<zone>`, `<zone>spot`, `<zone>arm`, `<zone>armspot`, from
-zero, the priority expander putting spot first; GPUs a `<zone>gpu` pool on request (D42, not built); node auto
-provisioning only when it supports the pod subnet (7.4 watch list). No AKS Automatic (D79). Private API servers over
-Private Link (D58, VNet integration open as H14), no public endpoints (D60), Traefik with HTTP/2 and TLS 1.3 only at
-the edge and h2c upstream (D69-D71, V29 open), Flux's webhook only in a cell with a public entry point (D78), Git
-refs with one branch per cell (D77). The dev lab (D57, D79) is one cell, `aks-dev-int-stateless-az3` in
-germanywestcentral (Sweden's `int-se`, 10.100.0.0/16 + pods 100.64.0.0/16) behind labfw in the hub; Finland's
-`int-fi` stays defined but no lab cell runs it; the stateful cluster (pod subnet too) is never deployed. Backup (6.3)
-is left open on purpose: it is built with the stateful cluster.
-
-Known code-side gaps noted in the design: aks-ai-agents `versions.py` steps the slow speed by 30 days and matches
-`sl-az1`/`sf` names (D11 wants 3 weeks and the real cluster names); the upgrade agent edits a tfvars file that does
-not exist; the egress check and `--check` of the traffic flow docs are not wired into any CI.
+zero, the priority expander putting spot first; GPUs a `<zone>gpu` pool on request (D42); node auto provisioning only
+when it supports the pod subnet (7.4 watch list). No AKS Automatic (D79). Private API servers over Private Link (D58,
+VNet integration open as H14), no public endpoints (D60), KMS data encryption (D22), Traefik with HTTP/2 and TLS 1.3
+only at the edge and h2c upstream (D69-D71, V29 open), Flux's webhook only in a cell with a public entry point (D78),
+Git refs with one branch per cell (D77). The implementation project (7.1) builds and accepts the dev environment in a
+separate build tenant, starting with one internal cell behind a firewall VM that enforces the designed Firewall
+Policies (D57); the stateful cluster and backup (6.3) are built with the first approved stateful exception.
