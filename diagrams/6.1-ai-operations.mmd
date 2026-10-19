@@ -44,7 +44,7 @@ flowchart LR
     subgraph RT["Runtime guardrails"]
         direction TB
         clu["Clusters and Azure resources<br/>Azure Policy deny · Azure RBAC ·<br/>cell by cell · SLO gates · budgets"]
-        ctl["In-cluster controllers inside Git bounds<br/>HPA / KEDA · VPA in-place resize · NAP"]
+        ctl["In-cluster controllers inside Git bounds<br/>HPA / KEDA · VPA in-place resize · cluster autoscaler"]
     end
 
     s_mon & s_sec & s_cost & s_rel & s_req --> a_obs

@@ -1,22 +1,21 @@
-%% Example of a generated per-application picture (section 5.3): int-fi-example on the dev lab's overlay cell az2,
-%% regenerated 2026-10-17 after the stats.grafana.org rule moved to the platform rules (azure-landing-zone docs/traffic-flows).
+%% Example of a generated per-application picture (section 5.3): int-se-example on the dev lab's cell az3
+%% (azure-landing-zone docs/traffic-flows).
 flowchart LR
     client["Corporate network and VPN clients"]
-    subgraph CELL["Cell aks-dev-int-stateless-az2 - overlay + hub firewall only: the firewall sees the zone's node addresses (model A)"]
+    subgraph CELL["Cell aks-dev-int-stateless-az3 - pod subnet + hub firewall: the firewall sees the pod's own address"]
         direction LR
-        gw["Gateway int-fi-gateway/int-fi<br/>hello-aks-dev-int-stateless-az2.int-fi.dev.onek8s.lol<br/>hello.int-fi.dev.onek8s.lol"]
-        subgraph NS["namespace int-fi-example - team example"]
+        gw["Gateway int-se-gateway/int-se<br/>hello-aks-dev-int-stateless-az3.int-se.dev.onek8s.lol<br/>hello.int-se.dev.onek8s.lol"]
+        subgraph NS["namespace int-se-example - team example"]
             direction TB
             svc_aks_hello["Service aks-hello"]
             wl_aks_hello["Deployment aks-hello x2<br/>acronek8sdev.azurecr.io/aks-hello:0.5.0"]
         end
         dns["CoreDNS"]
-        eso["ESO int-fi - Key Vault share int-fi-example--*"]
+        eso["ESO int-se - Key Vault share int-se-example--*"]
     end
     fw["Hub firewall<br/>rule collection group dev-int-applications"]
     subgraph OUT["Outside the landing zone"]
         direction TB
-        d_api_ipify_org["api.ipify.org:443"]
         d_api_open_meteo_com["api.open-meteo.com:443"]
     end
     client --> gw
@@ -25,7 +24,6 @@ flowchart LR
     wl_aks_hello --> dns
     eso -.->|"Secrets"| wl_aks_hello
     wl_aks_hello -->|"every flow leaving the cluster"| fw
-    fw -->|"allowed"| d_api_ipify_org
     fw -->|"allowed"| d_api_open_meteo_com
     classDef ns fill:#e3f2fd,stroke:#1565c0,color:#000
     classDef platform fill:#eceff1,stroke:#455a64,color:#000
@@ -38,4 +36,4 @@ flowchart LR
     class gw,dns,eso platform
     class fw fw
     class svc_aks_hello,wl_aks_hello ns
-    class d_api_ipify_org,d_api_open_meteo_com allowed
+    class d_api_open_meteo_com allowed

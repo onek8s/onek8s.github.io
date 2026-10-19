@@ -1,89 +1,55 @@
 # OneK8s design - notes for Claude sessions
 
-The shared working notes for all OneK8s repos (what is deployed, decisions, gotchas) are in
+The shared working notes for all OneK8s repos (what is deployed, how to operate it, gotchas) are in
 `onek8s/aks-terraform/CLAUDE.md`. Read that first.
 
-This repo is the design, published with GitHub Pages (`docs/<part>.<page>-*.md`: `1.2-requirements.md`,
-`7.2-decisions.md` (decision log, capability matrix, human sign-offs), `7.3-open-questions.md` (only the open questions a person
-still has to weigh; the sign-offs live in 7.2 alone); diagrams in `diagrams/`, rendered as described in `CONTRIBUTING.md`; the site's reading order is
-`_data/nav.yml`, repeated with a description per page in `README.md`'s Contents - a new page goes into both). A decision goes into
-`7.2-decisions.md` with its options and justification; `scripts/check.sh` runs in CI (diagram freshness, links, release notes).
+## This repository
 
-**Versions and release notes (the user, 2026-10-18): the design as of #81 is v1.0.** Every pull request that changes the
-design adds the next minor version (v1.1, v1.2, ...; a major version only when a human says so) at the top of
-`docs/8.1-release-notes.md` - `## v1.N - <date>`, then one short sentence per change ending in the link to the pull
-request (`[#NN](https://github.com/onek8s/onek8s.github.io/pull/NN)`) - and sets the same `version:` in `_config.yml`, in
-the same pull request; create the pull request first if its number is not known yet, then add the entry. `check.sh`
-fails when the two disagree or an entry has no pull request link. **The design is three PDFs** - the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone, the page a
-reviewer reads instead of the rest: every line links a section, it adds nothing of its own), the design (`/onek8s-design.pdf`,
-parts 1-6, linked as *PDF* in every page's header) and the reference (`/onek8s-design-reference.pdf`, parts 7-8):
-`scripts/pdf.py --only` builds them from `_site` in `_data/nav.yml` order with headless Chrome in the Pages workflow (and
-on every pull request in `Check`, attached as the `onek8s-design-pdf` artifact); links
-between pages and headings stay links inside the PDF and the build fails when one has no target - keep links as relative
-Markdown links (`x.md#heading`) so they work on the site and in the PDF alike.
-When an implementation decision changes the design, update the affected sections here in the same
-round. Decisions already reflected: Traffic Manager instead of Front Door; public API server as a dev
-lab exception (until D58); zone gateways and ESOs on the system pool so zone nodes scale to zero; spot and
-architecture chosen per application with on-demand fallback; App Routing's Gateway API (`approuting-istio`)
-instead of Traefik; GPU NodePools per zone on request (D42); cost per team from OpenCost in Grafana's k8s-monitoring
-instead of the AKS cost analysis add-on (D46); namespace ownership labels (D47, R25); namespace access by Entra ID groups bound to `view`/`edit`/`admin`, with the matching Key Vault rights on the namespace's secrets (D49); soft multi-tenancy - tenants list no namespaces or secrets, platform viewers list both through a resource-group custom role, same pattern for other PaaS (D50); `edit` writes secrets without reading them (custom Key Vault Secrets Editor role), `admin` keeps Secrets Officer (D51); a hub VNet and Azure Firewall Premium per exposure with no route between them, the management VNet peered to both (D53); IPv4 only, no IPv6 planned (D54); V13 re-opened because the network isolated cluster docs list only the `NodeImage` and `None` OS channels. The Gateway API implementation is a per-cluster flag - App Routing in acc/prd, Traefik in the dev lab because istiod's requests cannot be tuned (Azure/AKS#5939), and the dev cells without the VPA add-on on one 8 GiB system node (D55); a cell that keeps ACNS turns Hubble off (D56; az3 today - az2 runs without ACNS since D61). The dev lab's API servers are private too (D58, Private Link - Azure refuses VNet integration on encrypted networks with v4+ sizes, open as H14 - public FQDN to the private address, runners on labfw's VPN). The dev lab (D57, 2026-10-15) is the internal exposure, Finland only (`int-fi`; Sweden disabled by `isolation_zones.<zone>.enabled = false`), in germanywestcentral (az1 defined but disabled: zone 1 is not available to the lab subscription; az2 is the running overlay cell), routed through labfw in the hub in `firewall`-mode topology (no platform gateway, no Flux webhook, no Traffic Manager). A second dev cell, az3 (D59, Sweden's `int-se`), has no overlay - D59 is NOT decided: both egress models (overlay + the hub firewall per zone in az2, the firewall with pod addresses in az3) are configuration options under test because their feature sets differ (H15): pods in 100.64.0.0/16 keep their addresses to the hub firewall, which decides egress from per-application rules that an AI egress agent proposes from the denied flows; SNAT for everything leaving the landing zone's ranges. No public endpoints (D60, 2026-10-15): vaults, registry, Foundry, Terraform state, Log Analytics (hub Azure Monitor Private Link scope) take no public network access; runners on labfw's VPN; KMS data encryption (preview) reaches the private vault as a trusted service; exceptions are AKS-managed node resources and the ALZ bootstrap state. Proposed default egress model (D61, section 5.2, 2026-10-16): overlay + hub Firewall only, without ACNS (cost) - the overlay half superseded by D76 below, the no-ACNS half holds; per-application granularity via ACNS or pod subnet per cell; a company-owned firewall through a child Firewall Policy under its parent (custom RCG-author role on the child) or pull requests to the firewall team. Container registry tier per environment (D62, 2026-10-16): Premium with a private endpoint in prd only; Basic on its public endpoint (Entra ID only) in dev and acc - aks-terraform `shared/` `container_registry_sku` defaults from the environment. Traffic flow documentation generated from Git (D63, section 5.3, 2026-10-17): a Mermaid page per application and per zone from the per-application firewall rule files + the application's Flux configuration + the zone allow-lists + the cell tfvars, each destination with a status (allowed/named, allowed/unexplained, named/denied, proposed, zone); `aks-agent docs traffic` in aks-ai-agents generates, the documentation agent opens the PR; the pages live in azure-landing-zone `docs/traffic-flows/<spoke>/` (aks-terraform workflow `Traffic flow docs`, by hand). Optional features are added only by the rule of D64 (section 7.4: what holds, what changes by 2030, the options kept open with trigger, path and cost); Dapr is not offered (D65, proposed 2026-10-17: it fails D64 - nothing names it, applications would code to its API; an option kept open in 7.4); the AKS Dapr trial on az3 is off (never installed, removed 2026-10-18). The project keeps the name OneK8s; its promise is the application contract - "One Kubernetes platform, one application contract for every cloud - built on Azure (AKS) first" - with portability as requirement R26, still the last criterion `Port` (D66, 2026-10-17); idle persistent volumes in the stateful cluster found by Kubernetes 1.37's `Unused` condition on every claim (KEP-5541) and a storage agent that proposes, never deletes - the stateful cluster is created on 1.37 or later, the agent is planned in 6.1 and NOT built until the cluster is (D67, proposed 2026-10-18, V25); the 2026 Kubernetes and AKS features reviewed against D64 (D68, proposed 2026-10-18): adopted - `externalIPs` denied by policy, node pool rollback as the stateful cluster's way back, `LocalDNS: Disabled` stated on every AKSNodeClass and the system pool before the first 1.37 cell, identity bindings as the path past 20 federated credentials, the 1.37 checklist V26 (Memory QoS on by default, HPA scale to zero, Gateway API 1.6.1 TCP/UDP routes, immediate reimages on settings changes, KMS versionless only); options in 7.4 - Artifact Streaming, Prepared Image Specification, capacity reservations, automatic PDB management; open questions Q01-Q07 in 7.3 (LocalDNS, workload identity without a mesh, user namespaces, HPA scale to zero vs KEDA, stateful storage, the system pool, the stateful node OS) - a new section "Recently added features not yet adopted" with a decision table, to be re-run per minor; section 7.4 has "The roadmap watch list" (2026-10-18): per signal what it closes, the first rows the previews the trust path stands on (ABAC, KMS data encryption, Image Integrity), then in-core identity, post-quantum cryptography (a "Cryptography" row in "What is changing" and V27, the algorithm inventory), OCI artifacts, workload-aware scheduling, agent sandboxes, Automatic, node OS, IPv6, fleet scale, dated deprecations, and six rows marked *proposal* for work without a release (node lifecycle, ClusterNetworkPolicy, multi-network pods / AKS DRANET, changed block tracking, authorization with conditions, node attestation) that a person reads from the working groups once a quarter - the upgrade agent reads each minor's notes against the rest; R19 and R20 follow D61 (egress per cell). **HTTP/2 upstream from day 1 (D69, proposed 2026-10-18, "HTTP/1.1 must die")**: no HTTP/1.1 between a gateway and a pod - every Service port an HTTPRoute references declares `appProtocol: kubernetes.io/h2c` (policy `h2c-upstream`, to be written in azure-landing-zone, plus a CI check), applications serve h2c on the route port (Kestrel does; busybox httpd of boot-log does not), HTTP/1.1 stays only client-to-edge and for the kubelet's probes until 1.38 (KEP-5999 `protocol: HTTP2`); a WAF must speak HTTP/2 to the gateway (Application Gateway v2 and Front Door do not - H03 criterion); Flux's webhook receiver is the exception; V28 verifies both gateway implementations (aks-hello 0.5.1 reports `protocol` in `/status`). **Extended to the edge the same day (D70, the user): HTTP/2 only everywhere** - Traefik's default TLS options offer ALPN `h2` alone (aks-terraform `gateways/traefik`, a file-provider ConfigMap), clients announcing anything else are refused in the handshake (a client without ALPN still gets HTTP/1.1 - the measured residual, V29); consequences: Traefik is the gateway implementation in EVERY environment until App Routing can refuse HTTP/1.1 (D55 amended), no platform gateway and no Flux webhook anywhere (every cell polls) - **withdrawn by D78 (the user, 2026-10-19)**: V29 showed HTTP/1.1 cannot be refused anyway, so the webhook is back as an option of a cell with a public entry point (aks-terraform `flux_github_webhook` brings the platform gateway; the fleet keeps `platform-gateway/`, `flux-webhook/`; the receiver is the one HTTP/1.1 exception, `h2c-upstream` exempts it before it denies; off in the internal lab), the policy `h2c-upstream` (azure-landing-zone, audit) holds every application Service port to `appProtocol: kubernetes.io/h2c`. **TLS 1.3 only (D71, the user, 2026-10-18)**: the same Traefik ConfigMap states `minVersion: VersionTLS13` (Go 1.25's defaults add the X25519MLKEM768 hybrid key exchange), the stateful cluster's applications terminate TLS 1.3 only (4.1, R9a), and the policy `gateway-tls` (azure-landing-zone, audit) reads the ConfigMap back in every `*-gateway` namespace: ALPN exactly `[h2]`, `minVersion` exactly `VersionTLS13` - the same rule for both gateway implementations, which App Routing cannot meet yet (D55 stays amended). V30 verifies; Traffic Manager's probe TLS version is the open point. **Naming policy (D72, the user, 2026-10-18)**: the landing zone's naming convention is not published (some names are
-global); aks-terraform `modules/conventions` names the platform's resources from a template per resource type over location,
-exposure, environment and `{name}`, defaults = the lab's names (1.2's canonical names), the real policy from outside Git
-(Deploy's `dev` environment secret `NAMING_POLICY`). **Zone-to-zone traffic through the hub Firewall (D73, the user,
-2026-10-18)**: until then `rt-<cell>` (0.0.0.0/0 only) sat on every node subnet and traffic between the slots of a cell took
-the VNet's system route (more specific than /0), so the Firewall never saw it and only NSG + Cilium separated the zones -
-against what R5 and 2.4 claimed; now the system subnet keeps `rt-<cell>` with the default route alone and every zone's
-node subnet has `rt-<cell>-<zone>`: the default route plus a route per other zone slot 1-14 (occupied or free, so a new
-zone changes no table) to the Firewall, never its own slot (a UDR applies to intra-subnet traffic too) nor slot 0 (flows
-①-④ stay direct); the Firewall denies and logs zone-to-zone traffic (a zone-to-zone allow is a change to R5 and needs
-the slots on the system subnet's table too - gateway answers come from the system pool). Limit: the tables route VNet
-addresses, so pod-to-pod between the zones of an overlay cell stays Cilium's alone (Azure's overlay routing domain); a
-node-subnet cell's pods are in the slot and meet the Firewall (H16, with H15). Built in aks-terraform `shared/cells.tf`
-(route table `zone`, naming `route_table/<cell>/<zone>`, root locals grant Network Contributor per zone table),
-applied to the lab 2026-10-18 (traffic verified); V31 verifies the denial. V28 and V30 hold in the lab, V29 fails (Go's ALPN
-fallback, golang/go#46310) - D70 needs a new decision; Kestrel needs an Http2-only port for h2c (aks-hello 0.5.2). **The non-overlay cell is a pod-subnet cell (D74, the user, 2026-10-18; built in az3 the same day)**:
-Azure CNI Pod Subnet with dynamic IP allocation + Cilium, classic node pools per zone x capacity x arch with the cluster
-autoscaler (priority expander spot first - ConfigMap in aks-fluxcd-platform `infrastructure/autoscaler-priority`, min 0,
-pools in cluster IaC) **until NAP supports the pod subnet** (karpenter-provider-azure issue 1351, open, the work on the AKS
-machine API side; the 7.4 watch list row) - node subnet is out as Microsoft's legacy mode (D64). **Two address spaces**
-(the user's layout, amending D74 the same day): `address_space` for nodes and load balancers in /24 slots exactly like an
-overlay cell (az3: 10.100.0.0/16, snet-system 10.100.0.0/24, int-se 10.100.2.0/24, ILB 10.100.2.128/27), and
-`pod_address_space`, a /16 of 100.64.0.0/10 with a /20 per slot index (az3: 100.64.0.0/16; `snet-system-pods`
-100.64.0.0/20, `snet-int-fi-pods` 100.64.16.0/20, `snet-int-se-pods` 100.64.32.0/20 - ~4,000 pods per zone, batches of 16);
-D73's zone table sits on the zone's node and pod subnets and routes every other zone's node and pod slot, the system pod
-subnet takes `rt-<cell>`; zone IP groups list node + pod slots, SNAT ranges add 10.100.0.0/16; the spot mutations also
-tolerate `kubernetes.azure.com/scalesetpriority=spot`. az3's pools `intse`, `intsespot`, `intsearm`, `intsearmspot`
-(Standard_D2alds_v6 / D2pds_v6, ephemeral OS disk), ACNS kept (eBPF host routing, Hubble off); D59 and D61 amended, H16
-reworded, V32 verifies (not run yet), section 2.3 has the pod-subnet cell's table, 2.1 and 3.1 the address plan. section 5.2 has the ACNS/eBPF host routing deep dive and section 4.1 the service-mesh-or-not reasoning. **Zone-specific AKS
-Automatic clusters as option E (D75, the user, 2026-10-18, proposed, nothing built)**: one Automatic cluster per isolation zone,
-exposure and environment instead of cells (section 5.2 "E.", V33, decided with H15 and H16): the zone is the cluster and its spoke
-VNet, overlay + the hub Firewall per zone, Microsoft's managed system pool (not billed), in-place `stable` upgrades inside
-maintenance windows, no VNet encryption (API Server VNet Integration is preconfigured), Standard tier without LTS so stateless
-only; 12 clusters with two countries, 6 more per country; list prices of 2026-10-18 in 5.2 (hosted control plane 0.16 USD/h +
-~0.01 per vCPU-hour); 7.4's Automatic rows and 2.1's "one cluster per zone" note point at it. **Pod subnet is the default cell (D76, the user,
-2026-10-18)**: C in 5.2 - pod subnet + the hub Firewall without ACNS, classic pools until NAP supports the pod subnet - because
-the countries' separation must hold when Cilium does not enforce it and an overlay cell separates the zones' pods by Cilium
-alone (no NSG rule or route reaches overlay addresses); H16 answered, D61 and D74 amended, R9b and R5 follow, 3.1/2.1/2.3/7.4
-updated; V32 gains whether a node-subnet cell can take pod-subnet node pools without a rebuild (then NAP on node subnet is
-the smaller interim; az3 itself was rebuilt); the default cell's layout is D74's two address spaces as the user amended it; **overlay is deprecated** (the user, the same day, on this study: no new overlay cell, back only by a new decision after the security discussion) but the lab keeps BOTH cells - az2 overlay (A) and az3 pod subnet (C) - for further tests and the security discussion (H15), so do not remove az2; E (D75) is unaffected - a cluster per zone needs no pod subnet, and
-the path to E is a rebuild per zone from either mode. **The design was validated against the implementation on 2026-10-17 (pull request #62)**: every page states what
-runs as "built today" and what the design intends as "target"; when something is built that the design describes
-differently, the design follows the implementation (the user's rule). Backup (6.3) is left open on purpose: it is
-built with the stateful cluster, stateless cells are rebuilt in a disaster. Known code-side gaps noted in the design:
-aks-ai-agents `versions.py` steps the slow speed by 30 days and matches `sl-az1`/`sf` names (D11 wants 3 weeks and
-the real cluster names), the upgrade agent edits a tfvars file that does not exist, the egress check and `--check`
-of the traffic flow docs are not wired into any CI.
+The design, published with GitHub Pages: `docs/<part>.<page>-*.md` (1 Start here, 2 Inside a cluster, 3 The fleet,
+4 Encryption, 5 Egress control, 6 Operations, 7 Delivery and decisions, 8 Appendix). `7.2-decisions.md` is the decision
+log, capability matrix and human sign-offs; `7.3-open-questions.md` holds only the questions a person still has to
+weigh (the sign-offs live in 7.2 alone). Diagrams are `diagrams/*.mmd`, rendered to `images/<name>.svg` and
+`<name>.dark.svg` by `scripts/render.sh` (`CONTRIBUTING.md`). The reading order is `_data/nav.yml`, repeated with a
+description per page in `README.md`'s Contents - a new page goes into both. `scripts/check.sh` runs in CI (diagram
+freshness, links and anchors, navigation, release notes).
 
-**Sections were renumbered on 2026-10-17** into reading order (pull request #58). The other repositories were
-updated the same day (aks-terraform #180, azure-landing-zone #83, aks-ai-agents #16, aks-fluxcd-platform #59,
-aks-fluxcd-example #35, aks-hello #13); commits, issues and notes written before that date cite the old numbers.
-Old → new: 1→1, 2→3, 3→4, 4→5,
-5→6, 6→7, 7→8, 8→10, 9→11, 10→12, 11→13, 12→14, 13→15, 14→9, 15→20, 16→17, 17→23, 18→16, 19→21, 20→22, 21→2, 22→18,
-23→19. Pictures carry the number of the section that shows them.
+- **Decisions**: a decision goes into `7.2-decisions.md` with its options and justification. D-numbers are never
+  renumbered or reused (D75 is retired, D59 and D76 are merged into D61 and D74).
+- **The design follows the implementation** (the user's rule): every page states what runs as "built today" and what
+  the design intends as "target"; when something is built differently, the design changes in the same round. When an
+  implementation decision changes the design, update the affected sections here too.
+- **Versions** (the user): the design is **v2.0 since 2026-10-19**. Every pull request that changes the design adds
+  the next minor version (v2.1, v2.2, ...; a major version only when a human says so) at the top of
+  `docs/8.1-release-notes.md` - `## v2.N - <date>`, one short sentence per change ending in the pull request link
+  (`[#NN](https://github.com/onek8s/onek8s.github.io/pull/NN)`) - and sets the same `version:` in `_config.yml`;
+  create the pull request first if its number is not known yet. `check.sh` fails when the two disagree or an entry
+  has no pull request link. Every version is tagged `v<version>` in every repository by aks-terraform's `Design tags`
+  workflow (`design-tags.yml`, hourly and by hand): merge a round's code pull requests before the design's.
+- **Three PDFs**: the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone - every line links a
+  section, it adds nothing of its own), the design (`/onek8s-design.pdf`, parts 1-6) and the reference
+  (`/onek8s-design-reference.pdf`, parts 7-8), built by `scripts/pdf.py --only` from `_site` in nav order with
+  headless Chrome (Pages workflow; `Check` attaches them as `onek8s-design-pdf`). The build fails on a link without a
+  target, so keep links relative (`x.md#heading`) and fix every link to a renamed heading.
+- **History**: v1 - the options v2.0 removed, the two-cell lab and the section renumberings of 2026-10-17 that older
+  commits and issues cite - is in the `v1.15` tag.
 
-**Two-level numbers since 2026-10-17 (pull request #61)**: a page is `<part>.<page>` (1 Start here, 2 Inside a cluster,
-3 The fleet, 4 Encryption, 5 Egress control, 6 Operations, 7 Delivery and decisions, 8 Appendix). From the single
-numbers of #58: 1→1.1, 2→1.3, 3→2.1, 4→2.2, 5→2.3, 6→2.4, 7→2.5, 8→2.6, 9→2.7, 10→3.1, 11→3.2, 12→3.3, 13→3.4,
-14→3.5, 15→4.1, 16→4.2, 17→5.1, 18→5.2, 19→5.3, 20→6.1, 21→6.2, 22→6.3, 23→7.1; requirements 1.2, decisions 7.2,
-open questions 7.3, editing the pictures 8.1 (8.2 until 2026-10-18), release notes 8.2 (8.3 until then); the Wolkwacht
-comparison left the published design for `reviews/wolkwacht-comparison.md` on 2026-10-18.
+## The design in v2.0
+
+One cell network: Azure CNI Pod Subnet with dynamic IP allocation and Cilium (D74) - nodes and internal load
+balancers in `/24` slots of `address_space` (slot 0 the system pool, a slot per zone index), pods in
+`pod_address_space`, a `/16` of 100.64.0.0/10 with a `/20` per slot. The hub Firewall (one per exposure, D53) sees the
+pods' own addresses and decides egress per application rule file; ACNS (Cilium FQDN policies, eBPF host routing) is
+optional per cell, Hubble off in the lab (D56, D61). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
+nodes are classic node pools with the cluster autoscaler - `<zone>`, `<zone>spot`, `<zone>arm`, `<zone>armspot`, from
+zero, the priority expander putting spot first; GPUs a `<zone>gpu` pool on request (D42, not built); node auto
+provisioning only when it supports the pod subnet (7.4 watch list). No AKS Automatic (D79). Private API servers over
+Private Link (D58, VNet integration open as H14), no public endpoints (D60), Traefik with HTTP/2 and TLS 1.3 only at
+the edge and h2c upstream (D69-D71, V29 open), Flux's webhook only in a cell with a public entry point (D78), Git
+refs with one branch per cell (D77). The dev lab (D57, D79) is one cell, `aks-dev-int-stateless-az3` in
+germanywestcentral (Sweden's `int-se`, 10.100.0.0/16 + pods 100.64.0.0/16) behind labfw in the hub; Finland's
+`int-fi` stays defined but no lab cell runs it; the stateful cluster (pod subnet too) is never deployed. Backup (6.3)
+is left open on purpose: it is built with the stateful cluster.
+
+Known code-side gaps noted in the design: aks-ai-agents `versions.py` steps the slow speed by 30 days and matches
+`sl-az1`/`sf` names (D11 wants 3 weeks and the real cluster names); the upgrade agent edits a tfvars file that does
+not exist; the egress check and `--check` of the traffic flow docs are not wired into any CI.

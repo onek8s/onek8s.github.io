@@ -13,8 +13,8 @@ flowchart TB
 
     subgraph FRONT["Frontend network of the exposure's subscription sub-aks-&lt;env&gt;-&lt;int|ext&gt; – stateless clusters, one per availability zone"]
         direction LR
-        sl1["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az1</b><br/>vnet-&lt;env&gt;-&lt;x&gt;-sl-az1 (VNet encryption)<br/>all nodes in AZ 1<br/>the exposure's zones: int-fi, int-se – or ext-fi, ext-se<br/>Azure CNI Overlay · App Routing Gateway API (HTTPS only)<br/>≥ 2 replicas per app · HPA / KEDA<br/>node auto provisioning (NAP)"]
-        sl2["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az2</b><br/>vnet-&lt;env&gt;-&lt;x&gt;-sl-az2 (VNet encryption)<br/>all nodes in AZ 2<br/>identical apps and config<br/>≥ 2 replicas per app · HPA / KEDA<br/>node auto provisioning (NAP)"]
+        sl1["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az1</b><br/>vnet-&lt;env&gt;-&lt;x&gt;-sl-az1 (VNet encryption)<br/>all nodes in AZ 1<br/>the exposure's zones: int-fi, int-se – or ext-fi, ext-se<br/>Azure CNI Pod Subnet · Gateway API (HTTPS only)<br/>≥ 2 replicas per app · HPA / KEDA<br/>cluster autoscaler"]
+        sl2["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az2</b><br/>vnet-&lt;env&gt;-&lt;x&gt;-sl-az2 (VNet encryption)<br/>all nodes in AZ 2<br/>identical apps and config<br/>≥ 2 replicas per app · HPA / KEDA<br/>cluster autoscaler"]
         sl3["<b>aks-&lt;env&gt;-&lt;x&gt;-sl-az3</b> (optional)<br/>vnet-&lt;env&gt;-&lt;x&gt;-sl-az3<br/>all nodes in AZ 3"]
         sl1 ~~~ sl2 ~~~ sl3
     end
