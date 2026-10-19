@@ -17,7 +17,7 @@ flowchart LR
         agw["Traffic Manager (external zones)<br/>DNS only: picks the cell<br/>internal clients connect to the gateway directly"]
     end
 
-    subgraph SL["Stateless clusters sl-az1/2/3 · Azure CNI Overlay · VNet encryption between nodes"]
+    subgraph SL["Stateless clusters sl-az1/2/3 · Azure CNI Pod Subnet · VNet encryption between nodes"]
         direction TB
         tr["Gateway (App Routing, zone ext-fi)<br/>listener HTTPS :443 only<br/>no :80<br/>cert Secret written by ESO"]
         subgraph N1["node A"]

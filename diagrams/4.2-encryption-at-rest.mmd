@@ -16,7 +16,7 @@ flowchart TB
         direction TB
         slapi["Control plane · etcd Secrets<br/>KMS, private key vault<br/>(API Server VNet Integration)"]
         sldes["des-&lt;env&gt;-sl-az&lt;N&gt;<br/>cluster-wide, set at creation"]
-        slnodes["system pool + all NAP nodes<br/>ephemeral OS disks<br/>encryption at host"]
+        slnodes["system pool + all zone nodes<br/>ephemeral OS disks<br/>encryption at host"]
     end
 
     subgraph SF["Stateful cluster sf"]
@@ -35,7 +35,7 @@ flowchart TB
     ksfdisk -->|"Crypto Service Encryption User"| sfdes --> sfnodes
     kpv -->|"one key per zone"| zdes --> sc --> pv
 
-    note["Not possible in AKS: a disk key per node pool or per AKSNodeClass<br/>→ one OS-disk key per cluster, application data separated per zone<br/>Rotation: new key version every 12 months, no expiry dates<br/>KMS: pipeline updates key version + re-writes Secrets, dev → acc → prd"]
+    note["Not possible in AKS: a disk key per node pool<br/>→ one OS-disk key per cluster, application data separated per zone<br/>Rotation: new key version every 12 months, no expiry dates<br/>KMS: pipeline updates key version + re-writes Secrets, dev → acc → prd"]
 
     classDef cp fill:#eceff1,stroke:#455a64,color:#000
     classDef sl fill:#e0f2f1,stroke:#00695c,color:#000
