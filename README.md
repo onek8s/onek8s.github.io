@@ -49,12 +49,12 @@ the [design](https://onek8s.github.io/onek8s-design.pdf) (parts 1 to 6) and the
 
 ## Contents
 
-The sections are numbered by part and page in reading order; the decision log and the implementation repositories cite them by number.
+The sections are numbered by part and page in reading order; the decision log cites them by number.
 
 **1. Start here**
 
 - [1.0 Summary](docs/1.0-summary.md) – the whole design in a few pages: what it is, the bets, the decisions that
-  shape it, built today against target, the sign-offs, the cost structure.
+  shape it, the sign-offs, the cost structure.
 - [1.1 Overview](docs/1.1-overview.md) – the hub-and-spoke landing zone with a hub per exposure, and the inner layout
   every cluster shares.
 - [1.2 Requirements](docs/1.2-requirements.md) – the requirements and how the design meets each; the vocabulary: exposures,
@@ -126,8 +126,7 @@ The sections are numbered by part and page in reading order; the decision log an
 **7. Delivery and decisions**
 
 - [7.1 Implementation project and acceptance testing](docs/7.1-implementation-project-and-acceptance-testing.md) – a
-  separate build tenant, the phases and the backlog, the acceptance tests, security reviews and the connection
-  readiness gate.
+  separate build tenant, the phases, the acceptance tests, security reviews and the connection readiness gate.
 - [7.2 Decisions](docs/7.2-decisions.md) – the decision log with options and justification, the Azure capability and
   verification matrix, and the human sign-offs still needed.
 - [7.3 Open questions](docs/7.3-open-questions.md) – the recently added features a person still has to weigh, each with
@@ -140,5 +139,5 @@ The sections are numbered by part and page in reading order; the decision log an
 - [8.1 Release notes](docs/8.1-release-notes.md) – the design's versions from v1.0 on, one sentence and the pull request
   per change.
 
-The implementation lives in the other repositories of the [onek8s](https://github.com/onek8s) organisation. How to edit the pictures, the site, the PDFs and the release notes is in [CONTRIBUTING.md](https://github.com/onek8s/onek8s.github.io/blob/main/CONTRIBUTING.md); reviews of the design against outside sources are kept in [`reviews/`](https://github.com/onek8s/onek8s.github.io/tree/main/reviews) on GitHub and are not part of the
+The environments are built from this design; the implementation lives in the other repositories of the [onek8s](https://github.com/onek8s) organisation. How to edit the pictures, the site, the PDFs and the release notes is in [CONTRIBUTING.md](https://github.com/onek8s/onek8s.github.io/blob/main/CONTRIBUTING.md); reviews of the design against outside sources are kept in [`reviews/`](https://github.com/onek8s/onek8s.github.io/tree/main/reviews) on GitHub and are not part of the
 published design.

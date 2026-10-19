@@ -1,4 +1,4 @@
-%% Subnet layout of an AKS spoke VNet, here the dev lab's internal cell az3 (10.100.0.0/16, pods 100.64.0.0/16).
+%% Subnet layout of an AKS spoke VNet, an internal cell as the example (10.100.0.0/16, pods 100.64.0.0/16).
 %% Nodes and load balancers: one address space per cell in sixteen equal slots - slot 0 the system subnet, slots 1-14 the
 %% isolation zones by their index (the same index in every cell of the exposure), slot 15 reserved for the delegated API
 %% server subnet of VNet integration (H14). In a zone's slot the first half is the node subnet and the fifth eighth the
@@ -9,7 +9,7 @@
 %% subnets route every other zone's node and pod slot to the hub Firewall (D73), so zone-to-zone traffic is denied and
 %% logged there; the system subnets keep the default route alone.
 flowchart TB
-    subgraph VNET["Cell VNet vnet-dev-int-stateless-az3 in sub-aks-dev-int – nodes and load balancers in /24 slots of 10.100.0.0/16, pods in /20 slots of 100.64.0.0/16"]
+    subgraph VNET["Cell VNet vnet-dev-int-stateless-az1 in sub-aks-dev-int – nodes and load balancers in /24 slots of 10.100.0.0/16, pods in /20 slots of 100.64.0.0/16"]
         direction TB
         subgraph S15["Slot 15 – 10.100.15.0/24"]
             direction LR
@@ -25,7 +25,7 @@ flowchart TB
             ise_i["snet-int-se-ilb<br/>10.100.2.128/27<br/>internal LB of the zone gateway"]
             ise_p["snet-int-se-pods<br/>100.64.32.0/20"]
         end
-        subgraph S1["Slot 1 – zone int-fi (index 1, not run in the lab) – 10.100.1.0/24, pods 100.64.16.0/20"]
+        subgraph S1["Slot 1 – zone int-fi (index 1) – 10.100.1.0/24, pods 100.64.16.0/20"]
             direction LR
             ifi_n["snet-int-fi-nodes<br/>10.100.1.0/25"]
             ifi_i["snet-int-fi-ilb<br/>10.100.1.128/27"]
@@ -39,7 +39,7 @@ flowchart TB
     end
 
     shared["Environment network vnet-aks-dev<br/>snet-shared-pe: private endpoints of the zone and platform Key Vaults,<br/>registry (prd), Terraform state, AI models – reached through the hub Firewall"]
-    hub["Hub VNet of the exposure<br/>Azure Firewall Premium (labfw in the dev lab)<br/>DNS proxy, SNAT, per-zone IP groups (node + pod slots)"]
+    hub["Hub VNet of the exposure<br/>Azure Firewall Premium (D53)<br/>DNS proxy, SNAT, per-zone IP groups (node + pod slots)"]
     rt["Route tables, BGP propagation off (D73)<br/>rt-&lt;cell&gt; on the system subnets: 0.0.0.0/0 → hub Firewall<br/>rt-&lt;cell&gt;-&lt;zone&gt; on each zone's node and pod subnets: 0.0.0.0/0 + every other zone's node and pod slot → hub Firewall<br/>(a zone's own slots and slot 0 stay on the VNet's route)"]
     nsg["NSG per subnet nsg-&lt;cell&gt;-&lt;subnet&gt;<br/>deny-all inbound last; allows only kubelet 10250 from snet-system, Cilium health, DNS,<br/>the cell's pod subnets between node subnets, LB probes, 443 from Internet / VirtualNetwork"]
     cni["Azure CNI Pod Subnet (dynamic IP allocation) powered by Cilium (D74)<br/>every pod keeps its own address up to the hub Firewall;<br/>classic node pools with the cluster autoscaler"]

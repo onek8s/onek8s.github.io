@@ -1,30 +1,30 @@
-%% Example of a generated per-application picture (section 5.3): int-se-example on the dev lab's cell az3
-%% (azure-landing-zone docs/traffic-flows).
+%% Example of a generated per-application picture (section 5.3): int-se-orders in an internal dev cell where the hub
+%% Firewall decides egress (D61). Names and addresses are examples.
 flowchart LR
-    client["Corporate network and VPN clients"]
-    subgraph CELL["Cell aks-dev-int-stateless-az3 - pod subnet + hub firewall: the firewall sees the pod's own address"]
+    client["Corporate network"]
+    subgraph CELL["Cell aks-dev-int-stateless-az1 - pod subnet + hub Firewall: the Firewall sees the pod's own address"]
         direction LR
-        gw["Gateway int-se-gateway/int-se<br/>hello-aks-dev-int-stateless-az3.int-se.dev.onek8s.lol<br/>hello.int-se.dev.onek8s.lol"]
-        subgraph NS["namespace int-se-example - team example"]
+        gw["Gateway int-se-gateway/int-se<br/>orders-aks-dev-int-stateless-az1.int-se.dev.example.com<br/>orders.int-se.dev.example.com"]
+        subgraph NS["namespace int-se-orders - team orders"]
             direction TB
-            svc_aks_hello["Service aks-hello"]
-            wl_aks_hello["Deployment aks-hello x2<br/>acronek8sdev.azurecr.io/aks-hello:0.5.0"]
+            svc_orders["Service orders"]
+            wl_orders["Deployment orders x2<br/>acrdevint.azurecr.io/orders@sha256:…"]
         end
         dns["CoreDNS"]
-        eso["ESO int-se - Key Vault share int-se-example--*"]
+        eso["ESO int-se - Key Vault share int-se-orders--*"]
     end
-    fw["Hub firewall<br/>rule collection group dev-int-applications"]
+    fw["Hub Firewall<br/>rule collection group dev-int-applications"]
     subgraph OUT["Outside the landing zone"]
         direction TB
-        d_api_open_meteo_com["api.open-meteo.com:443"]
+        d_api_partner_example["api.partner.example:443"]
     end
     client --> gw
-    gw --> svc_aks_hello
-    svc_aks_hello --> wl_aks_hello
-    wl_aks_hello --> dns
-    eso -.->|"Secrets"| wl_aks_hello
-    wl_aks_hello -->|"every flow leaving the cluster"| fw
-    fw -->|"allowed"| d_api_open_meteo_com
+    gw --> svc_orders
+    svc_orders --> wl_orders
+    wl_orders --> dns
+    eso -.->|"Secrets"| wl_orders
+    wl_orders -->|"every flow leaving the cluster"| fw
+    fw -->|"allowed"| d_api_partner_example
     classDef ns fill:#e3f2fd,stroke:#1565c0,color:#000
     classDef platform fill:#eceff1,stroke:#455a64,color:#000
     classDef fw fill:#ede7f6,stroke:#5e35b1,color:#000
@@ -35,5 +35,5 @@ flowchart LR
     classDef zone fill:#e0f2f1,stroke:#00695c,color:#000
     class gw,dns,eso platform
     class fw fw
-    class svc_aks_hello,wl_aks_hello ns
-    class d_api_open_meteo_com allowed
+    class svc_orders,wl_orders ns
+    class d_api_partner_example allowed
