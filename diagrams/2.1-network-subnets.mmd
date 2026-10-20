@@ -1,10 +1,9 @@
 %% Subnet layout of a cell's VNet (an internal cell as the example). Nodes and load balancers in sixteen /24 slots of one
 %% address space: slot 0 the system subnet, slots 1-14 the isolation zones by index, slot 15 reserved (H14). Pods in a
-%% second address space, a /20 per slot (D74). Every zone's node and pod subnets route the cell's address spaces to the hub
-%% Firewall, their own and the system pool's slots excepted (D73). Private endpoints sit in the environment's shared
-%% network, not in the cell.
+%% second address space, a /20 per slot (D74). Every node and pod subnet routes the cell's address spaces to the hub
+%% Firewall, its own slot excepted (D73). Private endpoints sit in the environment's shared network, not in the cell.
 flowchart TB
-    rt["Route tables (D73)<br/>system subnets: 0.0.0.0/0 → Firewall<br/>zone subnets: + both address spaces → Firewall, own and system slots → VNet"]
+    rt["Route tables (D73), every node and pod subnet<br/>0.0.0.0/0 + both address spaces → Firewall<br/>own slot → VNet (a zone's own LB → Firewall)"]
     nsg["NSG per subnet · deny-all inbound last<br/>kubelet 10250 from snet-system<br/>443 from Internet / VirtualNetwork · LB probes"]
     subgraph VNET["Cell VNet · nodes and LBs in /24 slots of 10.100.0.0/16 · pods in /20 slots of 100.64.0.0/16"]
         direction TB
