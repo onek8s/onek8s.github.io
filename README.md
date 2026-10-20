@@ -1,8 +1,7 @@
 # OneK8s
 
-**One Kubernetes platform, one application contract for every cloud – built on Azure (AKS) first.** The name comes
-from the one ring that rules them all: one platform whose applications run in any public cloud **without changes to
-the applications or to how they are deployed** (R26). Applications,
+**One Kubernetes platform, one application contract for every cloud – built on Azure (AKS) first.** One platform whose applications run in any public cloud **without changes to
+the applications or to how they are deployed** ([R26](requirements/0.2-requirements.md#r26)). Applications,
 their manifests and the platform's in-cluster configuration use only open standards – Kubernetes, OCI, Flux, the
 Gateway API, External Secrets, OIDC workload identity – and data lives in PaaS services that every major cloud offers
 with the same protocol (PostgreSQL, MySQL, Redis / Valkey, MongoDB, Kafka). Only the landing zone and the cluster
@@ -63,7 +62,7 @@ page names the requirements it serves under its title.
 
 - [0.1 How we work: requirements-driven collaboration](requirements/0.1-how-we-work.md) (requirements PDF) – humans own
   the requirements and acceptance criteria, AI owns the design and the code; how a change flows and who approves it.
-- [0.2 Requirements](requirements/0.2-requirements.md) (requirements PDF) – every requirement R1 to R26 and the
+- [0.2 Requirements](requirements/0.2-requirements.md) (requirements PDF) – every requirement [R1](requirements/0.2-requirements.md#r1) to [R26](requirements/0.2-requirements.md#r26) and the
   acceptance criteria that prove it.
 - [0.3 Acceptance criteria](requirements/0.3-acceptance-criteria.md) (requirements PDF) – the acceptance tests in dev:
   requirement and isolation tests, CIS benchmark, performance, high availability, upgrades, recovery, operations.

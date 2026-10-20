@@ -24,7 +24,7 @@ The requirements and the design, published with GitHub Pages, in two folders wit
   the D/V/H/Q rows no requirement names, ...). Numbering gaps stay (no renumbering). No published page links into it.
 
 **The design holds only what serves a requirement** (the user, v4.0): every design page names the requirements of 0.2
-it serves on the line under its first heading (`**Requirements:** [R5](../requirements/0.2-requirements.md), ...`;
+it serves on the line under its first heading (`**Requirements:** [R5](../requirements/0.2-requirements.md#r5), ...`; every link to a requirement names its row;
 8.1 says `none`). Content no requirement names goes to `archive/`, not `design/`; propose the requirement to a human
 instead.
 

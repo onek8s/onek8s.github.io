@@ -11,7 +11,7 @@
 #  4. the newest version in design/8.1-release-notes.md is the version in _config.yml, and every entry links a pull
 #     request;
 #  5. every design page names the requirements it serves on the line under its first heading
-#     (`**Requirements:** [R5](../requirements/0.2-requirements.md), ...`), each one a requirement of
+#     (`**Requirements:** [R5](../requirements/0.2-requirements.md#r5), ...`), each one a requirement of
 #     requirements/0.2-requirements.md - the release notes say `**Requirements:** none` instead;
 #  6. no published page (README.md, requirements/, design/) links into archive/, which keeps what no requirement names
 #     outside the site and the PDFs.
@@ -67,6 +67,7 @@ for path in files:
                 h = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', h)
                 s = re.sub(r'[^\w\- ]', '', h.lower()).strip().replace(' ', '-')
                 slugs.add(s)
+            slugs |= set(re.findall(r'\bid="([^"]+)"', other))  # explicit anchors, e.g. a requirement's table row
             if anchor not in slugs:
                 print(f'  ANCHOR   {path}: {target}'); bad += 1
 sys.exit(1 if bad else 0)
@@ -158,7 +159,7 @@ echo "Requirements: every design page names the requirements of 0.2 it serves"
 python3 -I - <<'PY' || status=1
 import os, re, sys
 bad = 0
-known = set(re.findall(r'^\| (R\d+[a-z]?) \|', open('requirements/0.2-requirements.md', encoding='utf-8').read(), re.M))
+known = set(re.findall(r'^\| <a id="r\d+[a-z]?"></a>(R\d+[a-z]?) \|', open('requirements/0.2-requirements.md', encoding='utf-8').read(), re.M))
 for f in sorted(os.listdir('design')):
     if not f.endswith('.md'):
         continue
@@ -174,9 +175,12 @@ for f in sorted(os.listdir('design')):
         print(f'  REQS     {path}: no "**Requirements:** ..." line under the first heading'); bad += 1
         continue
     named = re.findall(r'\[(R\d+[a-z]?)\]\(\.\./requirements/0\.2-requirements\.md(?:#[^)]*)?\)', line)
+    for r, anchor in re.findall(r'\[(R\d+[a-z]?)\]\(\.\./requirements/0\.2-requirements\.md(#[^)]*)?\)', line):
+        if anchor != '#' + r.lower():
+            print(f'  REQS     {path}: [{r}] must link its row, ../requirements/0.2-requirements.md#{r.lower()}'); bad += 1
     rest = re.sub(r'\[(R\d+[a-z]?)\]\(\.\./requirements/0\.2-requirements\.md(?:#[^)]*)?\)', '', line[len('**Requirements:** '):])
     if not named or re.search(r'[^,.\s]', rest):
-        print(f'  REQS     {path}: the requirements line must list linked R-numbers only: [R5](../requirements/0.2-requirements.md), ...')
+        print(f'  REQS     {path}: the requirements line must list linked R-numbers only: [R5](../requirements/0.2-requirements.md#r5), ...')
         bad += 1
     for r in named:
         if r not in known:
