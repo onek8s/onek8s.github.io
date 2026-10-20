@@ -19,6 +19,12 @@ repeat the requirements):
   acceptance criteria. `1.2-how-the-design-meets-the-requirements.md` maps each requirement to the design (and holds
   the vocabulary). The design states what is chosen: it keeps no decision log, capability or verification matrix,
   human sign-offs or open questions.
+- `examples/lab/` (since v4.3, the user) - the **lab examples**, owned by neither side: generated from Git by the
+  documentation agent (aks-ai-agents `aks-agent docs lab`, aks-terraform's manual `Lab examples` workflow, which opens a
+  pull request for a human to merge), an index and one page per isolation zone with a section per test application.
+  They describe what Git deploys to the lab, so the rule against lab state in the design does not apply to them; they are
+  in neither PDF, CODEOWNERS names no owner for them, and no page of `requirements/` or `design/` links to them
+  (`check.sh`). Never edit them by hand, and the agent's updates add no release note.
 - `archive/` (since v4.0, the user) - what no requirement names, kept as Markdown outside the site and the PDFs: the
   whole pages 7.1 (implementation project), 7.2 (the old decision log: D-numbers, capability matrix V, sign-offs H),
   7.3 (open questions Q), 7.4 (outlook, options kept open, watch list) and 7.5 (other clouds, exit;
