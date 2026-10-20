@@ -10,6 +10,10 @@
 # (.github/workflows/approvals.yml, scripts/approvals.py) does: it reads this file from the pull request's base and
 # passes once every owner of a changed file is the author or has approved the latest changes to their files.
 # The last matching line wins, as on GitHub.
+#
+# The lab examples (examples/lab/) are the documentation agent's: generated from Git by onek8s/aks-ai-agents
+# (`aks-agent docs lab`, aks-terraform's Lab examples workflow), not the requirements or the design, in neither PDF.
+# Their line names no owner, so a pull request that changes only them needs no approval; the human merges it.
 
 *               @olljanat-ai
 
@@ -21,3 +25,4 @@
 /README.md      @olljanat
 /diagrams/how-we-work.mmd  @olljanat
 /images/how-we-work.*      @olljanat
+/examples/lab/
