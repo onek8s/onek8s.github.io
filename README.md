@@ -22,6 +22,6 @@ side's approval, and an approval is kept across later pushes that do not touch t
 |---|---|
 | Someone who sets or changes a requirement | [0.2 Requirements](requirements/0.2-requirements.md) and [0.3 Acceptance criteria](requirements/0.3-acceptance-criteria.md) |
 | A reviewer or sponsor | [1.0 Summary](design/1.0-summary.md), then [1.2](design/1.2-how-the-design-meets-the-requirements.md) for how the design meets each requirement |
-| The security team | Parts 2 (inside a cluster), 4 (encryption) and 5 (egress control) |
+| The security team | [Part 2 Inside a cluster](design/2.1-network-layout.md), [4 Encryption](design/4.1-encryption-in-transit-and-tls.md) and [5 Egress control](design/5.1-egress-control-and-the-company-firewall.md), then [2.4](design/2.4-allowed-and-blocked-flows.md)'s isolation matrix |
 | An application team | [1.4 The application contract](design/1.4-application-contract.md) |
-| An operator | Parts 3 (the fleet) and 6 (operations) |
+| An operator | [Part 3 The fleet](design/3.1-cluster-types-stateless-and-stateful.md) and [6 Operations](design/6.1-ai-driven-day-2-operations.md) |
