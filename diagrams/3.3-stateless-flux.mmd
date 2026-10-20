@@ -1,0 +1,34 @@
+%% Stateless clusters: every change is a pull request whose merge GitHub signs. Once the environment's stateful stage
+%% has completed, the release pipeline moves one cell's branch at a time while that cell is drained; Flux in the cell
+%% polls its branch, verifies the signature and reconciles; the health gate decides between the next cell and rolling back.
+flowchart TB
+    pr["Pull request<br/>CI validates, policy tests"]
+    main["main in Git (GitHub)<br/>merged commits, signed by GitHub"]
+    sfdone["Stateful stage of the<br/>environment completed"]
+    rel["Release pipeline<br/>drains one cell,<br/>moves its branch"]
+    br["The cell's branch in Git<br/>&lt;env&gt;-sl-az1, -az2, -az3"]
+    flux["Flux in the cell<br/>polls its branch, verifies<br/>the signature, reconciles"]
+    gate["Health gate<br/>Kustomizations Ready<br/>per-cell tests · SLOs"]
+    next["Cell back in traffic<br/>after soak: next cell"]
+    back["Branch moved back<br/>stop and alert"]
+
+    pr -->|"merge"| main
+    main --> sfdone
+    sfdone --> rel
+    rel -->|"fast-forward"| br
+    br -.->|"poll"| flux
+    flux --> gate
+    gate -->|"healthy"| next
+    gate -->|"not healthy"| back
+    next -.->|"az2, then az3"| rel
+
+    classDef note fill:#fffde7,stroke:#9e9d24,color:#000
+    classDef sl fill:#e0f2f1,stroke:#00695c,color:#000
+    classDef sf fill:#fce4ec,stroke:#ad1457,color:#000
+    classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef off fill:#ffebee,stroke:#c62828,color:#000
+    class pr,main,br,gate note
+    class flux,next sl
+    class sfdone sf
+    class rel hub
+    class back off
