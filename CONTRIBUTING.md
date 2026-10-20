@@ -51,7 +51,9 @@ this file, `CLAUDE.md`, `archive/`, `reviews/`, `diagrams/` and `scripts/` are e
 `**Requirements:** [R5](../requirements/0.2-requirements.md#r5), [R20](../requirements/0.2-requirements.md#r20).` - and
 the release notes say `**Requirements:** none - ...`. What no requirement names does not go into `design/`: it is
 kept in `archive/` (since v4.0), outside the site and the PDFs, and no published page links to it; it comes back
-only when a human adds the requirement that names it. `scripts/check.sh` fails on a page without the line, an
+only when a human adds the requirement that names it. The design states what is chosen, with a short reason only where
+it explains how a requirement is met: it keeps no decision log, decision numbers, sign-offs or open questions (the old
+decision log and open questions, pages 7.2 and 7.3, are in `archive/` for history). `scripts/check.sh` fails on a page without the line, an
 R-number that 0.2 does not have, or a link into `archive/`.
 
 | File | Holds |

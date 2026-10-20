@@ -25,9 +25,9 @@ the AKS-native **Azure Policy add-on** (Gatekeeper managed by AKS), and day-2 op
 that change the platform only through pull requests within human-defined guardrails.
 
 The platform is **private by default**: no PaaS service, vault, registry or API server takes public network access,
-and the only public endpoints are the external zones' gateways ([D60](design/7.2-decisions.md#decision-matrix)). Egress
+and the only public endpoints are the external zones' gateways. Egress
 leaves through the exposure's **hub Azure Firewall**, which decides per isolation zone from per-application rule
-files ([D61](design/7.2-decisions.md#decision-matrix), [section 5.1](design/5.1-egress-control-and-the-company-firewall.md)).
+files ([section 5.1](design/5.1-egress-control-and-the-company-firewall.md)).
 
 > Status: **draft** for review ([release notes](design/8.1-release-notes.md)). Country codes `fi` / `se` and
 > all IP ranges are examples.
@@ -42,7 +42,7 @@ and the infrastructure as code built from it: every change there needs the AI's 
 | You are | Read |
 |---|---|
 | Someone who sets or changes a requirement | [0.1 How we work](requirements/0.1-how-we-work.md), then [0.2 Requirements](requirements/0.2-requirements.md) and [0.3 Acceptance criteria](requirements/0.3-acceptance-criteria.md) (also a [PDF](https://onek8s.github.io/onek8s-requirements.pdf)) |
-| A reviewer or sponsor who has to decide or sign off | [1.0 Summary](design/1.0-summary.md) (the first pages of the [design PDF](https://onek8s.github.io/onek8s-design.pdf)), then the [sign-offs](design/7.2-decisions.md#human-sign-offs-still-needed) |
+| A reviewer or sponsor | [1.0 Summary](design/1.0-summary.md) (the first pages of the [design PDF](https://onek8s.github.io/onek8s-design.pdf)), then [1.2](design/1.2-how-the-design-meets-the-requirements.md) for how the design meets each requirement |
 | The security team | Parts 2 (inside a cluster), 4 (encryption) and 5 (egress control), then [2.4](design/2.4-allowed-and-blocked-flows.md)'s isolation matrix and the [acceptance criteria](requirements/0.3-acceptance-criteria.md) that prove them |
 | An application team | [1.4 The application contract](design/1.4-application-contract.md), then [1.3](design/1.3-open-standards-and-portability.md) for why it is portable |
 | An operator | Parts 3 (the fleet) and 6 (operations) |

@@ -13,13 +13,14 @@ The requirements and the design, published with GitHub Pages, in two folders wit
   7.1). AI may propose a change; every change needs a human's approval (`olljanat`). Never change a requirement or a
   criterion to fit the design: propose it in its own pull request for a human.
 - `design/<part>.<page>-*.md`, parts 1 to 8 (1 Start here, 2 Inside a cluster, 3 The fleet, 4 Encryption, 5 Egress
-  control, 6 Operations, 7 Decisions, 8 Appendix) - **owned by AI**, like the infrastructure as code in
-  the implementation repositories; a human's change gets the AI's review (`olljanat-ai`) against the requirements and
+  control, 6 Operations, 8 Appendix; part 7 has no page since the decision log left) - **owned by AI**, like the
+  infrastructure as code in the implementation repositories; a human's change gets the AI's review (`olljanat-ai`) against the requirements and
   acceptance criteria. `1.2-how-the-design-meets-the-requirements.md` maps each requirement to the design (and holds
-  the vocabulary); `7.2-decisions.md` is the decision log, capability matrix and human sign-offs;
-  `7.3-open-questions.md` holds only the questions a person still has to weigh (the sign-offs live in 7.2 alone).
+  the vocabulary). The design states what is chosen: it keeps no decision log, capability or verification matrix,
+  human sign-offs or open questions.
 - `archive/` (since v4.0, the user) - what no requirement names, kept as Markdown outside the site and the PDFs: the
-  whole pages 7.1 (implementation project), 7.4 (outlook, options kept open, watch list) and 7.5 (other clouds, exit;
+  whole pages 7.1 (implementation project), 7.2 (the old decision log: D-numbers, capability matrix V, sign-offs H),
+  7.3 (open questions Q), 7.4 (outlook, options kept open, watch list) and 7.5 (other clouds, exit;
   its data services moved to 1.3), and `<page>-<slug>-sections.md` with the sections moved out of a page (GPUs of 2.3,
   the D/V/H/Q rows no requirement names, ...). Numbering gaps stay (no renumbering). No published page links into it.
 
@@ -40,9 +41,11 @@ heading and nav share the page number). The header has two buttons, Requirements
 separates part 0 (owned by humans) from parts 1 to 8 (owned by AI). `scripts/check.sh` runs in CI (diagram freshness, links and anchors, navigation, release notes, each design
 page's requirements line, no link into `archive/`).
 
-- **Decisions**: a decision goes into `7.2-decisions.md` with its options and justification. D-numbers are never
-  renumbered or reused (D75 is retired, D59 and D76 are merged into D61 and D74; their rows, and the rows no
-  requirement names, are in `archive/7.2-decisions-sections.md`).
+- **Decisions are no longer logged** (the user, v4.0): the design states what is chosen, with a short reason only
+  where it explains how a requirement is met. A changed choice changes the page that states it. The old decision
+  log (`archive/7.2-decisions.md`, with `archive/7.2-decisions-sections.md`), its D/V/H numbers and the open
+  questions (`archive/7.3-open-questions.md`) are kept in `archive/` for history only; no published page cites a
+  D, V, H or Q number. The implementation repositories and older commits still cite D-numbers: they resolve there.
 - **The environments are built from the design** (the user's rule), never the other way round: the pages describe
   the design, not the state of a lab or of the code. No "built today" against "target", no repository, file,
   workflow or variable names of the implementation, no lab cluster names or addresses (example names only, as
@@ -70,21 +73,23 @@ page's requirements line, no link into `archive/`).
   delegation options in 7.1, Kubernetes and AKS mechanics replaced by links to the documentation; v3.9 split the
   repository into `requirements/` (humans) and `design/` (AI, formerly `docs/`), with 1.2's requirement texts in 0.2
   and 7.1's acceptance tests in 0.3 (anchors such as `#cis-benchmark` now point into 0.3); v4.0 moved what no
-  requirement names to `archive/` and dropped the summary and reference PDFs - the `v3.8` tag holds the design before
+  requirement names to `archive/`, the decision log (7.2) and open questions (7.3) with it, and dropped the summary
+  and reference PDFs - the `v3.8` tag holds the design before
   v4.0, with the release notes of v2.0 to v3.8 (8.1 lists only v4).
 
 ## The design in v4.0
 
+(The D-numbers below are those of the archived decision log, `archive/7.2-decisions.md`; the design itself cites none.)
 One cell network: Azure CNI Pod Subnet with dynamic IP allocation and Cilium (D74) - nodes and internal load
 balancers in `/24` slots of `address_space` (slot 0 the system pool, a slot per zone index), pods in
 `pod_address_space`, a `/16` of 100.64.0.0/10 with a `/20` per slot. The hub Firewall (one per exposure, D53) sees the
 pods' own addresses and decides egress per application rule file in every cell; ACNS (FQDN filtering, Hubble, eBPF
-host routing) is not used, each part an option with a measured trigger in 5.1 (D61, D80). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
+host routing) is not used (D61, D80). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
 nodes are classic node pools with the cluster autoscaler - `<zone>`, `<zone>spot`, `<zone>arm`, `<zone>armspot`, from
 zero, the priority expander putting spot first; node auto provisioning only
-when it supports the pod subnet. No AKS Automatic (D79). Private API servers over Private Link (D58,
-VNet integration open as H14), no public endpoints (D60), KMS data encryption (D22), Traefik with HTTP/2 and TLS 1.3
-only at the edge and h2c upstream (D69-D71, V29 open), Flux's webhook only in a cell with a public entry point (D78),
+when it supports the pod subnet. No AKS Automatic (D79). Private API servers over Private Link (D58;
+VNet integration is refused on encrypted networks), no public endpoints (D60), KMS data encryption (D22), Traefik with HTTP/2 and TLS 1.3
+only at the edge and h2c upstream (D69-D71), Flux's webhook only in a cell with a public entry point (D78),
 Git refs with one branch per cell (D77); no Microsoft Defender - the company's third-party security tool (D81); in the build tenant every
 Azure Policy assignment denies once it reports no non-compliant resource (D82); purge protection by policy in prd only (D83). The stateful cluster and backup (6.3) are built with the first
 approved stateful exception. GPUs (D42), other clouds and exit (7.5), the outlook (7.4) and the implementation

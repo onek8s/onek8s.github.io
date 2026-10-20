@@ -12,7 +12,8 @@ layout: null
 <script>
   // The design moved from docs/ to design/ in v3.9, and its requirements page 1.2 became requirements/0.2: send the
   // old addresses to the new ones, keeping the heading (#...) they pointed at; 7.1's acceptance tests are 0.3 now.
-  // v4.0 moved the pages no requirement names (7.1, 7.4, 7.5) out of the site: their addresses go to the nearest page.
+  // v4.0 moved the pages no requirement names (7.1, 7.4, 7.5) out of the site, and the decision log and open questions
+  // (7.2, 7.3) with them: their addresses go to the nearest page.
   (function () {
     var base = '{{ "/" | relative_url }}';
     var path = location.pathname;
@@ -26,8 +27,9 @@ layout: null
       // 7.1's acceptance tests are 0.3; the rest of the page (build tenant, phases, reviews) is archived.
       target = 'requirements/0.3-acceptance-criteria.html';
       if (!moved.test(hash)) hash = '';
-    } else if (/^7\.4-/.test(name)) {
-      target = 'design/7.2-decisions.html';
+    } else if (/^7\.[234]-/.test(name)) {
+      // The design states what is chosen; the summary lists the choices that shape it.
+      target = 'design/1.0-summary.html';
       hash = '';
     } else if (/^7\.5-/.test(name)) {
       // Its data services joined 1.3 under the same heading.

@@ -149,18 +149,6 @@
       title: Backup and region recovery
       pdf: design
 
-- number: 7
-  part: Decisions
-  pages:
-    - path: design/7.2-decisions.md
-      number: "7.2"
-      title: Decisions
-      pdf: design
-    - path: design/7.3-open-questions.md
-      number: "7.3"
-      title: Open questions
-      pdf: design
-
 - number: 8
   part: Appendix
   pages:

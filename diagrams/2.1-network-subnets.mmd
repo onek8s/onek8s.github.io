@@ -1,9 +1,9 @@
 %% Subnet layout of a cell's VNet (an internal cell as the example). Nodes and load balancers in sixteen /24 slots of one
-%% address space: slot 0 the system subnet, slots 1-14 the isolation zones by index, slot 15 reserved (H14). Pods in a
-%% second address space, a /20 per slot (D74). Every node and pod subnet routes the cell's address spaces to the hub
-%% Firewall, its own slot excepted (D73). Private endpoints sit in the environment's shared network, not in the cell.
+%% address space: slot 0 the system subnet, slots 1-14 the isolation zones by index, slot 15 reserved. Pods in a
+%% second address space, a /20 per slot. Every node and pod subnet routes the cell's address spaces to the hub
+%% Firewall, its own slot excepted. Private endpoints sit in the environment's shared network, not in the cell.
 flowchart TB
-    rt["Route tables (D73), every node and pod subnet<br/>0.0.0.0/0 + both address spaces → Firewall<br/>own slot → VNet (a zone's own LB → Firewall)"]
+    rt["Route tables, every node and pod subnet<br/>0.0.0.0/0 + both address spaces → Firewall<br/>own slot → VNet (a zone's own LB → Firewall)"]
     nsg["NSG per subnet · deny-all inbound last<br/>kubelet 10250 from snet-system<br/>443 from Internet / VirtualNetwork · LB probes"]
     subgraph VNET["Cell VNet · nodes and LBs in /24 slots of 10.100.0.0/16 · pods in /20 slots of 100.64.0.0/16"]
         direction TB
@@ -11,7 +11,7 @@ flowchart TB
         s1["Slot 1 · zone int-fi<br/>snet-int-fi-nodes 10.100.1.0/25 · snet-int-fi-ilb 10.100.1.128/27<br/>snet-int-fi-pods 100.64.16.0/20"]
         s2["Slot 2 · zone int-se<br/>snet-int-se-nodes 10.100.2.0/25 · snet-int-se-ilb 10.100.2.128/27<br/>snet-int-se-pods 100.64.32.0/20"]
         sf["Slots 3 to 14 · free<br/>a new zone takes its index's slot in every cell"]
-        s15["Slot 15 · reserved<br/>snet-apiserver for VNet integration (H14)"]
+        s15["Slot 15 · reserved<br/>snet-apiserver for VNet integration"]
         s0 ~~~ s1 ~~~ s2 ~~~ sf ~~~ s15
     end
     hub["Hub VNet of the exposure · Azure Firewall Premium<br/>DNS proxy · SNAT · IP group per zone (node + pod slots)"]
