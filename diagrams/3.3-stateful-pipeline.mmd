@@ -1,0 +1,36 @@
+%% Stateful cluster: no Flux. A pipeline on self-hosted agents in the management network - the only network that
+%% reaches the cluster's private API server - applies the same signed commit in explicit stages. It runs first in an
+%% environment; its success starts the cells' release.
+flowchart TB
+    main["main in Git (GitHub)<br/>the signed commit"]
+
+    subgraph MG["Management network: self-hosted agent"]
+        direction TB
+        s1["1. Check out the commit,<br/>verify its signature"]
+        s2["2. Policy readiness gate"]
+        s3["3. kubectl diff<br/>published as change summary"]
+        s4["4. Approval<br/>prd always, acc for operators"]
+        s5["5. Server-side apply<br/>infrastructure first"]
+        s6["6. Rollout checks<br/>smoke tests"]
+    end
+
+    sf["Stateful cluster<br/>private API server<br/>over Private Link · no Flux"]
+    ok["Success: the cells'<br/>release starts"]
+    fail["7. Stop and alert<br/>rollback = previous commit"]
+
+    main --> MG
+    s1 --> s2 --> s3 --> s4 --> s5 --> s6
+    s5 --> sf
+    s6 -->|"success"| ok
+    s6 -->|"failure"| fail
+
+    classDef note fill:#fffde7,stroke:#9e9d24,color:#000
+    classDef sl fill:#e0f2f1,stroke:#00695c,color:#000
+    classDef sf fill:#fce4ec,stroke:#ad1457,color:#000
+    classDef hub fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef off fill:#ffebee,stroke:#c62828,color:#000
+    class main note
+    class s1,s2,s3,s4,s5,s6 hub
+    class sf sf
+    class ok sl
+    class fail off
