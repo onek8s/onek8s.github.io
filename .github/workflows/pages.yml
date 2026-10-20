@@ -2,7 +2,8 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # Temporary, for reviewing pull request 109: remove the review branch before it merges.
+    branches: [main, claude/requirements-driven-collaboration-vv1mpe]
   workflow_dispatch:
 
 permissions:
