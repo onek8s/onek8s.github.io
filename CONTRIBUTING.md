@@ -5,7 +5,7 @@ the design in `design/` (parts 1 to 8); both are published at [onek8s.github.io]
 
 ## Who approves what
 
-Humans own `requirements/` and AI owns `design/` ([0.1 How we work](requirements/0.1-how-we-work.md)):
+Humans own `requirements/` and AI owns `design/` ([How we work](README.md#how-we-work-requirements-driven-collaboration)):
 
 - A change to `requirements/` - a requirement or an acceptance criterion - needs a human's approval (`olljanat`).
   AI may propose one.
@@ -59,7 +59,7 @@ R-number that 0.2 does not have, or a link into `archive/`.
 | File | Holds |
 |---|---|
 | `_config.yml` | The title, the design's `version` (shown in the header and on the PDF's cover), the repository the "Edit this page" links point at, and what is not published (`archive/`, `CLAUDE.md`, `diagrams/`, `scripts/`, ...) |
-| `_data/nav.yml` | The reading order of the pages in parts, and per page the PDF it is printed in (`pdf: requirements` or `design`; only the introduction has none). The layout builds the sidebar (part 0 under "Requirements - owned by humans", parts 1 to 8 under "Design - owned by AI"), the part shown above each title and the previous / next links from it, and `scripts/check.sh` fails when the list and the files in `requirements/` and `design/` disagree, or when a page in `requirements/` is not `pdf: requirements` (or one outside it is) or a page in `design/` not `pdf: design` |
+| `_data/nav.yml` | The reading order of the pages in parts, and per page the PDF it is printed in (`pdf: requirements` or `design`; only the front page has none; it comes first and the sidebar shows it above both groups). The layout builds the sidebar (part 0 under "Requirements - owned by humans", parts 1 to 8 under "Design - owned by AI"), the part shown above each title and the previous / next links from it, and `scripts/check.sh` fails when the list and the files in `requirements/` and `design/` disagree, or when a page in `requirements/` is not `pdf: requirements` (or one outside it is) or a page in `design/` not `pdf: design` |
 | `_layouts/default.html` | The page: header (with the version and the two PDF buttons), sidebar, the "On this page" list built from the h2 / h3 headings at build time, the page, previous / next |
 | `assets/css/site.css` | The styles, light and dark (the reader's choice is remembered; the system setting is the default), print |
 | `assets/js/site.js` | Progressive enhancements only: the theme toggle, the dark rendering of each picture in dark mode, pictures as figures with their caption and a full-screen view on click |
@@ -76,7 +76,7 @@ the implementation repositories, which cite sections by number too.
 
 Every publish also builds **two PDFs**: the requirements (`/onek8s-requirements.pdf`, part 0) and the design
 (`/onek8s-design.pdf`, every page of `design/`, the summary 1.0 first and the release notes last, both linked as buttons at
-the top of every page). Which PDF a page is in is its `pdf:` key in `_data/nav.yml` - only the introduction is online
+the top of every page). Which PDF a page is in is its `pdf:` key in `_data/nav.yml` - only the front page is online
 only - and `scripts/pdf.py --only <name>` selects by it.
 `scripts/pdf.py` takes the built pages in the order of `_data/nav.yml`
 (`--only` selects parts, part ranges or pages), puts a cover with the version and the commit and a contents list in

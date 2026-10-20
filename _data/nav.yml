@@ -2,22 +2,19 @@
 #
 # Part 0 is the requirements and acceptance criteria in requirements/, owned by humans (a change needs a human's
 # approval); parts 1 to 8 are the design in design/, owned by AI (a change needs the AI's review). A page is numbered
-# <part>.<page>, and the pictures carry the number of the page that shows them. The layout builds the sidebar and the
-# previous / next links from this list; README.md repeats it with a one-line description per page, and
-# scripts/check.sh fails when the two lists or the files in requirements/ and design/ disagree.
+# <part>.<page>, and the pictures carry the number of the page that shows them. The front page (README.md, how we
+# work) comes first and the layout shows it above both owners' parts. The layout builds the sidebar and the previous /
+# next links from this list; scripts/check.sh fails when it and the files in requirements/ and design/ disagree.
 #
 # `pdf:` names the PDF a page is printed in - `requirements` (onek8s-requirements.pdf, every page of requirements/ and
 # no other) or `design` (onek8s-design.pdf, every page of design/); scripts/pdf.py --only <name> selects them. Only the
-# introduction (README.md) has no `pdf:`. README.md marks the design PDF's pages (PDF) and the requirements PDF's pages
-# (requirements PDF). What no requirement names is kept in archive/, outside the site and the PDFs.
+# front page (README.md) has no `pdf:`. What no requirement names is kept in archive/, outside the site and the PDFs.
 
 - number: 0
   part: Requirements
   pages:
-    - path: requirements/0.1-how-we-work.md
-      number: "0.1"
+    - path: README.md
       title: How we work
-      pdf: requirements
     - path: requirements/0.2-requirements.md
       number: "0.2"
       title: Requirements
@@ -30,8 +27,6 @@
 - number: 1
   part: Start here
   pages:
-    - path: README.md
-      title: Introduction
     - path: design/1.0-summary.md
       number: "1.0"
       title: Summary

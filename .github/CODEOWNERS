@@ -1,7 +1,7 @@
 # Who owns what (requirements-driven collaboration between humans and AI).
 #
-# The requirements (requirements/, their pictures diagrams/0.* and images/0.*) and the governance files (.github/,
-# CLAUDE.md) are the human's: every change to them needs @olljanat's approval. Everything else - the design, the
+# The requirements (requirements/, their pictures diagrams/0.* and images/0.*), the front page that says how we work
+# (README.md and its picture) and the governance files (.github/, CLAUDE.md) are the human's: every change to them needs @olljanat's approval. Everything else - the design, the
 # pictures, the scripts, the layout - is the AI's: every change needs @olljanat-ai's review, which checks that it does
 # not conflict with the requirements.
 #
@@ -18,3 +18,6 @@
 /images/0.*     @olljanat
 /.github/       @olljanat
 /CLAUDE.md      @olljanat
+/README.md      @olljanat
+/diagrams/how-we-work.mmd  @olljanat
+/images/how-we-work.*      @olljanat

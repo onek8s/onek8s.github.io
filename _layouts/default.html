@@ -59,6 +59,8 @@
 </header>
 <div class="layout">
 <nav class="sidebar" aria-label="Pages">
+{%- assign home = site.pages | where: "path", "README.md" | first %}
+<ul class="home-link"><li{% if page.path == 'README.md' %} class="current"{% endif %}><a href="{{ home.url | relative_url }}"{% if page.path == 'README.md' %} aria-current="page"{% endif %}><span>How we work</span></a></li></ul>
 {%- for part in site.data.nav %}
 {%- if part.number == 0 %}
 <p class="owner">Requirements <span>owned by humans</span></p>
@@ -69,6 +71,7 @@
 <span class="part-title">{% if part.number %}{{ part.number }}. {% endif %}{{ part.part }}</span>
 <ul>
 {%- for item in part.pages -%}
+  {%- if item.path == 'README.md' %}{% continue %}{% endif -%}
   {%- assign target = site.pages | where: "path", item.path | first -%}
 <li{% if item.path == page.path %} class="current"{% endif %}><a href="{{ target.url | relative_url }}"{% if item.path == page.path %} aria-current="page"{% endif %}>{% if item.number %}<span class="num">{{ item.number }}</span>{% endif %}<span>{{ item.title }}</span></a></li>
 {%- endfor %}
