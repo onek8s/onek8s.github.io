@@ -21,12 +21,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
       - uses: actions/jekyll-build-pages@v1
-      - name: The three PDFs
+      - name: The two PDFs
         run: |
           sudo chown -R "$(id -u)" _site
-          python3 scripts/pdf.py _site _site/onek8s-design-summary.pdf --only summary --subtitle Summary
+          python3 scripts/pdf.py _site _site/onek8s-requirements.pdf --only requirements --subtitle Requirements
           python3 scripts/pdf.py _site _site/onek8s-design.pdf --only design
-          python3 scripts/pdf.py _site _site/onek8s-design-reference.pdf --only reference --subtitle "Release notes"
       - uses: actions/upload-pages-artifact@v3
 
   deploy:

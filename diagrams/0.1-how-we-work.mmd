@@ -1,0 +1,28 @@
+%% How we work: humans own the requirements and acceptance criteria, AI owns the design and the infrastructure as code.
+%% Every change needs the other side's approval: a human approves requirements/, the AI reviewer reviews design/.
+flowchart TB
+    subgraph OWN["Who owns what"]
+        direction LR
+        h_own["Humans own the<br/>requirements and<br/>acceptance criteria.<br/>A human approves<br/>every change."]
+        a_own["AI owns the design<br/>and the<br/>infrastructure as code.<br/>The AI reviews<br/>every change."]
+        h_own ~~~ a_own
+    end
+
+    req["1 · A requirement changes,<br/>approved by a human"]
+    des["2 · The AI updates<br/>the design"]
+    iac["3 · The AI implements it<br/>as code"]
+    env["4 · Environments are<br/>built from the code"]
+    acc["5 · Acceptance tests<br/>prove the criteria"]
+
+    OWN ~~~ req
+    req --> des --> iac --> env --> acc
+    env -.->|"a finding that changes<br/>the design goes back<br/>to the design first"| des
+
+    classDef human fill:#fffde7,stroke:#9e9d24,color:#000
+    classDef ai fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef run fill:#e0f2f1,stroke:#00695c,color:#000
+    classDef legend fill:#ffffff,stroke:#9e9e9e,color:#000
+    class h_own,req,acc human
+    class a_own,des,iac ai
+    class env run
+    class OWN legend

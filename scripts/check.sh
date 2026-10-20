@@ -3,10 +3,16 @@
 #  1. every diagram source (diagrams/*.mmd) has a light and a dark rendering (images/<name>.svg, images/<name>.dark.svg)
 #     that are at least as new in Git history;
 #  2. every relative Markdown link and image reference resolves to a file;
-#  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree, every page's
-#     <part>.<page> number is the same in its file name, its first heading and the navigation, and README.md marks
-#     (PDF) exactly the pages whose `pdf:` is `design`;
-#  4. the newest version in docs/8.1-release-notes.md is the version in _config.yml, and every entry links a pull request.
+#  3. the navigation (_data/nav.yml) and the files in requirements/ and design/ agree, every page's <part>.<page>
+#     number is the same in its file name, its first heading and the navigation, `pdf: requirements` is set on every
+#     page in requirements/ and `pdf: design` on every page in design/;
+#  4. the newest version in design/8.1-release-notes.md is the version in _config.yml, and every entry links a pull
+#     request;
+#  5. every design page names the requirements it serves on the line under its first heading
+#     (`**Requirements:** [R5](../requirements/0.2-requirements.md#r5), ...`), each one a requirement of
+#     requirements/0.2-requirements.md - the release notes say `**Requirements:** none` instead;
+#  6. no published page (README.md, requirements/, design/) links into archive/, which keeps what no requirement names
+#     outside the site and the PDFs.
 # Usage: scripts/check.sh   (run from anywhere; needs git and python3)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -36,7 +42,8 @@ python3 -I - <<'PY' || status=1
 import os, re, sys
 link = re.compile(r'!?\[[^\]]*\]\(([^)\s]+)\)')
 bad = 0
-files = ['README.md'] + sorted(os.path.join('docs', f) for f in os.listdir('docs') if f.endswith('.md'))
+files = ['README.md'] + sorted(os.path.join(d, f) for d in ('requirements', 'design') for f in os.listdir(d)
+                               if f.endswith('.md'))
 for path in files:
     base = os.path.dirname(path)
     text = open(path, encoding='utf-8').read()
@@ -58,12 +65,13 @@ for path in files:
                 h = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', h)
                 s = re.sub(r'[^\w\- ]', '', h.lower()).strip().replace(' ', '-')
                 slugs.add(s)
+            slugs |= set(re.findall(r'\bid="([^"]+)"', other))  # explicit anchors, e.g. a requirement's table row
             if anchor not in slugs:
                 print(f'  ANCHOR   {path}: {target}'); bad += 1
 sys.exit(1 if bad else 0)
 PY
 
-echo "Navigation: _data/nav.yml, the Contents of README.md and docs/*.md agree"
+echo "Navigation: _data/nav.yml, requirements/*.md and design/*.md agree"
 python3 -I - <<'PY' || status=1
 import os, re, sys
 bad = 0
@@ -83,28 +91,26 @@ for line in open('_data/nav.yml', encoding='utf-8'):
     m = re.match(r'\s+pdf: (\w+)', line)
     if m and nav:
         nav[-1]['pdf'] = m.group(1)
-        if m.group(1) not in ('design', 'summary', 'reference'):
-            fail(f'{nav[-1]["path"]}: pdf: {m.group(1)} is not design, summary or reference')
+        if m.group(1) not in ('requirements', 'design'):
+            fail(f'{nav[-1]["path"]}: pdf: {m.group(1)} is not requirements or design')
 paths = [item['path'] for item in nav]
 for path in paths:
     if not os.path.exists(path):
         fail(f'_data/nav.yml lists {path}, which does not exist')
     if paths.count(path) > 1:
         fail(f'_data/nav.yml lists {path} more than once')
-docs = sorted('docs/' + f for f in os.listdir('docs') if f.endswith('.md'))
-readme = open('README.md', encoding='utf-8').read()
-linked = set(re.findall(r'\]\((docs/[^)#\s]+)', readme))
+docs = sorted(d + '/' + f for d in ('requirements', 'design') for f in os.listdir(d) if f.endswith('.md'))
 for doc in docs:
     if doc not in paths:
         fail(f'{doc} is not in _data/nav.yml')
-    if doc not in linked:
-        fail(f'{doc} is not linked from the Contents of README.md')
-    marked = re.search(r'\]\(' + re.escape(doc) + r'\) \(PDF\)', readme) is not None
-    in_design = next((i.get('pdf') == 'design' for i in nav if i['path'] == doc), False)
-    if marked != in_design:
-        fail(f'{doc}: README.md marks it {"(PDF)" if marked else "online only"}, _data/nav.yml says '
-             f'{"pdf: design" if in_design else "it is not in the design PDF"}')
-    number = re.match(r'docs/(\d+\.\d+)-', doc)
+    pdf = next((i.get('pdf') for i in nav if i['path'] == doc), None)
+    if (pdf == 'requirements') != doc.startswith('requirements/'):
+        fail(f'{doc}: every page in requirements/ and no other has pdf: requirements (_data/nav.yml says '
+             f'{"pdf: " + pdf if pdf else "no pdf"})')
+    if doc.startswith('design/') and pdf != 'design':
+        fail(f'{doc}: every page in design/ is in the design PDF (_data/nav.yml says '
+             f'{"pdf: " + pdf if pdf else "no pdf"})')
+    number = re.match(r'(?:requirements|design)/(\d+\.\d+)-', doc)
     item = next((i for i in nav if i['path'] == doc), None)
     if not number:
         fail(f'{doc}: the file name does not start with a <part>.<page> number')
@@ -124,7 +130,7 @@ python3 -I - <<'PY' || status=1
 import re, sys
 bad = 0
 version = re.search(r'^version:\s*"?([^"\n]+)"?', open('_config.yml', encoding='utf-8').read(), re.M)
-notes = open('docs/8.1-release-notes.md', encoding='utf-8').read()
+notes = open('design/8.1-release-notes.md', encoding='utf-8').read()
 versions = re.findall(r'^## v(\d+\.\d+) - \d{4}-\d{2}-\d{2}$', notes, re.M)
 if not version or not versions or versions[0] != version[1].strip():
     print(f'  NOTES    _config.yml version {version[1] if version else "(none)"} is not the newest release note '
@@ -135,6 +141,52 @@ if len(set(versions)) != len(versions):
 for entry in re.findall(r'^- .*?(?=^- |^#|\Z)', notes, re.M | re.S):
     if not re.search(r'\(https://github\.com/onek8s/[^)]+/pull/\d+\)', entry):
         print(f'  NOTES    no pull request link: {entry.splitlines()[0]}'); bad += 1
+sys.exit(1 if bad else 0)
+PY
+
+echo "Requirements: every design page names the requirements of 0.2 it serves"
+python3 -I - <<'PY' || status=1
+import os, re, sys
+bad = 0
+known = set(re.findall(r'^\| <a id="r\d+[a-z]?"></a>(R\d+[a-z]?) \|', open('requirements/0.2-requirements.md', encoding='utf-8').read(), re.M))
+for f in sorted(os.listdir('design')):
+    if not f.endswith('.md'):
+        continue
+    path = 'design/' + f
+    lines = open(path, encoding='utf-8').read().split('\n')
+    # The first heading, a blank line, then the requirements line.
+    line = lines[2] if len(lines) > 2 and lines[1] == '' else ''
+    if f.startswith('8.1-'):
+        if not line.startswith('**Requirements:** none'):
+            print(f'  REQS     {path}: the line under the first heading is not "**Requirements:** none ..."'); bad += 1
+        continue
+    if not line.startswith('**Requirements:** '):
+        print(f'  REQS     {path}: no "**Requirements:** ..." line under the first heading'); bad += 1
+        continue
+    named = re.findall(r'\[(R\d+[a-z]?)\]\(\.\./requirements/0\.2-requirements\.md(?:#[^)]*)?\)', line)
+    for r, anchor in re.findall(r'\[(R\d+[a-z]?)\]\(\.\./requirements/0\.2-requirements\.md(#[^)]*)?\)', line):
+        if anchor != '#' + r.lower():
+            print(f'  REQS     {path}: [{r}] must link its row, ../requirements/0.2-requirements.md#{r.lower()}'); bad += 1
+    rest = re.sub(r'\[(R\d+[a-z]?)\]\(\.\./requirements/0\.2-requirements\.md(?:#[^)]*)?\)', '', line[len('**Requirements:** '):])
+    if not named or re.search(r'[^,.\s]', rest):
+        print(f'  REQS     {path}: the requirements line must list linked R-numbers only: [R5](../requirements/0.2-requirements.md#r5), ...')
+        bad += 1
+    for r in named:
+        if r not in known:
+            print(f'  REQS     {path}: {r} is not a requirement of requirements/0.2-requirements.md'); bad += 1
+sys.exit(1 if bad else 0)
+PY
+
+echo "Archive: no published page links into archive/"
+python3 -I - <<'PY' || status=1
+import os, re, sys
+bad = 0
+files = ['README.md', '404.html'] + sorted(os.path.join(d, f) for d in ('requirements', 'design') for f in os.listdir(d)
+                                           if f.endswith('.md'))
+for path in files:
+    for n, line in enumerate(open(path, encoding='utf-8'), 1):
+        if re.search(r'(\]\(|href=["\'])[^)"\']*\barchive/', line):
+            print(f'  ARCHIVE  {path}:{n} links into archive/'); bad += 1
 sys.exit(1 if bad else 0)
 PY
 

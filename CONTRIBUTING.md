@@ -1,7 +1,22 @@
 # Editing the pictures and the site
 
-How this repository is edited and built; the design itself is in `docs/` and published at
-[onek8s.github.io](https://onek8s.github.io/).
+How this repository is edited and built. The requirements and acceptance criteria are in `requirements/` (part 0),
+the design in `design/` (parts 1 to 8); both are published at [onek8s.github.io](https://onek8s.github.io/).
+
+## Who approves what
+
+Humans own `requirements/` and AI owns `design/` ([0.1 How we work](requirements/0.1-how-we-work.md)):
+
+- A change to `requirements/` - a requirement or an acceptance criterion - needs a human's approval (`olljanat`).
+  AI may propose one.
+- A change to `design/`, and to the infrastructure as code in the implementation repositories, needs the AI's review
+  (`olljanat-ai`): it checks that the change does not conflict with the requirements or the acceptance criteria.
+  Humans may contribute.
+
+`.github/CODEOWNERS` names the owners, and the required check **Approvals** lists the approval each changed path of a
+pull request needs. The author counts as their own side's approval, and an approval is kept across later pushes that
+do not touch that owner's files. A change to the requirements comes first; the design follows it in its own pull
+request, and a finding in an environment that changes the design is a design pull request first.
 
 ## The pictures
 
@@ -22,50 +37,63 @@ the page and the 16 px labels turn unreadable beyond that - stack subgraphs (`a 
 words and prefer `flowchart TB` with two or three columns to a wide `LR` row.
 
 A pull request fails the `Check` workflow when a `.mmd` is newer in Git than either `.svg`, when a relative link in
-the documents is broken, or when the navigation and the files in `docs/` disagree (below); run `scripts/check.sh`
+the documents is broken, or when the navigation and the files in `requirements/` and `design/` disagree (below); run `scripts/check.sh`
 locally to see the same result.
 
 ## The site
 
 The site is plain [GitHub Pages with Jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll):
-the Markdown in `docs/` and `README.md` is published as is, without front matter, and one layout wraps every page;
-this file, `CLAUDE.md`, `reviews/`, `diagrams/` and `scripts/` are excluded.
+the Markdown in `requirements/`, `design/` and `README.md` is published as is, without front matter, and one layout wraps every page;
+this file, `CLAUDE.md`, `archive/`, `reviews/`, `diagrams/` and `scripts/` are excluded.
+
+**The design holds only what serves a requirement.** Every page in `design/` names the requirements of
+[0.2](requirements/0.2-requirements.md) it serves on the line under its first heading -
+`**Requirements:** [R5](../requirements/0.2-requirements.md#r5), [R20](../requirements/0.2-requirements.md#r20).` - and
+the release notes say `**Requirements:** none - ...`. What no requirement names does not go into `design/`: it is
+kept in `archive/` (since v4.0), outside the site and the PDFs, and no published page links to it; it comes back
+only when a human adds the requirement that names it. The design states what is chosen, with a short reason only where
+it explains how a requirement is met: it keeps no decision log, decision numbers, sign-offs or open questions (the old
+decision log and open questions, pages 7.2 and 7.3, are in `archive/` for history). `scripts/check.sh` fails on a page without the line, an
+R-number that 0.2 does not have, or a link into `archive/`.
 
 | File | Holds |
 |---|---|
-| `_config.yml` | The title, the design's `version` (shown in the header and on the PDF's cover), the repository the "Edit this page" links point at, and what is not published (`CLAUDE.md`, `diagrams/`, `scripts/`) |
-| `_data/nav.yml` | The reading order of the pages in parts, and per page the PDF it is printed in (`pdf: design`, `summary` or `reference`; none = online only). The layout builds the sidebar (with the PDF tags and their legend), the part shown above each title and the previous / next links from it; the Contents of `README.md` repeat it with a one-line description per page and *(PDF)* on the design PDF's pages, and `scripts/check.sh` fails when the lists, the markers or the files in `docs/` disagree |
-| `_layouts/default.html` | The page: header (with the version and the PDF link), sidebar, the "On this page" list built from the h2 / h3 headings at build time, the page, previous / next |
+| `_config.yml` | The title, the design's `version` (shown in the header and on the PDF's cover), the repository the "Edit this page" links point at, and what is not published (`archive/`, `CLAUDE.md`, `diagrams/`, `scripts/`, ...) |
+| `_data/nav.yml` | The reading order of the pages in parts, and per page the PDF it is printed in (`pdf: requirements` or `design`; only the introduction has none). The layout builds the sidebar (part 0 under "Requirements - owned by humans", parts 1 to 8 under "Design - owned by AI"), the part shown above each title and the previous / next links from it, and `scripts/check.sh` fails when the list and the files in `requirements/` and `design/` disagree, or when a page in `requirements/` is not `pdf: requirements` (or one outside it is) or a page in `design/` not `pdf: design` |
+| `_layouts/default.html` | The page: header (with the version and the two PDF buttons), sidebar, the "On this page" list built from the h2 / h3 headings at build time, the page, previous / next |
 | `assets/css/site.css` | The styles, light and dark (the reader's choice is remembered; the system setting is the default), print |
 | `assets/js/site.js` | Progressive enhancements only: the theme toggle, the dark rendering of each picture in dark mode, pictures as figures with their caption and a full-screen view on click |
 
-To add a page: create the Markdown in `docs/`, add it to `_data/nav.yml` (with `pdf: design` if it belongs in the
-design PDF) and to the Contents of `README.md` (with *(PDF)* in that case), and run `scripts/check.sh`. A page is numbered `<part>.<page>` in reading order (`2.3` is the third page of part 2, *Inside a
+To add a page: create the Markdown in `design/` with its requirements line (or, for a requirement page, in
+`requirements/`, part 0), add it to `_data/nav.yml` (with `pdf: design` for every page in `design/`, `pdf: requirements`
+for every page in `requirements/`), and run
+`scripts/check.sh`. A page is numbered `<part>.<page>` in reading order (`2.3` is the third page of part 2, *Inside a
 cluster*) and the pictures carry the number of the page that shows them, so a new page in the middle of a part
 renumbers the pages after it - the files, the headings, the pictures and every "section N.M" in the text, here and in
 the implementation repositories, which cite sections by number too.
 
 ## The PDF and the release notes
 
-Every publish also builds **three PDFs**: the summary (`/onek8s-design-summary.pdf`, page 1.0 alone), the design
-(`/onek8s-design.pdf`, sections 1.1 to 5.2, linked as *PDF* at the top of every page) and the reference
-(`/onek8s-design-reference.pdf`, part 8). Which PDF a page is in is its `pdf:` key in `_data/nav.yml` - the sidebar
-and the Contents of `README.md` mark the design PDF's pages; the intro and parts 6 and 7 have no key and stay online
-only for now - and `scripts/pdf.py --only <name>` selects by it. `scripts/pdf.py` takes the built pages in the order of `_data/nav.yml`
+Every publish also builds **two PDFs**: the requirements (`/onek8s-requirements.pdf`, part 0) and the design
+(`/onek8s-design.pdf`, every page of `design/`, the summary 1.0 first and the release notes last, both linked as buttons at
+the top of every page). Which PDF a page is in is its `pdf:` key in `_data/nav.yml` - only the introduction is online
+only - and `scripts/pdf.py --only <name>` selects by it.
+`scripts/pdf.py` takes the built pages in the order of `_data/nav.yml`
 (`--only` selects parts, part ranges or pages), puts a cover with the version and the commit and a contents list in
 front, and prints them with headless Chrome, each page on a new sheet, with an outline from the headings. Links between
 pages and to their headings stay links inside the PDF (each id is prefixed with its page, so the same heading on two
 pages is two targets); links to pages outside a PDF's selection, and to files that are not pages, go to the site, or to
 GitHub for what the site does not publish. The build fails when a link inside a PDF has no target. The `Check` workflow
-builds the same PDFs on every pull request and attaches them to the run as `onek8s-design-pdf`.
+builds the same PDFs on every pull request and attaches them to the run as `onek8s-design-pdf`; the requirements PDF
+is `--only requirements --subtitle Requirements`.
 
-The design is v2.0 since 2026-10-19 (the user's decision; v1.0 to v1.15 are in the `v1.15` tag). A pull request that
-changes the design adds the next minor version (v2.1, v2.2, ...; a major version only when a human says so) to
-[8.1 Release notes](docs/8.1-release-notes.md) - one short sentence per change with the link to the pull request - and sets
-the same `version` in `_config.yml`; `scripts/check.sh` fails when the two disagree or an entry has no pull request
-link. Every version is tagged `v<version>` in every repository at its default branch's head by aks-terraform's
-`Design tags` workflow (`design-tags.yml`, hourly and by hand), so merge the code pull requests of a round before the
-design's.
+The design is v4.0 since 2026-10-20 (the user's decision; the versions before it are in the Git tags, `v3.8` the last
+of v3, `v1.15` the last of v1). A pull request that changes the design adds the next minor version (v4.1, v4.2, ...;
+a major version only when a human says so) to [8.1 Release notes](design/8.1-release-notes.md) - one short sentence
+per change with the link to the pull request - and sets the same `version` in `_config.yml`; `scripts/check.sh` fails
+when the two disagree or an entry has no pull request link. Every version is tagged `v<version>` in every repository
+at its default branch's head by aks-terraform's `Design tags` workflow (`design-tags.yml`, hourly and by hand), so
+merge the code pull requests of a round before the design's.
 
 ## Building the site locally
 
