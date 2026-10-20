@@ -5,10 +5,11 @@ The shared working notes for all OneK8s repos (what is deployed, how to operate 
 
 ## This repository
 
-The requirements and the design, published with GitHub Pages, in two folders with two owners (since v3.9, page
-`requirements/0.1-how-we-work.md`):
+The requirements and the design, published with GitHub Pages, in two folders with two owners (since v3.9; how we
+work is the front page, `README.md`, since v4.1 - human-owned with its picture `how-we-work`, kept short: it does not
+repeat the requirements):
 
-- `requirements/0.<page>-*.md`, part 0 Requirements - **owned by humans**: 0.1 How we work, 0.2 Requirements (R1 to
+- `requirements/0.<page>-*.md`, part 0 Requirements - **owned by humans**: 0.2 Requirements (R1 to
   R26 with the acceptance criteria that prove each), 0.3 Acceptance criteria (the acceptance tests in dev, formerly in
   7.1). AI may propose a change; every change needs a human's approval (`olljanat`). Never change a requirement or a
   criterion to fit the design: propose it in its own pull request for a human.

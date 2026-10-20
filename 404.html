@@ -17,8 +17,13 @@ layout: null
   (function () {
     var base = '{{ "/" | relative_url }}';
     var path = location.pathname;
-    var m = path.match(/\/(docs|design)\/([^/]+?)(?:\.html|\.md)?$/);
+    var m = path.match(/\/(docs|design|requirements)\/([^/]+?)(?:\.html|\.md)?$/);
     if (!m) return;
+    if (m[1] === 'requirements') {
+      // v4.1 moved 0.1 How we work onto the front page.
+      if (/^0\.1-/.test(m[2])) location.replace(base + location.search + '#how-we-work-requirements-driven-collaboration');
+      return;
+    }
     var name = m[2];
     var hash = location.hash;
     var moved = /^#(requirement-and-isolation-tests|cis-benchmark|performance-and-capacity|high-availability-and-resilience|shared-tier-failure-domains|zero-downtime-upgrades-and-changes|rebuild-backup-and-recovery|operations)$/;

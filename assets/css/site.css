@@ -185,6 +185,7 @@ td > :last-child, th > :last-child { margin-bottom: 0; }
 .sidebar .num { flex: none; width: 1.9rem; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 .sidebar li.current > a { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .sidebar li.current .num { color: var(--accent); }
+.sidebar .home-link { margin: 0 0 1.25rem; }
 .sidebar .owner { margin: 0 0 0.75rem 0.6rem; padding: 0.4rem 0.6rem; border-left: 3px solid var(--accent); font-size: 0.82rem; font-weight: 700; color: var(--fg-strong); }
 .sidebar .owner span { display: block; font-weight: 400; color: var(--muted); }
 .sidebar .owner-split { position: relative; margin-top: 2rem; }
