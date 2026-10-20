@@ -48,7 +48,7 @@ layout wraps every page; this file, `CLAUDE.md`, `archive/`, `reviews/`, `diagra
 
 **The design holds only what serves a requirement.** Every page in `design/` names the requirements of
 [0.2](requirements/0.2-requirements.md) it serves on the line under its first heading -
-`**Requirements:** [R5](../requirements/0.2-requirements.md#r5), [R20](../requirements/0.2-requirements.md#r20).` - and
+`**Requirements:** [R4](../requirements/0.2-requirements.md#r4), [R29](../requirements/0.2-requirements.md#r29).` - and
 the release notes say `**Requirements:** none - ...`. What no requirement names does not go into `design/`: it is
 kept in `archive/` (since v4.0), outside the site and the PDFs, and no published page links to it; it comes back
 only when a human adds the requirement that names it. The design states what is chosen, with a short reason only where

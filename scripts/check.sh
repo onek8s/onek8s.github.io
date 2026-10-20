@@ -9,7 +9,7 @@
 #  4. the newest version in design/8.1-release-notes.md is the version in _config.yml, and every entry links a pull
 #     request;
 #  5. every design page names the requirements it serves on the line under its first heading
-#     (`**Requirements:** [R5](../requirements/0.2-requirements.md#r5), ...`), each one a requirement of
+#     (`**Requirements:** [R4](../requirements/0.2-requirements.md#r4), ...`), each one a requirement of
 #     requirements/0.2-requirements.md - the release notes say `**Requirements:** none` instead;
 #  6. no published page (README.md, requirements/, design/, examples/lab/) links into archive/, which keeps what no
 #     requirement names outside the site and the PDFs;
@@ -173,7 +173,7 @@ for f in sorted(os.listdir('design')):
             print(f'  REQS     {path}: [{r}] must link its row, ../requirements/0.2-requirements.md#{r.lower()}'); bad += 1
     rest = re.sub(r'\[(R\d+[a-z]?)\]\(\.\./requirements/0\.2-requirements\.md(?:#[^)]*)?\)', '', line[len('**Requirements:** '):])
     if not named or re.search(r'[^,.\s]', rest):
-        print(f'  REQS     {path}: the requirements line must list linked R-numbers only: [R5](../requirements/0.2-requirements.md#r5), ...')
+        print(f'  REQS     {path}: the requirements line must list linked R-numbers only: [R4](../requirements/0.2-requirements.md#r4), ...')
         bad += 1
     for r in named:
         if r not in known:

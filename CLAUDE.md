@@ -10,7 +10,7 @@ work is the front page, `README.md`, since v4.1 - human-owned with its picture `
 repeat the requirements):
 
 - `requirements/0.<page>-*.md`, part 0 Requirements - **owned by humans**: 0.2 Requirements (R1 to
-  R26 with the acceptance criteria that prove each), 0.3 Acceptance criteria (the acceptance tests in dev, formerly in
+  R32 with the acceptance criteria that prove each), 0.3 Acceptance criteria (the acceptance tests in dev, formerly in
   7.1). AI may propose a change; every change needs a human's approval (`olljanat`). Never change a requirement or a
   criterion to fit the design: propose it in its own pull request for a human.
 - `design/<part>.<page>-*.md`, parts 1 to 8 (1 Start here, 2 Inside a cluster, 3 The fleet, 4 Encryption, 5 Egress
@@ -32,7 +32,7 @@ repeat the requirements):
   the D/V/H/Q rows no requirement names, ...). Numbering gaps stay (no renumbering). No published page links into it.
 
 **The design holds only what serves a requirement** (the user, v4.0): every design page names the requirements of 0.2
-it serves on the line under its first heading (`**Requirements:** [R5](../requirements/0.2-requirements.md#r5), ...`; every link to a requirement names its row;
+it serves on the line under its first heading (`**Requirements:** [R4](../requirements/0.2-requirements.md#r4), ...`; every link to a requirement names its row;
 8.1 says `none`). Content no requirement names goes to `archive/`, not `design/`; propose the requirement to a human
 instead.
 
