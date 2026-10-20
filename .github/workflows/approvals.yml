@@ -1,0 +1,42 @@
+# Approvals: the enforcement of .github/CODEOWNERS. The requirements and the governance files are the human's
+# (@olljanat), everything else the AI's (@olljanat-ai). Branch protection's "require review from code owners" cannot
+# enforce that - the AI account writes most pull requests and an author cannot approve their own - so branch protection
+# requires this check (`Approvals`) instead: scripts/approvals.py passes once every owner of a changed file is the
+# author or has approved the latest changes to their files. It re-runs on every push and every review.
+name: Approvals
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: approvals-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  approvals:
+    name: Approvals
+    runs-on: ubuntu-latest
+    steps:
+      # The script as the base has it, so a pull request cannot change the check that judges it
+      # (the pull request that adds the script runs its own: the base has none yet).
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - if: hashFiles('scripts/approvals.py') == ''
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Every owner of a changed file has approved
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python3 -I scripts/approvals.py

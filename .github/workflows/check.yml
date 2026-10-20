@@ -23,13 +23,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/jekyll-build-pages@v1
-      - name: The three PDFs, every internal link with a target
+      - name: The four PDFs, every internal link with a target
         run: |
           sudo chown -R "$(id -u)" _site
+          python3 scripts/pdf.py _site onek8s-requirements.pdf --only requirements --subtitle Requirements
           python3 scripts/pdf.py _site onek8s-design-summary.pdf --only summary --subtitle Summary
           python3 scripts/pdf.py _site onek8s-design.pdf --only design
           python3 scripts/pdf.py _site onek8s-design-reference.pdf --only reference --subtitle "Release notes"
       - uses: actions/upload-artifact@v4
         with:
           name: onek8s-design-pdf
-          path: onek8s-design*.pdf
+          path: |
+            onek8s-requirements.pdf
+            onek8s-design*.pdf

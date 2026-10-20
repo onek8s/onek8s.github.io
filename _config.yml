@@ -1,11 +1,11 @@
 title: OneK8s
-# The design's version: the newest entry of docs/8.1-release-notes.md (scripts/check.sh compares the two).
-version: "3.8"
+# The design's version: the newest entry of design/8.1-release-notes.md (scripts/check.sh compares the two).
+version: "3.9"
 description: One Kubernetes platform, one application contract for every cloud - built on Azure (AKS) first.
 # Used by the "Edit this page" links.
 repository: onek8s/onek8s.github.io
 branch: main
-# Only publish the design document and its pictures.
+# Only publish the requirements, the design and their pictures (and 404.html, which redirects the old docs/ URLs).
 exclude:
   - CLAUDE.md
   - reviews

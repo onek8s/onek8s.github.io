@@ -1,0 +1,20 @@
+# Who owns what (requirements-driven collaboration between humans and AI).
+#
+# The requirements (requirements/, their pictures diagrams/0.* and images/0.*) and the governance files (.github/,
+# CLAUDE.md) are the human's: every change to them needs @olljanat's approval. Everything else - the design, the
+# pictures, the scripts, the layout - is the AI's: every change needs @olljanat-ai's review, which checks that it does
+# not conflict with the requirements.
+#
+# The author of a pull request cannot approve it, and the AI account writes most of them, so branch protection's
+# "require review from code owners" cannot enforce this. The required status check `Approvals`
+# (.github/workflows/approvals.yml, scripts/approvals.py) does: it reads this file from the pull request's base and
+# passes once every owner of a changed file is the author or has approved the latest changes to their files.
+# The last matching line wins, as on GitHub.
+
+*               @olljanat-ai
+
+/requirements/  @olljanat
+/diagrams/0.*   @olljanat
+/images/0.*     @olljanat
+/.github/       @olljanat
+/CLAUDE.md      @olljanat

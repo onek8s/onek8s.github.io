@@ -5,13 +5,29 @@ The shared working notes for all OneK8s repos (what is deployed, how to operate 
 
 ## This repository
 
-The design, published with GitHub Pages: `docs/<part>.<page>-*.md` (1 Start here, 2 Inside a cluster, 3 The fleet,
-4 Encryption, 5 Egress control, 6 Operations, 7 Delivery and decisions, 8 Appendix). `7.2-decisions.md` is the decision
-log, capability matrix and human sign-offs; `7.3-open-questions.md` holds only the questions a person still has to
-weigh (the sign-offs live in 7.2 alone). Diagrams are `diagrams/*.mmd`, rendered to `images/<name>.svg` and
-`<name>.dark.svg` by `scripts/render.sh` (`CONTRIBUTING.md`). The reading order is `_data/nav.yml`, repeated with a
+The requirements and the design, published with GitHub Pages, in two folders with two owners (since v3.9, page
+`requirements/0.1-how-we-work.md`):
+
+- `requirements/0.<page>-*.md`, part 0 Requirements - **owned by humans**: 0.1 How we work, 0.2 Requirements (R1 to
+  R26 with the acceptance criteria that prove each), 0.3 Acceptance criteria (the acceptance tests in dev, formerly in
+  7.1). AI may propose a change; every change needs a human's approval (`olljanat`). Never change a requirement or a
+  criterion to fit the design: propose it in its own pull request for a human.
+- `design/<part>.<page>-*.md`, parts 1 to 8 (1 Start here, 2 Inside a cluster, 3 The fleet, 4 Encryption, 5 Egress
+  control, 6 Operations, 7 Delivery and decisions, 8 Appendix) - **owned by AI**, like the infrastructure as code in
+  the implementation repositories; a human's change gets the AI's review (`olljanat-ai`) against the requirements and
+  acceptance criteria. `1.2-how-the-design-meets-the-requirements.md` maps each requirement to the design (and holds
+  the vocabulary); `7.2-decisions.md` is the decision log, capability matrix and human sign-offs;
+  `7.3-open-questions.md` holds only the questions a person still has to weigh (the sign-offs live in 7.2 alone).
+
+`.github/CODEOWNERS` and the required `Approvals` check (`scripts/approvals.py`) enforce who approves what: it lists
+the approval each changed path needs, the author counts as their own side's approval, and an approval is kept across
+later pushes that do not touch that owner's files. Old `docs/` URLs are redirected by `404.html`.
+
+Diagrams are `diagrams/*.mmd`, rendered to `images/<name>.svg` and `<name>.dark.svg` by `scripts/render.sh` (`CONTRIBUTING.md`). The reading order is `_data/nav.yml`, repeated with a
 description per page in `README.md`'s Contents - a new page goes into both, with `pdf: design` in `nav.yml` and
-`(PDF)` after its README link when it belongs in the design PDF (the sidebar tags those pages; `check.sh` compares the two). `scripts/check.sh` runs in CI (diagram
+`(PDF)` after its README link when it belongs in the design PDF, `pdf: requirements` and `(requirements PDF)` for every
+page in `requirements/` and no other (the sidebar tags those pages; `check.sh` compares the two and checks the folder,
+and that file name, first heading and nav share the page number). `scripts/check.sh` runs in CI (diagram
 freshness, links and anchors, navigation, release notes).
 
 - **Decisions**: a decision goes into `7.2-decisions.md` with its options and justification. D-numbers are never
@@ -24,16 +40,17 @@ freshness, links and anchors, navigation, release notes).
   scope: refer to Microsoft's documentation instead of explaining it here.
 - **Versions** (the user): the design is **v3.0 since 2026-10-19**. Every pull request that changes the design adds
   the next minor version (v2.1, v2.2, ...; a major version only when a human says so) at the top of
-  `docs/8.1-release-notes.md` - `## v2.N - <date>`, one short sentence per change ending in the pull request link
+  `design/8.1-release-notes.md` - `## v2.N - <date>`, one short sentence per change ending in the pull request link
   (`[#NN](https://github.com/onek8s/onek8s.github.io/pull/NN)`) - and sets the same `version:` in `_config.yml`;
   create the pull request first if its number is not known yet. `check.sh` fails when the two disagree or an entry
   has no pull request link. Every version is tagged `v<version>` in every repository by aks-terraform's `Design tags`
   workflow (`design-tags.yml`, hourly and by hand): merge a round's code pull requests before the design's.
-- **Three PDFs**: the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone - every line links a
+- **Four PDFs**: the requirements (`/onek8s-requirements.pdf`, part 0, `--only requirements --subtitle Requirements`),
+  the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone - every line links a
   section, it adds nothing of its own), the design (`/onek8s-design.pdf`, sections 1.1 to 5.2, under 100 pages) and the reference
   (`/onek8s-design-reference.pdf`, part 8; the intro, parts 6 and 7 and page 7.5 are left out of the design PDF until
-  the user asks for their review). Membership is the `pdf:` key of each page in `_data/nav.yml` (`design`, `summary`,
-  `reference`), which `scripts/pdf.py --only <name>` selects, built from `_site` in nav order with headless Chrome
+  the user asks for their review). Membership is the `pdf:` key of each page in `_data/nav.yml` (`requirements`, `design`,
+  `summary`, `reference`), which `scripts/pdf.py --only <name>` selects, built from `_site` in nav order with headless Chrome
   (Pages workflow; `Check` attaches them as `onek8s-design-pdf`). The build fails on a link without a target, so keep
   links relative (`x.md#heading`) and fix every link to a renamed heading. Pictures in a PDF must stay readable at
   page width: at most about 1 200 px wide (`CONTRIBUTING.md`).
@@ -41,7 +58,9 @@ freshness, links and anchors, navigation, release notes).
   commits and issues cite - is in the `v1.15` tag; v2.0 still carried the lab's state and the implementation's names,
   removed in v2.1; v2.2 removed ACNS and its page 5.1 (5.2 and 5.3 became 5.1 and 5.2), kept in the `v2.1` tag;
   v3.0 cut the design PDF under 100 pages: other clouds and exit on 7.5 (outside the PDF), the company firewall's
-  delegation options in 7.1, Kubernetes and AKS mechanics replaced by links to the documentation.
+  delegation options in 7.1, Kubernetes and AKS mechanics replaced by links to the documentation; v3.9 split the
+  repository into `requirements/` (humans) and `design/` (AI, formerly `docs/`), with 1.2's requirement texts in 0.2
+  and 7.1's acceptance tests in 0.3 (anchors such as `#cis-benchmark` now point into 0.3).
 
 ## The design in v3.0
 

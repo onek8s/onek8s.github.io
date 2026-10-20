@@ -3,10 +3,12 @@
 #  1. every diagram source (diagrams/*.mmd) has a light and a dark rendering (images/<name>.svg, images/<name>.dark.svg)
 #     that are at least as new in Git history;
 #  2. every relative Markdown link and image reference resolves to a file;
-#  3. the navigation (_data/nav.yml), the Contents of README.md and the files in docs/ agree, every page's
-#     <part>.<page> number is the same in its file name, its first heading and the navigation, and README.md marks
-#     (PDF) exactly the pages whose `pdf:` is `design`;
-#  4. the newest version in docs/8.1-release-notes.md is the version in _config.yml, and every entry links a pull request.
+#  3. the navigation (_data/nav.yml), the Contents of README.md and the files in requirements/ and design/ agree,
+#     every page's <part>.<page> number is the same in its file name, its first heading and the navigation, README.md
+#     marks (PDF) exactly the pages whose `pdf:` is `design` and (requirements PDF) exactly those whose `pdf:` is
+#     `requirements`, and `pdf: requirements` is set on every page in requirements/ and on no other;
+#  4. the newest version in design/8.1-release-notes.md is the version in _config.yml, and every entry links a pull
+#     request.
 # Usage: scripts/check.sh   (run from anywhere; needs git and python3)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -36,7 +38,8 @@ python3 -I - <<'PY' || status=1
 import os, re, sys
 link = re.compile(r'!?\[[^\]]*\]\(([^)\s]+)\)')
 bad = 0
-files = ['README.md'] + sorted(os.path.join('docs', f) for f in os.listdir('docs') if f.endswith('.md'))
+files = ['README.md'] + sorted(os.path.join(d, f) for d in ('requirements', 'design') for f in os.listdir(d)
+                               if f.endswith('.md'))
 for path in files:
     base = os.path.dirname(path)
     text = open(path, encoding='utf-8').read()
@@ -63,7 +66,7 @@ for path in files:
 sys.exit(1 if bad else 0)
 PY
 
-echo "Navigation: _data/nav.yml, the Contents of README.md and docs/*.md agree"
+echo "Navigation: _data/nav.yml, the Contents of README.md, requirements/*.md and design/*.md agree"
 python3 -I - <<'PY' || status=1
 import os, re, sys
 bad = 0
@@ -83,28 +86,32 @@ for line in open('_data/nav.yml', encoding='utf-8'):
     m = re.match(r'\s+pdf: (\w+)', line)
     if m and nav:
         nav[-1]['pdf'] = m.group(1)
-        if m.group(1) not in ('design', 'summary', 'reference'):
-            fail(f'{nav[-1]["path"]}: pdf: {m.group(1)} is not design, summary or reference')
+        if m.group(1) not in ('requirements', 'design', 'summary', 'reference'):
+            fail(f'{nav[-1]["path"]}: pdf: {m.group(1)} is not requirements, design, summary or reference')
 paths = [item['path'] for item in nav]
 for path in paths:
     if not os.path.exists(path):
         fail(f'_data/nav.yml lists {path}, which does not exist')
     if paths.count(path) > 1:
         fail(f'_data/nav.yml lists {path} more than once')
-docs = sorted('docs/' + f for f in os.listdir('docs') if f.endswith('.md'))
+docs = sorted(d + '/' + f for d in ('requirements', 'design') for f in os.listdir(d) if f.endswith('.md'))
 readme = open('README.md', encoding='utf-8').read()
-linked = set(re.findall(r'\]\((docs/[^)#\s]+)', readme))
+linked = set(re.findall(r'\]\(((?:requirements|design)/[^)#\s]+)', readme))
 for doc in docs:
     if doc not in paths:
         fail(f'{doc} is not in _data/nav.yml')
     if doc not in linked:
         fail(f'{doc} is not linked from the Contents of README.md')
-    marked = re.search(r'\]\(' + re.escape(doc) + r'\) \(PDF\)', readme) is not None
-    in_design = next((i.get('pdf') == 'design' for i in nav if i['path'] == doc), False)
-    if marked != in_design:
-        fail(f'{doc}: README.md marks it {"(PDF)" if marked else "online only"}, _data/nav.yml says '
-             f'{"pdf: design" if in_design else "it is not in the design PDF"}')
-    number = re.match(r'docs/(\d+\.\d+)-', doc)
+    pdf = next((i.get('pdf') for i in nav if i['path'] == doc), None)
+    for name, marker in (('design', '(PDF)'), ('requirements', '(requirements PDF)')):
+        marked = re.search(r'\]\(' + re.escape(doc) + r'\) ' + re.escape(marker), readme) is not None
+        if marked != (pdf == name):
+            fail(f'{doc}: README.md {"marks" if marked else "does not mark"} it {marker}, _data/nav.yml says '
+                 f'{"pdf: " + pdf if pdf else "it is online only"}')
+    if (pdf == 'requirements') != doc.startswith('requirements/'):
+        fail(f'{doc}: every page in requirements/ and no other has pdf: requirements (_data/nav.yml says '
+             f'{"pdf: " + pdf if pdf else "no pdf"})')
+    number = re.match(r'(?:requirements|design)/(\d+\.\d+)-', doc)
     item = next((i for i in nav if i['path'] == doc), None)
     if not number:
         fail(f'{doc}: the file name does not start with a <part>.<page> number')
@@ -124,7 +131,7 @@ python3 -I - <<'PY' || status=1
 import re, sys
 bad = 0
 version = re.search(r'^version:\s*"?([^"\n]+)"?', open('_config.yml', encoding='utf-8').read(), re.M)
-notes = open('docs/8.1-release-notes.md', encoding='utf-8').read()
+notes = open('design/8.1-release-notes.md', encoding='utf-8').read()
 versions = re.findall(r'^## v(\d+\.\d+) - \d{4}-\d{2}-\d{2}$', notes, re.M)
 if not version or not versions or versions[0] != version[1].strip():
     print(f'  NOTES    _config.yml version {version[1] if version else "(none)"} is not the newest release note '

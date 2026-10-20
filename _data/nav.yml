@@ -1,35 +1,54 @@
-# Site navigation: the reading order of the design, in numbered parts.
+# Site navigation: the reading order of the site, in numbered parts.
 #
-# A page is numbered <part>.<page>, and the pictures carry the number of the page that shows them. The layout builds
-# the sidebar and the previous / next links from this list; README.md repeats it with a one-line description per
-# page, and scripts/check.sh fails when the two lists or the files in docs/ disagree.
+# Part 0 is the requirements and acceptance criteria in requirements/, owned by humans (a change needs a human's
+# approval); parts 1 to 8 are the design in design/, owned by AI (a change needs the AI's review). A page is numbered
+# <part>.<page>, and the pictures carry the number of the page that shows them. The layout builds the sidebar and the
+# previous / next links from this list; README.md repeats it with a one-line description per page, and
+# scripts/check.sh fails when the two lists or the files in requirements/ and design/ disagree.
 #
-# `pdf:` names the PDF a page is printed in - `design` (onek8s-design.pdf, the sidebar marks these pages PDF),
-# `summary` (onek8s-design-summary.pdf) or `reference` (onek8s-design-reference.pdf); scripts/pdf.py --only <name>
-# selects them. A page without `pdf:` is online only, and README.md marks the design PDF's pages the same way.
+# `pdf:` names the PDF a page is printed in - `requirements` (onek8s-requirements.pdf, every page of requirements/ and
+# no other), `design` (onek8s-design.pdf, the sidebar marks these pages PDF), `summary` (onek8s-design-summary.pdf) or
+# `reference` (onek8s-design-reference.pdf); scripts/pdf.py --only <name> selects them. A page without `pdf:` is online
+# only. README.md marks the design PDF's pages (PDF) and the requirements PDF's pages (requirements PDF).
+
+- number: 0
+  part: Requirements
+  pages:
+    - path: requirements/0.1-how-we-work.md
+      number: "0.1"
+      title: How we work
+      pdf: requirements
+    - path: requirements/0.2-requirements.md
+      number: "0.2"
+      title: Requirements
+      pdf: requirements
+    - path: requirements/0.3-acceptance-criteria.md
+      number: "0.3"
+      title: Acceptance criteria
+      pdf: requirements
 
 - number: 1
   part: Start here
   pages:
     - path: README.md
       title: Introduction
-    - path: docs/1.0-summary.md
+    - path: design/1.0-summary.md
       number: "1.0"
       title: Summary
       pdf: summary
-    - path: docs/1.1-overview.md
+    - path: design/1.1-overview.md
       number: "1.1"
       title: Overview
       pdf: design
-    - path: docs/1.2-requirements.md
+    - path: design/1.2-how-the-design-meets-the-requirements.md
       number: "1.2"
-      title: Requirements
+      title: How the design meets the requirements
       pdf: design
-    - path: docs/1.3-open-standards-and-portability.md
+    - path: design/1.3-open-standards-and-portability.md
       number: "1.3"
       title: Open standards and portability
       pdf: design
-    - path: docs/1.4-application-contract.md
+    - path: design/1.4-application-contract.md
       number: "1.4"
       title: The application contract
       pdf: design
@@ -37,31 +56,31 @@
 - number: 2
   part: Inside a cluster
   pages:
-    - path: docs/2.1-network-layout.md
+    - path: design/2.1-network-layout.md
       number: "2.1"
       title: Network layout
       pdf: design
-    - path: docs/2.2-control-plane.md
+    - path: design/2.2-control-plane.md
       number: "2.2"
       title: Control plane
       pdf: design
-    - path: docs/2.3-node-pools.md
+    - path: design/2.3-node-pools.md
       number: "2.3"
       title: Node pools
       pdf: design
-    - path: docs/2.4-allowed-and-blocked-flows.md
+    - path: design/2.4-allowed-and-blocked-flows.md
       number: "2.4"
       title: Allowed and blocked flows
       pdf: design
-    - path: docs/2.5-workload-identity-and-secrets.md
+    - path: design/2.5-workload-identity-and-secrets.md
       number: "2.5"
       title: Workload identity and secrets
       pdf: design
-    - path: docs/2.6-application-multi-tenancy.md
+    - path: design/2.6-application-multi-tenancy.md
       number: "2.6"
       title: Application multi-tenancy
       pdf: design
-    - path: docs/2.7-policy-enforcement.md
+    - path: design/2.7-policy-enforcement.md
       number: "2.7"
       title: Policy enforcement
       pdf: design
@@ -69,23 +88,23 @@
 - number: 3
   part: The fleet
   pages:
-    - path: docs/3.1-cluster-types-stateless-and-stateful.md
+    - path: design/3.1-cluster-types-stateless-and-stateful.md
       number: "3.1"
       title: "Cluster types: stateless and stateful"
       pdf: design
-    - path: docs/3.2-environments.md
+    - path: design/3.2-environments.md
       number: "3.2"
       title: Environments
       pdf: design
-    - path: docs/3.3-keeping-clusters-in-sync.md
+    - path: design/3.3-keeping-clusters-in-sync.md
       number: "3.3"
       title: Keeping clusters in sync
       pdf: design
-    - path: docs/3.4-zero-downtime-application-upgrades.md
+    - path: design/3.4-zero-downtime-application-upgrades.md
       number: "3.4"
       title: Zero-downtime application upgrades
       pdf: design
-    - path: docs/3.5-zero-downtime-cluster-upgrades.md
+    - path: design/3.5-zero-downtime-cluster-upgrades.md
       number: "3.5"
       title: Zero-downtime cluster upgrades
       pdf: design
@@ -93,11 +112,11 @@
 - number: 4
   part: Encryption
   pages:
-    - path: docs/4.1-encryption-in-transit-and-tls.md
+    - path: design/4.1-encryption-in-transit-and-tls.md
       number: "4.1"
       title: Encryption in transit and TLS
       pdf: design
-    - path: docs/4.2-encryption-at-rest-and-customer-managed-keys.md
+    - path: design/4.2-encryption-at-rest-and-customer-managed-keys.md
       number: "4.2"
       title: Encryption at rest
       pdf: design
@@ -105,11 +124,11 @@
 - number: 5
   part: Egress control
   pages:
-    - path: docs/5.1-egress-control-and-the-company-firewall.md
+    - path: design/5.1-egress-control-and-the-company-firewall.md
       number: "5.1"
       title: Egress control and the company firewall
       pdf: design
-    - path: docs/5.2-traffic-flow-documentation.md
+    - path: design/5.2-traffic-flow-documentation.md
       number: "5.2"
       title: Traffic flow documentation
       pdf: design
@@ -117,39 +136,39 @@
 - number: 6
   part: Operations
   pages:
-    - path: docs/6.1-ai-driven-day-2-operations.md
+    - path: design/6.1-ai-driven-day-2-operations.md
       number: "6.1"
       title: AI-driven day 2 operations
-    - path: docs/6.2-observability-with-grafana-cloud.md
+    - path: design/6.2-observability-with-grafana-cloud.md
       number: "6.2"
       title: Observability with Grafana Cloud
-    - path: docs/6.3-backup-and-region-recovery.md
+    - path: design/6.3-backup-and-region-recovery.md
       number: "6.3"
       title: Backup and region recovery
 
 - number: 7
   part: Delivery and decisions
   pages:
-    - path: docs/7.1-implementation-project-and-acceptance-testing.md
+    - path: design/7.1-implementation-project-and-acceptance-testing.md
       number: "7.1"
       title: Implementation project and acceptance testing
-    - path: docs/7.2-decisions.md
+    - path: design/7.2-decisions.md
       number: "7.2"
       title: Decisions
-    - path: docs/7.3-open-questions.md
+    - path: design/7.3-open-questions.md
       number: "7.3"
       title: Open questions
-    - path: docs/7.4-outlook-2030-and-the-options-kept-open.md
+    - path: design/7.4-outlook-2030-and-the-options-kept-open.md
       number: "7.4"
       title: "Outlook: 2030 and the options kept open"
-    - path: docs/7.5-other-clouds-and-exit.md
+    - path: design/7.5-other-clouds-and-exit.md
       number: "7.5"
       title: Other clouds, sovereignty and exit
 
 - number: 8
   part: Appendix
   pages:
-    - path: docs/8.1-release-notes.md
+    - path: design/8.1-release-notes.md
       number: "8.1"
       title: Release notes
       pdf: reference

@@ -1,0 +1,41 @@
+---
+permalink: /404.html
+layout: null
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Page not found – {{ site.title }}</title>
+<script>
+  // The design moved from docs/ to design/ in v3.9, and its requirements page 1.2 became requirements/0.2: send the
+  // old addresses to the new ones, keeping the heading (#...) they pointed at; 7.1's acceptance tests are 0.3 now.
+  (function () {
+    var base = '{{ "/" | relative_url }}';
+    var path = location.pathname;
+    var m = path.match(/\/docs\/([^/]+?)(?:\.html|\.md)?$/);
+    if (!m) return;
+    var moved = /^#(requirement-and-isolation-tests|cis-benchmark|performance-and-capacity|high-availability-and-resilience|shared-tier-failure-domains|zero-downtime-upgrades-and-changes|rebuild-backup-and-recovery|operations)$/;
+    // 1.2's headings (cells and bulkheads, ...) stayed in the design's page 1.2; its table of requirements is 0.2.
+    var target = m[1] === '1.2-requirements'
+      ? (location.hash ? 'design/1.2-how-the-design-meets-the-requirements.html' : 'requirements/0.2-requirements.html')
+      : /^7\.1-/.test(m[1]) && moved.test(location.hash) ? 'requirements/0.3-acceptance-criteria.html'
+      : 'design/' + m[1] + '.html';
+    location.replace(base + target + location.search + location.hash);
+  })();
+</script>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 4rem 16px; font: 16px/1.5 system-ui, sans-serif; text-align: center;
+    background: #fff; color: #1f2328; }
+  a { color: #0b5cad; }
+  @media (prefers-color-scheme: dark) { body { background: #0f141a; color: #e6edf3; } a { color: #79b8ff; } }
+</style>
+</head>
+<body>
+<h1>Page not found</h1>
+<p>This page does not exist. The design's pages are listed on the <a href="{{ '/' | relative_url }}">home page</a>.</p>
+</body>
+</html>
