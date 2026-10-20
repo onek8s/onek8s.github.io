@@ -12,18 +12,36 @@ layout: null
 <script>
   // The design moved from docs/ to design/ in v3.9, and its requirements page 1.2 became requirements/0.2: send the
   // old addresses to the new ones, keeping the heading (#...) they pointed at; 7.1's acceptance tests are 0.3 now.
+  // v4.0 moved the pages no requirement names (7.1, 7.4, 7.5) out of the site: their addresses go to the nearest page.
   (function () {
     var base = '{{ "/" | relative_url }}';
     var path = location.pathname;
-    var m = path.match(/\/docs\/([^/]+?)(?:\.html|\.md)?$/);
+    var m = path.match(/\/(docs|design)\/([^/]+?)(?:\.html|\.md)?$/);
     if (!m) return;
+    var name = m[2];
+    var hash = location.hash;
     var moved = /^#(requirement-and-isolation-tests|cis-benchmark|performance-and-capacity|high-availability-and-resilience|shared-tier-failure-domains|zero-downtime-upgrades-and-changes|rebuild-backup-and-recovery|operations)$/;
-    // 1.2's headings (cells and bulkheads, ...) stayed in the design's page 1.2; its table of requirements is 0.2.
-    var target = m[1] === '1.2-requirements'
-      ? (location.hash ? 'design/1.2-how-the-design-meets-the-requirements.html' : 'requirements/0.2-requirements.html')
-      : /^7\.1-/.test(m[1]) && moved.test(location.hash) ? 'requirements/0.3-acceptance-criteria.html'
-      : 'design/' + m[1] + '.html';
-    location.replace(base + target + location.search + location.hash);
+    var target;
+    if (/^7\.1-/.test(name)) {
+      // 7.1's acceptance tests are 0.3; the rest of the page (build tenant, phases, reviews) is archived.
+      target = 'requirements/0.3-acceptance-criteria.html';
+      if (!moved.test(hash)) hash = '';
+    } else if (/^7\.4-/.test(name)) {
+      target = 'design/7.2-decisions.html';
+      hash = '';
+    } else if (/^7\.5-/.test(name)) {
+      // Its data services joined 1.3 under the same heading.
+      target = 'design/1.3-open-standards-and-portability.html';
+      if (hash !== '#data-in-paas-services-that-every-cloud-offers') hash = '';
+    } else if (m[1] === 'design') {
+      return;
+    } else if (name === '1.2-requirements') {
+      // 1.2's headings (cells and bulkheads, ...) stayed in the design's page 1.2; its table of requirements is 0.2.
+      target = hash ? 'design/1.2-how-the-design-meets-the-requirements.html' : 'requirements/0.2-requirements.html';
+    } else {
+      target = 'design/' + name + '.html';
+    }
+    location.replace(base + target + location.search + hash);
   })();
 </script>
 <style>

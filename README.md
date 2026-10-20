@@ -10,8 +10,8 @@ infrastructure-as-code are cloud-specific ([section 1.3](design/1.3-open-standar
 portable today; the platform under it is an AKS platform that leans on what Azure manages, and a second cloud is
 another implementation of it, not a lift of this one.
 
-**Azure is the first cloud implemented**; AWS and Google Cloud are the targets. This design describes the Azure
-implementation: a large Azure Kubernetes Service (AKS) platform with strong isolation between
+**Azure is the first cloud implemented**, and this design describes the Azure implementation:
+a large Azure Kubernetes Service (AKS) platform with strong isolation between
 **internal / external** workloads – separate subscriptions and clusters – and between **countries** – isolation zones
 with their own node pools, network and Key Vault inside a cluster – plus application multi-tenancy inside each zone.
 
@@ -43,24 +43,21 @@ and the infrastructure as code built from it: every change there needs the AI's 
 | You are | Read |
 |---|---|
 | Someone who sets or changes a requirement | [0.1 How we work](requirements/0.1-how-we-work.md), then [0.2 Requirements](requirements/0.2-requirements.md) and [0.3 Acceptance criteria](requirements/0.3-acceptance-criteria.md) (also a [PDF](https://onek8s.github.io/onek8s-requirements.pdf)) |
-| A reviewer or sponsor who has to decide or sign off | [1.0 Summary](design/1.0-summary.md) (also a [PDF](https://onek8s.github.io/onek8s-design-summary.pdf)), then the [sign-offs](design/7.2-decisions.md#human-sign-offs-still-needed) |
-| The security team | Parts 2 (inside a cluster), 4 (encryption) and 5 (egress control), then [2.4](design/2.4-allowed-and-blocked-flows.md)'s isolation matrix and [7.1](design/7.1-implementation-project-and-acceptance-testing.md#security-reviews)'s reviews |
+| A reviewer or sponsor who has to decide or sign off | [1.0 Summary](design/1.0-summary.md) (the first pages of the [design PDF](https://onek8s.github.io/onek8s-design.pdf)), then the [sign-offs](design/7.2-decisions.md#human-sign-offs-still-needed) |
+| The security team | Parts 2 (inside a cluster), 4 (encryption) and 5 (egress control), then [2.4](design/2.4-allowed-and-blocked-flows.md)'s isolation matrix and the [acceptance criteria](requirements/0.3-acceptance-criteria.md) that prove them |
 | An application team | [1.4 The application contract](design/1.4-application-contract.md), then [1.3](design/1.3-open-standards-and-portability.md) for why it is portable |
 | An operator | Parts 3 (the fleet) and 6 (operations) |
 
-There are four PDFs, rebuilt with every publish: the [requirements](https://onek8s.github.io/onek8s-requirements.pdf)
-(part 0), the [summary](https://onek8s.github.io/onek8s-design-summary.pdf), the
-[design](https://onek8s.github.io/onek8s-design.pdf) (sections 1.1 to 5.2) and the
-[reference](https://onek8s.github.io/onek8s-design-reference.pdf) (part 8, the release notes). This introduction, the
-summary (its own PDF) and parts 6 and 7 - operations, delivery and decisions - are left out of the design PDF until
-their review; the site shows them.
+There are two PDFs, rebuilt with every publish: the [requirements](https://onek8s.github.io/onek8s-requirements.pdf)
+(part 0) and the [design](https://onek8s.github.io/onek8s-design.pdf) (every page of parts 1 to 8, the summary first).
+This introduction is in neither; the site shows it.
 
 ## Contents
 
 The sections are numbered by part and page in reading order; the decision log cites them by number. The pages
 marked **(PDF)** are the [design PDF](https://onek8s.github.io/onek8s-design.pdf), those marked **(requirements PDF)**
-the [requirements PDF](https://onek8s.github.io/onek8s-requirements.pdf); the summary and the release notes are PDFs of
-their own; the other pages are online only.
+the [requirements PDF](https://onek8s.github.io/onek8s-requirements.pdf); every page is in one of the two. Each design
+page names the requirements it serves under its title.
 
 **0. Requirements**
 
@@ -73,7 +70,7 @@ their own; the other pages are online only.
 
 **1. Start here**
 
-- [1.0 Summary](design/1.0-summary.md) – the whole design in a few pages: what it is, the bets, the decisions that
+- [1.0 Summary](design/1.0-summary.md) (PDF) – the whole design in a few pages: what it is, the bets, the decisions that
   shape it, the sign-offs, the cost structure.
 - [1.1 Overview](design/1.1-overview.md) (PDF) – the hub-and-spoke landing zone with a hub per exposure, and the inner layout
   every cluster shares.
@@ -91,7 +88,7 @@ their own; the other pages are online only.
 - [2.2 Control plane](design/2.2-control-plane.md) (PDF) – a private API server in its own subnet, reached only from the
   management network; no local accounts, no SSH.
 - [2.3 Node pools](design/2.3-node-pools.md) (PDF) – classic pools per zone with the cluster autoscaler in the stateless clusters,
-  fixed pools in the stateful one; arm64, spot and GPUs chosen by the application; pods right-sized in place.
+  fixed pools in the stateful one; arm64 and spot chosen by the application; pods right-sized in place.
 - [2.4 Allowed and blocked flows](design/2.4-allowed-and-blocked-flows.md) (PDF) – the few flows Kubernetes needs between a
   zone and the platform, and the isolation matrix of what each principal can reach.
 - [2.5 Workload identity first, Key Vault secrets only when needed](design/2.5-workload-identity-and-secrets.md) (PDF) –
@@ -134,30 +131,24 @@ their own; the other pages are online only.
 
 **6. Operations**
 
-- [6.1 AI-driven day 2 operations](design/6.1-ai-driven-day-2-operations.md) – agents that observe with read-only
+- [6.1 AI-driven day 2 operations](design/6.1-ai-driven-day-2-operations.md) (PDF) – agents that observe with read-only
   identities and change the platform only by pull request, inside guardrails that humans own.
-- [6.2 Observability with Grafana Cloud](design/6.2-observability-with-grafana-cloud.md) – one stack per environment,
+- [6.2 Observability with Grafana Cloud](design/6.2-observability-with-grafana-cloud.md) (PDF) – one stack per environment,
   Grafana Alloy collecting node-locally, Private Link, SLO gates and security detections.
-- [6.3 Backup and region recovery](design/6.3-backup-and-region-recovery.md) – only persistent data is backed up,
+- [6.3 Backup and region recovery](design/6.3-backup-and-region-recovery.md) (PDF) – only persistent data is backed up,
   immutably, into the paired region; clusters are rebuilt from IaC and Git.
 
-**7. Delivery and decisions**
+**7. Decisions**
 
-- [7.1 Implementation project and acceptance testing](design/7.1-implementation-project-and-acceptance-testing.md) – a
-  separate build tenant, the phases, security reviews and the connection readiness gate.
-- [7.2 Decisions](design/7.2-decisions.md) – the decision log with options and justification, the Azure capability and
+- [7.2 Decisions](design/7.2-decisions.md) (PDF) – the decision log with options and justification, the Azure capability and
   verification matrix, and the human sign-offs still needed.
-- [7.3 Open questions](design/7.3-open-questions.md) – the recently added features a person still has to weigh, each with
+- [7.3 Open questions](design/7.3-open-questions.md) (PDF) – the recently added features a person still has to weigh, each with
   the design's default until then.
-- [7.4 Outlook: 2030 and the options kept open](design/7.4-outlook-2030-and-the-options-kept-open.md) – what is meant
-  to hold, what is changing, the rule that keeps the platform simple, and every feature left out today with its way in.
-- [7.5 Other clouds, sovereignty and exit](design/7.5-other-clouds-and-exit.md) – the PaaS services every cloud offers,
-  what replaces the Azure specifics elsewhere, DORA and NIS2, the dependencies outside the tenant, adding a cloud.
 
 **8. Appendix**
 
-- [8.1 Release notes](design/8.1-release-notes.md) – the design's versions from v1.0 on, one sentence and the pull request
-  per change.
+- [8.1 Release notes](design/8.1-release-notes.md) (PDF) – the current version of the design, one sentence and the pull
+  request per change; the older versions are in Git tags.
 
 The environments are built from this design; the implementation lives in the other repositories of the [onek8s](https://github.com/onek8s) organisation. How to edit the pictures, the site, the PDFs and the release notes is in [CONTRIBUTING.md](https://github.com/onek8s/onek8s.github.io/blob/main/CONTRIBUTING.md); reviews of the design against outside sources are kept in [`reviews/`](https://github.com/onek8s/onek8s.github.io/tree/main/reviews) on GitHub and are not part of the
-published design.
+published design, nor is the repository's `archive/` folder, which keeps what no requirement names.

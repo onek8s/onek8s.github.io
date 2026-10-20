@@ -7,9 +7,9 @@
 # scripts/check.sh fails when the two lists or the files in requirements/ and design/ disagree.
 #
 # `pdf:` names the PDF a page is printed in - `requirements` (onek8s-requirements.pdf, every page of requirements/ and
-# no other), `design` (onek8s-design.pdf, the sidebar marks these pages PDF), `summary` (onek8s-design-summary.pdf) or
-# `reference` (onek8s-design-reference.pdf); scripts/pdf.py --only <name> selects them. A page without `pdf:` is online
-# only. README.md marks the design PDF's pages (PDF) and the requirements PDF's pages (requirements PDF).
+# no other) or `design` (onek8s-design.pdf, every page of design/); scripts/pdf.py --only <name> selects them. Only the
+# introduction (README.md) has no `pdf:`. README.md marks the design PDF's pages (PDF) and the requirements PDF's pages
+# (requirements PDF). What no requirement names is kept in archive/, outside the site and the PDFs.
 
 - number: 0
   part: Requirements
@@ -35,7 +35,7 @@
     - path: design/1.0-summary.md
       number: "1.0"
       title: Summary
-      pdf: summary
+      pdf: design
     - path: design/1.1-overview.md
       number: "1.1"
       title: Overview
@@ -139,31 +139,27 @@
     - path: design/6.1-ai-driven-day-2-operations.md
       number: "6.1"
       title: AI-driven day 2 operations
+      pdf: design
     - path: design/6.2-observability-with-grafana-cloud.md
       number: "6.2"
       title: Observability with Grafana Cloud
+      pdf: design
     - path: design/6.3-backup-and-region-recovery.md
       number: "6.3"
       title: Backup and region recovery
+      pdf: design
 
 - number: 7
-  part: Delivery and decisions
+  part: Decisions
   pages:
-    - path: design/7.1-implementation-project-and-acceptance-testing.md
-      number: "7.1"
-      title: Implementation project and acceptance testing
     - path: design/7.2-decisions.md
       number: "7.2"
       title: Decisions
+      pdf: design
     - path: design/7.3-open-questions.md
       number: "7.3"
       title: Open questions
-    - path: design/7.4-outlook-2030-and-the-options-kept-open.md
-      number: "7.4"
-      title: "Outlook: 2030 and the options kept open"
-    - path: design/7.5-other-clouds-and-exit.md
-      number: "7.5"
-      title: Other clouds, sovereignty and exit
+      pdf: design
 
 - number: 8
   part: Appendix
@@ -171,4 +167,4 @@
     - path: design/8.1-release-notes.md
       number: "8.1"
       title: Release notes
-      pdf: reference
+      pdf: design

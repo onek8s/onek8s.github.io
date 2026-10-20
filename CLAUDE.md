@@ -13,68 +13,78 @@ The requirements and the design, published with GitHub Pages, in two folders wit
   7.1). AI may propose a change; every change needs a human's approval (`olljanat`). Never change a requirement or a
   criterion to fit the design: propose it in its own pull request for a human.
 - `design/<part>.<page>-*.md`, parts 1 to 8 (1 Start here, 2 Inside a cluster, 3 The fleet, 4 Encryption, 5 Egress
-  control, 6 Operations, 7 Delivery and decisions, 8 Appendix) - **owned by AI**, like the infrastructure as code in
+  control, 6 Operations, 7 Decisions, 8 Appendix) - **owned by AI**, like the infrastructure as code in
   the implementation repositories; a human's change gets the AI's review (`olljanat-ai`) against the requirements and
   acceptance criteria. `1.2-how-the-design-meets-the-requirements.md` maps each requirement to the design (and holds
   the vocabulary); `7.2-decisions.md` is the decision log, capability matrix and human sign-offs;
   `7.3-open-questions.md` holds only the questions a person still has to weigh (the sign-offs live in 7.2 alone).
+- `archive/` (since v4.0, the user) - what no requirement names, kept as Markdown outside the site and the PDFs: the
+  whole pages 7.1 (implementation project), 7.4 (outlook, options kept open, watch list) and 7.5 (other clouds, exit;
+  its data services moved to 1.3), and `<page>-<slug>-sections.md` with the sections moved out of a page (GPUs of 2.3,
+  the D/V/H/Q rows no requirement names, ...). Numbering gaps stay (no renumbering). No published page links into it.
+
+**The design holds only what serves a requirement** (the user, v4.0): every design page names the requirements of 0.2
+it serves on the line under its first heading (`**Requirements:** [R5](../requirements/0.2-requirements.md), ...`;
+8.1 says `none`). Content no requirement names goes to `archive/`, not `design/`; propose the requirement to a human
+instead.
 
 `.github/CODEOWNERS` and the required `Approvals` check (`scripts/approvals.py`) enforce who approves what: it lists
 the approval each changed path needs, the author counts as their own side's approval, and an approval is kept across
-later pushes that do not touch that owner's files. Old `docs/` URLs are redirected by `404.html`.
+later pushes that do not touch that owner's files. Old `docs/` URLs, and those of the pages v4.0 archived,
+are redirected by `404.html`.
 
 Diagrams are `diagrams/*.mmd`, rendered to `images/<name>.svg` and `<name>.dark.svg` by `scripts/render.sh` (`CONTRIBUTING.md`). The reading order is `_data/nav.yml`, repeated with a
-description per page in `README.md`'s Contents - a new page goes into both, with `pdf: design` in `nav.yml` and
-`(PDF)` after its README link when it belongs in the design PDF, `pdf: requirements` and `(requirements PDF)` for every
+description per page in `README.md`'s Contents - a new page goes into both, with `pdf: design` in `nav.yml` and `(PDF)` after its README link for every page in `design/`, `pdf: requirements` and `(requirements PDF)` for every
 page in `requirements/` and no other (the sidebar tags those pages; `check.sh` compares the two and checks the folder,
-and that file name, first heading and nav share the page number). `scripts/check.sh` runs in CI (diagram
-freshness, links and anchors, navigation, release notes).
+and that file name, first heading and nav share the page number). `scripts/check.sh` runs in CI (diagram freshness, links and anchors, navigation, release notes, each design
+page's requirements line, no link into `archive/`).
 
 - **Decisions**: a decision goes into `7.2-decisions.md` with its options and justification. D-numbers are never
-  renumbered or reused (D75 is retired, D59 and D76 are merged into D61 and D74).
+  renumbered or reused (D75 is retired, D59 and D76 are merged into D61 and D74; their rows, and the rows no
+  requirement names, are in `archive/7.2-decisions-sections.md`).
 - **The environments are built from the design** (the user's rule), never the other way round: the pages describe
   the design, not the state of a lab or of the code. No "built today" against "target", no repository, file,
   workflow or variable names of the implementation, no lab cluster names or addresses (example names only, as
   `aks-prd-int-stateless-az1`); what the implementation still lacks is tracked with the implementation, not here.
   A finding in an environment that changes the design is a design pull request first. The landing zone is out of
   scope: refer to Microsoft's documentation instead of explaining it here.
-- **Versions** (the user): the design is **v3.0 since 2026-10-19**. Every pull request that changes the design adds
-  the next minor version (v2.1, v2.2, ...; a major version only when a human says so) at the top of
-  `design/8.1-release-notes.md` - `## v2.N - <date>`, one short sentence per change ending in the pull request link
+- **Versions** (the user): the design is **v4.0 since 2026-10-20**. Every pull request that changes the design adds
+  the next minor version (v4.1, v4.2, ...; a major version only when a human says so) at the top of
+  `design/8.1-release-notes.md` - `## v4.N - <date>`, one short sentence per change ending in the pull request link
   (`[#NN](https://github.com/onek8s/onek8s.github.io/pull/NN)`) - and sets the same `version:` in `_config.yml`;
   create the pull request first if its number is not known yet. `check.sh` fails when the two disagree or an entry
   has no pull request link. Every version is tagged `v<version>` in every repository by aks-terraform's `Design tags`
   workflow (`design-tags.yml`, hourly and by hand): merge a round's code pull requests before the design's.
-- **Four PDFs**: the requirements (`/onek8s-requirements.pdf`, part 0, `--only requirements --subtitle Requirements`),
-  the summary (`/onek8s-design-summary.pdf`, page `1.0-summary.md` alone - every line links a
-  section, it adds nothing of its own), the design (`/onek8s-design.pdf`, sections 1.1 to 5.2, under 100 pages) and the reference
-  (`/onek8s-design-reference.pdf`, part 8; the intro, parts 6 and 7 and page 7.5 are left out of the design PDF until
-  the user asks for their review). Membership is the `pdf:` key of each page in `_data/nav.yml` (`requirements`, `design`,
-  `summary`, `reference`), which `scripts/pdf.py --only <name>` selects, built from `_site` in nav order with headless Chrome
-  (Pages workflow; `Check` attaches them as `onek8s-design-pdf`). The build fails on a link without a target, so keep
-  links relative (`x.md#heading`) and fix every link to a renamed heading. Pictures in a PDF must stay readable at
-  page width: at most about 1 200 px wide (`CONTRIBUTING.md`).
+- **Two PDFs** (since v4.0): the requirements (`/onek8s-requirements.pdf`, part 0, `--only requirements --subtitle
+  Requirements`) and the design (`/onek8s-design.pdf`, `--only design`: every page of `design/`, the summary 1.0
+  first, the release notes last; the former 100-page cap is gone). Membership is the `pdf:` key of each page in
+  `_data/nav.yml` (`requirements`, `design`), which `scripts/pdf.py --only <name>` selects, built from `_site` in nav
+  order with headless Chrome (Pages workflow; `Check` attaches them as `onek8s-design-pdf`). The build fails on a link
+  without a target, so keep links relative (`x.md#heading`) and fix every link to a renamed heading. Pictures in a PDF
+  must stay readable at page width: at most about 1 200 px wide (`CONTRIBUTING.md`).
 - **History**: v1 - the options v2.0 removed, the two-cell lab and the section renumberings of 2026-10-17 that older
   commits and issues cite - is in the `v1.15` tag; v2.0 still carried the lab's state and the implementation's names,
   removed in v2.1; v2.2 removed ACNS and its page 5.1 (5.2 and 5.3 became 5.1 and 5.2), kept in the `v2.1` tag;
   v3.0 cut the design PDF under 100 pages: other clouds and exit on 7.5 (outside the PDF), the company firewall's
   delegation options in 7.1, Kubernetes and AKS mechanics replaced by links to the documentation; v3.9 split the
   repository into `requirements/` (humans) and `design/` (AI, formerly `docs/`), with 1.2's requirement texts in 0.2
-  and 7.1's acceptance tests in 0.3 (anchors such as `#cis-benchmark` now point into 0.3).
+  and 7.1's acceptance tests in 0.3 (anchors such as `#cis-benchmark` now point into 0.3); v4.0 moved what no
+  requirement names to `archive/` and dropped the summary and reference PDFs - the `v3.8` tag holds the design before
+  v4.0, with the release notes of v2.0 to v3.8 (8.1 lists only v4).
 
-## The design in v3.0
+## The design in v4.0
 
 One cell network: Azure CNI Pod Subnet with dynamic IP allocation and Cilium (D74) - nodes and internal load
 balancers in `/24` slots of `address_space` (slot 0 the system pool, a slot per zone index), pods in
 `pod_address_space`, a `/16` of 100.64.0.0/10 with a `/20` per slot. The hub Firewall (one per exposure, D53) sees the
 pods' own addresses and decides egress per application rule file in every cell; ACNS (FQDN filtering, Hubble, eBPF
-host routing) is not used, each part an option in 7.4 with a measured trigger (D61, D80). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
+host routing) is not used, each part an option with a measured trigger in 5.1 (D61, D80). Zone-to-zone traffic goes through the hub Firewall (D73). Zone
 nodes are classic node pools with the cluster autoscaler - `<zone>`, `<zone>spot`, `<zone>arm`, `<zone>armspot`, from
-zero, the priority expander putting spot first; GPUs a `<zone>gpu` pool on request (D42); node auto provisioning only
-when it supports the pod subnet (7.4 watch list). No AKS Automatic (D79). Private API servers over Private Link (D58,
+zero, the priority expander putting spot first; node auto provisioning only
+when it supports the pod subnet. No AKS Automatic (D79). Private API servers over Private Link (D58,
 VNet integration open as H14), no public endpoints (D60), KMS data encryption (D22), Traefik with HTTP/2 and TLS 1.3
 only at the edge and h2c upstream (D69-D71, V29 open), Flux's webhook only in a cell with a public entry point (D78),
 Git refs with one branch per cell (D77); no Microsoft Defender - the company's third-party security tool (D81); in the build tenant every
-Azure Policy assignment denies once it reports no non-compliant resource (D82); purge protection by policy in prd only (D83); other clouds, sovereignty and exit only on 7.5. The implementation project (7.1) builds and accepts the dev environment in a
-separate build tenant, starting with one internal cell behind a firewall VM that enforces the designed Firewall
-Policies (D57); the stateful cluster and backup (6.3) are built with the first approved stateful exception.
+Azure Policy assignment denies once it reports no non-compliant resource (D82); purge protection by policy in prd only (D83). The stateful cluster and backup (6.3) are built with the first
+approved stateful exception. GPUs (D42), other clouds and exit (7.5), the outlook (7.4) and the implementation
+project's plan (7.1: build tenant, phases, the firewall VM of D57) are in `archive/`, outside the design.

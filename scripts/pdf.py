@@ -4,7 +4,7 @@
 Takes the pages of the built Jekyll site (_site) in the reading order of _data/nav.yml, joins their content into one
 HTML document - a cover with the version, a contents list, then every page on a new sheet - and prints it with
 headless Chrome. With --only the PDF holds a selection: the name of a PDF as the pages' `pdf:` key in nav.yml gives it
-(`requirements`, `design`, `summary`, `reference`), parts (`0`, `1-6`, `7`), pages (`1.0`) or `intro` (README.md), separated by commas;
+(`requirements`, `design`), parts (`0`, `1-6`, `7`), pages (`1.0`) or `intro` (README.md), separated by commas;
 links to pages outside the selection go to the published site. Links between pages and to their headings become links inside the PDF: every id is prefixed with its
 page's key (s2-1--<id>, intro--<id> for README.md), so the same heading on two pages stays two targets. Links to files
 that are not pages go to the published site, or to GitHub when the site does not publish them (diagrams/, scripts/).
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('site')
     parser.add_argument('out')
-    parser.add_argument('--only', help='a PDF name (requirements, design, summary, reference), parts, part ranges, page numbers or '
+    parser.add_argument('--only', help='a PDF name (requirements, design), parts, part ranges, page numbers or '
                         'intro, separated by commas')
     parser.add_argument('--subtitle', help='what the cover calls this PDF (default: Platform design)')
     args = parser.parse_args()
