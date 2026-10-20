@@ -3,11 +3,9 @@
 #  1. every diagram source (diagrams/*.mmd) has a light and a dark rendering (images/<name>.svg, images/<name>.dark.svg)
 #     that are at least as new in Git history;
 #  2. every relative Markdown link and image reference resolves to a file;
-#  3. the navigation (_data/nav.yml), the Contents of README.md and the files in requirements/ and design/ agree,
-#     every page's <part>.<page> number is the same in its file name, its first heading and the navigation, README.md
-#     marks (PDF) exactly the pages whose `pdf:` is `design` and (requirements PDF) exactly those whose `pdf:` is
-#     `requirements`, `pdf: requirements` is set on every page in requirements/ and `pdf: design` on every page in
-#     design/;
+#  3. the navigation (_data/nav.yml) and the files in requirements/ and design/ agree, every page's <part>.<page>
+#     number is the same in its file name, its first heading and the navigation, `pdf: requirements` is set on every
+#     page in requirements/ and `pdf: design` on every page in design/;
 #  4. the newest version in design/8.1-release-notes.md is the version in _config.yml, and every entry links a pull
 #     request;
 #  5. every design page names the requirements it serves on the line under its first heading
@@ -73,7 +71,7 @@ for path in files:
 sys.exit(1 if bad else 0)
 PY
 
-echo "Navigation: _data/nav.yml, the Contents of README.md, requirements/*.md and design/*.md agree"
+echo "Navigation: _data/nav.yml, requirements/*.md and design/*.md agree"
 python3 -I - <<'PY' || status=1
 import os, re, sys
 bad = 0
@@ -102,19 +100,10 @@ for path in paths:
     if paths.count(path) > 1:
         fail(f'_data/nav.yml lists {path} more than once')
 docs = sorted(d + '/' + f for d in ('requirements', 'design') for f in os.listdir(d) if f.endswith('.md'))
-readme = open('README.md', encoding='utf-8').read()
-linked = set(re.findall(r'\]\(((?:requirements|design)/[^)#\s]+)', readme))
 for doc in docs:
     if doc not in paths:
         fail(f'{doc} is not in _data/nav.yml')
-    if doc not in linked:
-        fail(f'{doc} is not linked from the Contents of README.md')
     pdf = next((i.get('pdf') for i in nav if i['path'] == doc), None)
-    for name, marker in (('design', '(PDF)'), ('requirements', '(requirements PDF)')):
-        marked = re.search(r'\]\(' + re.escape(doc) + r'\) ' + re.escape(marker), readme) is not None
-        if marked != (pdf == name):
-            fail(f'{doc}: README.md {"marks" if marked else "does not mark"} it {marker}, _data/nav.yml says '
-                 f'{"pdf: " + pdf if pdf else "it is online only"}')
     if (pdf == 'requirements') != doc.startswith('requirements/'):
         fail(f'{doc}: every page in requirements/ and no other has pdf: requirements (_data/nav.yml says '
              f'{"pdf: " + pdf if pdf else "no pdf"})')

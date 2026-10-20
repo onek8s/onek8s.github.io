@@ -3,20 +3,20 @@
 flowchart TB
     subgraph OWN["Who owns what"]
         direction LR
-        h_own["Humans own requirements/<br/>requirements and acceptance criteria<br/>every change approved by a human"]
-        a_own["AI owns design/ and the code<br/>design and infrastructure as code<br/>every change reviewed by the AI"]
+        h_own["Humans own the<br/>requirements and<br/>acceptance criteria.<br/>A human approves<br/>every change."]
+        a_own["AI owns the design<br/>and the<br/>infrastructure as code.<br/>The AI reviews<br/>every change."]
         h_own ~~~ a_own
     end
 
-    req["1 · A requirement or criterion changes<br/>pull request to requirements/<br/>approved by a human"]
-    des["2 · The AI updates the design<br/>pull request to design/"]
-    iac["3 · The AI implements it<br/>pull requests to the infrastructure as code"]
-    env["4 · Environments built from the code"]
-    acc["5 · Acceptance tests prove the criteria"]
+    req["1 · A requirement changes,<br/>approved by a human"]
+    des["2 · The AI updates<br/>the design"]
+    iac["3 · The AI implements it<br/>as code"]
+    env["4 · Environments are<br/>built from the code"]
+    acc["5 · Acceptance tests<br/>prove the criteria"]
 
     OWN ~~~ req
     req --> des --> iac --> env --> acc
-    env -.->|"a finding that changes the design:<br/>a design pull request first"| des
+    env -.->|"a finding that changes<br/>the design goes back<br/>to the design first"| des
 
     classDef human fill:#fffde7,stroke:#9e9d24,color:#000
     classDef ai fill:#ede7f6,stroke:#5e35b1,color:#000

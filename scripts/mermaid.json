@@ -13,5 +13,6 @@
     "actorMargin": 40,
     "messageMargin": 30,
     "width": 130
-  }
+  },
+  "themeCSS": "foreignObject { overflow: visible; }"
 }

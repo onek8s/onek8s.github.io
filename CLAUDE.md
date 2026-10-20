@@ -33,10 +33,11 @@ the approval each changed path needs, the author counts as their own side's appr
 later pushes that do not touch that owner's files. Old `docs/` URLs, and those of the pages v4.0 archived,
 are redirected by `404.html`.
 
-Diagrams are `diagrams/*.mmd`, rendered to `images/<name>.svg` and `<name>.dark.svg` by `scripts/render.sh` (`CONTRIBUTING.md`). The reading order is `_data/nav.yml`, repeated with a
-description per page in `README.md`'s Contents - a new page goes into both, with `pdf: design` in `nav.yml` and `(PDF)` after its README link for every page in `design/`, `pdf: requirements` and `(requirements PDF)` for every
-page in `requirements/` and no other (the sidebar tags those pages; `check.sh` compares the two and checks the folder,
-and that file name, first heading and nav share the page number). `scripts/check.sh` runs in CI (diagram freshness, links and anchors, navigation, release notes, each design
+Diagrams are `diagrams/*.mmd`, rendered to `images/<name>.svg` and `<name>.dark.svg` by `scripts/render.sh` (`CONTRIBUTING.md`). The reading order is `_data/nav.yml` (the sidebar; the
+front page has no Contents) - a new page goes into it, with `pdf: design` for every page in `design/` and `pdf:
+requirements` for every page in `requirements/` and no other (`check.sh` checks the folder, and that file name, first
+heading and nav share the page number). The header has two buttons, Requirements PDF and Design PDF; the sidebar
+separates part 0 (owned by humans) from parts 1 to 8 (owned by AI). `scripts/check.sh` runs in CI (diagram freshness, links and anchors, navigation, release notes, each design
 page's requirements line, no link into `archive/`).
 
 - **Decisions**: a decision goes into `7.2-decisions.md` with its options and justification. D-numbers are never

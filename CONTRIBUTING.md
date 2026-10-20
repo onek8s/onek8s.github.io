@@ -57,14 +57,14 @@ R-number that 0.2 does not have, or a link into `archive/`.
 | File | Holds |
 |---|---|
 | `_config.yml` | The title, the design's `version` (shown in the header and on the PDF's cover), the repository the "Edit this page" links point at, and what is not published (`archive/`, `CLAUDE.md`, `diagrams/`, `scripts/`, ...) |
-| `_data/nav.yml` | The reading order of the pages in parts, and per page the PDF it is printed in (`pdf: requirements` or `design`; only the introduction has none). The layout builds the sidebar (with the PDF tags and their legend), the part shown above each title and the previous / next links from it; the Contents of `README.md` repeat it with a one-line description per page and *(PDF)* on the design PDF's pages and *(requirements PDF)* on the requirements PDF's, and `scripts/check.sh` fails when the lists, the markers or the files in `requirements/` and `design/` disagree, or when a page in `requirements/` is not `pdf: requirements` (or one outside it is) or a page in `design/` not `pdf: design` |
-| `_layouts/default.html` | The page: header (with the version and the PDF link), sidebar, the "On this page" list built from the h2 / h3 headings at build time, the page, previous / next |
+| `_data/nav.yml` | The reading order of the pages in parts, and per page the PDF it is printed in (`pdf: requirements` or `design`; only the introduction has none). The layout builds the sidebar (part 0 under "Requirements - owned by humans", parts 1 to 8 under "Design - owned by AI"), the part shown above each title and the previous / next links from it, and `scripts/check.sh` fails when the list and the files in `requirements/` and `design/` disagree, or when a page in `requirements/` is not `pdf: requirements` (or one outside it is) or a page in `design/` not `pdf: design` |
+| `_layouts/default.html` | The page: header (with the version and the two PDF buttons), sidebar, the "On this page" list built from the h2 / h3 headings at build time, the page, previous / next |
 | `assets/css/site.css` | The styles, light and dark (the reader's choice is remembered; the system setting is the default), print |
 | `assets/js/site.js` | Progressive enhancements only: the theme toggle, the dark rendering of each picture in dark mode, pictures as figures with their caption and a full-screen view on click |
 
 To add a page: create the Markdown in `design/` with its requirements line (or, for a requirement page, in
 `requirements/`, part 0), add it to `_data/nav.yml` (with `pdf: design` for every page in `design/`, `pdf: requirements`
-for every page in `requirements/`) and to the Contents of `README.md` (with *(PDF)* or *(requirements PDF)*), and run
+for every page in `requirements/`), and run
 `scripts/check.sh`. A page is numbered `<part>.<page>` in reading order (`2.3` is the third page of part 2, *Inside a
 cluster*) and the pictures carry the number of the page that shows them, so a new page in the middle of a part
 renumbers the pages after it - the files, the headings, the pictures and every "section N.M" in the text, here and in
@@ -73,10 +73,9 @@ the implementation repositories, which cite sections by number too.
 ## The PDF and the release notes
 
 Every publish also builds **two PDFs**: the requirements (`/onek8s-requirements.pdf`, part 0) and the design
-(`/onek8s-design.pdf`, every page of `design/`, the summary 1.0 first and the release notes last, linked as *PDF* at
-the top of every page). Which PDF a page is in is its `pdf:` key in `_data/nav.yml` - the sidebar tags the design
-PDF's pages *PDF* and the requirements PDF's *Req. PDF*, the Contents of `README.md` mark them *(PDF)* and
-*(requirements PDF)*; only the introduction is online only - and `scripts/pdf.py --only <name>` selects by it.
+(`/onek8s-design.pdf`, every page of `design/`, the summary 1.0 first and the release notes last, both linked as buttons at
+the top of every page). Which PDF a page is in is its `pdf:` key in `_data/nav.yml` - only the introduction is online
+only - and `scripts/pdf.py --only <name>` selects by it.
 `scripts/pdf.py` takes the built pages in the order of `_data/nav.yml`
 (`--only` selects parts, part ranges or pages), puts a cover with the version and the commit and a contents list in
 front, and prints them with headless Chrome, each page on a new sheet, with an outline from the headings. Links between
