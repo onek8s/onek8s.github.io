@@ -19,10 +19,10 @@ The spoke `dev-int`: the cells of exposure `int`, from aks-terraform's
 
 ## Zones
 
-| Zone | Country | Cells | Applications |
+| Zone | Code | Cells | Applications |
 |---|---|---|---|
-| [int-fi - Finland](int-fi.md) | Finland | `aks-dev-int-stateless-az3` | [aks-hello in int-fi-example](int-fi.md#aks-hello-in-int-fi-example) |
-| [int-se - Sweden](int-se.md) | Sweden | `aks-dev-int-stateless-az3` | [aks-hello in int-se-example](int-se.md#aks-hello-in-int-se-example) |
+| [Internal - Finland](int-fi.md) | `int-fi` | `aks-dev-int-stateless-az3` | [aks-hello in int-fi-example](int-fi.md#aks-hello-in-int-fi-example) |
+| [Internal - Sweden](int-se.md) | `int-se` | `aks-dev-int-stateless-az3` | [aks-hello in int-se-example](int-se.md#aks-hello-in-int-se-example) |
 
 ## Findings
 
