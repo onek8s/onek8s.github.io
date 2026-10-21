@@ -47,6 +47,10 @@
       number: "1.4"
       title: The application contract
       pdf: design
+    - path: design/1.5-developer-experience.md
+      number: "1.5"
+      title: "Developer experience: onboarding, migration and operations"
+      pdf: design
 
 - number: 2
   part: Inside a cluster
