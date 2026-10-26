@@ -63,7 +63,7 @@ R-number that 0.2 does not have, or a link into `archive/`.
 | `_layouts/default.html` | The page: header (with the version and the two PDF buttons), sidebar, the "On this page" list built from the h2 / h3 headings at build time, the page, previous / next; on the lab examples also Mermaid from jsDelivr |
 | `assets/css/site.css` | The styles, light and dark (the reader's choice is remembered; the system setting is the default), print |
 | `assets/js/site.js` | Progressive enhancements only: the theme toggle, the dark rendering of each picture in dark mode, pictures as figures with their caption and a full-screen view on click |
-| `assets/js/mermaid.js` | The lab examples only: draws their Mermaid blocks in the browser, light or dark like the page, and opens one full screen on click (at least at the size Mermaid drew it, scrolling when wider than the window), with the settings of `scripts/mermaid.json` and `scripts/mermaid-dark.json` |
+| `assets/js/mermaid.js` | The lab examples only: draws their Mermaid blocks in the browser, light or dark like the page, with the settings of `scripts/mermaid.json` and `scripts/mermaid-dark.json`, and opens one full screen on click (at least at the size Mermaid drew it, scrolling when wider than the window) |
 
 To add a page: create the Markdown in `design/` with its requirements line (or, for a requirement page, in
 `requirements/`, part 0), add it to `_data/nav.yml` (with `pdf: design` for every page in `design/`, `pdf: requirements`
