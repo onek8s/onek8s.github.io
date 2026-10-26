@@ -119,6 +119,7 @@ img { max-width: 100%; height: auto; }
 /* A Mermaid source of the lab examples, drawn in the browser (assets/js/mermaid.js); the source stays as code until then. */
 .mermaid-diagram { margin: 1.75rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--figure-bg); box-shadow: var(--shadow); overflow-x: auto; text-align: center; }
 .mermaid-diagram svg { max-width: 100%; height: auto; }
+.mermaid-diagram.zoomable { cursor: zoom-in; }
 main > p > img:only-child { background: #ffffff; border-radius: 6px; cursor: zoom-in; }
 
 /* ---- Tables -------------------------------------------------------------------------------------- */
@@ -245,9 +246,12 @@ td > :last-child, th > :last-child { margin-bottom: 0; }
 
 /* ---- Lightbox ------------------------------------------------------------------------------------ */
 
-#lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: var(--figure-bg); cursor: zoom-out; align-items: center; justify-content: center; padding: 1rem; }
+#lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: var(--figure-bg); cursor: zoom-out; padding: 1rem; overflow: auto; }
 #lightbox.open { display: flex; }
 #lightbox img { width: 100%; height: 100%; object-fit: contain; }
+/* A lab example's diagram (mermaid.js) comes sized: auto margins centre it, and one larger than the window scrolls
+   from its start (centring with justify-content would cut that off). */
+#lightbox svg { flex: none; margin: auto; }
 
 /* ---- Narrow screens ------------------------------------------------------------------------------ */
 
@@ -307,7 +311,7 @@ td > :last-child, th > :last-child { margin-bottom: 0; }
   pre { white-space: pre-wrap; overflow: visible; }
   .figure, .mermaid-diagram { box-shadow: none; }
   .mermaid-diagram { break-inside: avoid; }
-  .figure img, main > p > img { cursor: auto; }
+  .figure img, main > p > img, .mermaid-diagram.zoomable { cursor: auto; }
   img, tr, pre, blockquote, .figure { break-inside: avoid; }
   h1, h2, h3, h4 { break-after: avoid; }
 }

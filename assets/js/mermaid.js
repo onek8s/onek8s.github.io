@@ -55,13 +55,32 @@
         counter += 1;
         return window.mermaid.render('mermaid-' + counter, block.source).then(function (result) {
           block.box.innerHTML = result.svg;
+          block.box.classList.add('zoomable');
         }, function () {
+          block.box.classList.remove('zoomable');
           block.box.innerHTML = '';
           block.box.appendChild(block.fallback);
         });
       });
     }, queue);
   };
+  // A click opens the drawn diagram full screen (site.js's lightbox): fitted to the window, but never smaller than
+  // Mermaid drew it, so a wide one that the column shrank to a strip is readable and scrolls instead.
+  blocks.forEach(function (block) {
+    block.box.addEventListener('click', function () {
+      var svg = block.box.querySelector('svg');
+      var box = svg && svg.viewBox && svg.viewBox.baseVal;
+      if (!box || !box.width || !window.onek8sLightbox) { return; }
+      var copy = svg.cloneNode(true);
+      var room = document.getElementById('lightbox');
+      var scale = Math.max(1, Math.min((room.clientWidth || window.innerWidth) / box.width,
+        (room.clientHeight || window.innerHeight) / box.height) * 0.95);
+      copy.style.maxWidth = 'none';
+      copy.setAttribute('width', Math.round(box.width * scale));
+      copy.setAttribute('height', Math.round(box.height * scale));
+      window.onek8sLightbox(copy);
+    });
+  });
   draw();
   // The theme follows the system setting and the header's toggle (which sets data-theme on <html>).
   systemDark.addEventListener('change', draw);

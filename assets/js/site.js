@@ -45,7 +45,7 @@
   }
 
   // Pictures: wrap each stand-alone image in a figure with its alt text as the caption, and open it full
-  // screen on click.
+  // screen on click. window.onek8sLightbox(node) shows any other node there (mermaid.js: the lab's diagrams).
   var box = document.getElementById('lightbox');
   var big = box ? box.querySelector('img') : null;
   var close = function () {
@@ -53,6 +53,14 @@
     box.classList.remove('open');
     if (document.fullscreenElement) { document.exitFullscreen(); }
   };
+  var open = function (node) {
+    Array.prototype.forEach.call(box.children, function (child) { if (child !== big) { box.removeChild(child); } });
+    big.hidden = !!node;
+    if (node) { box.appendChild(node); }
+    box.classList.add('open');
+    if (box.requestFullscreen) { box.requestFullscreen().catch(function () { /* fine without */ }); }
+  };
+  if (box) { window.onek8sLightbox = open; }
   document.querySelectorAll('main > p > img:only-child').forEach(function (img) {
     var p = img.parentNode;
     var figure = document.createElement('figure');
@@ -68,8 +76,7 @@
     img.addEventListener('click', function () {
       big.src = img.src;
       big.alt = img.alt;
-      box.classList.add('open');
-      if (box.requestFullscreen) { box.requestFullscreen().catch(function () { /* fine without */ }); }
+      open(null);
     });
   });
   if (box) {
