@@ -1,0 +1,175 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="6.3-backup-region-recovery" id="6.3-backup-region-recovery">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-PAIR" value="Paired region (same geography)" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1211.9" y="86.6" width="1007.5" height="577.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-PRI" value="Primary region" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="100.3" width="1004.2" height="515.3" as="geometry" />
+        </mxCell>
+        <mxCell id="n-git" value="GitHub: IaC, fleet, guardrails&#10;(outside the region)" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1289.7" y="10.0" width="241.9" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-gc" value="Grafana Cloud&#10;(outside the region)" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1321.7" y="775.0" width="177.9" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-fd" value="Traffic Manager (global)&#10;endpoints moved to the new cells" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1272.3" y="689.4" width="276.6" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-note" value="Retention example: daily 35 d · weekly 12 w ·&#10;monthly 12 m (prd); acc 14 d&#10;Backup subscription per environment: no platform&#10;or agent role can delete&#10;Region loss is declared by humans · drill in acc&#10;every six months" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="26.0" y="640.7" width="392.2" height="126.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-paas" value="Azure PaaS per zone&#10;SQL · PostgreSQL · Storage · Cosmos DB" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PRI">
+          <mxGeometry x="43.1" y="286.3" width="342.1" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-pv" value="Stateful cluster: persistent volumes&#10;of the zone's application namespaces" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PRI">
+          <mxGeometry x="60.9" y="425.9" width="306.4" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-kv" value="Zone Key Vaults: secrets that cannot be issued&#10;again&#10;platform vault: keys that backed-up data needs" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PRI">
+          <mxGeometry x="613.0" y="95.2" width="373.2" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-bv" value="Backup vault bvault-&lt;env&gt;-&lt;zone&gt;&#10;immutability locked · soft delete always on&#10;multi-user authorization (Resource Guard)&#10;GRS + Cross Region Restore" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PRI">
+          <mxGeometry x="630.2" y="378.8" width="338.8" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-rebuilt" value="Not backed up: clusters, etcd, node disks,&#10;Kubernetes objects, ACR images, certificates,&#10;cluster KMS/disk keys, messaging, caches" style="rounded=0;fillColor=#ffebee;strokeColor=#c62828;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PRI">
+          <mxGeometry x="617.3" y="198.4" width="364.6" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-st" value="Storage account stbkp&lt;env&gt;&lt;zone&gt;&#10;version-level immutability, locked&#10;private endpoint only, CanNotDelete lock" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PAIR">
+          <mxGeometry x="33.8" y="86.1" width="329.8" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-crr" value="Secondary copy of the vault's recovery points&#10;(Cross Region Restore)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PAIR">
+          <mxGeometry x="18.0" y="410.1" width="361.5" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-geo" value="Geo-redundant PaaS backups&#10;(geo-restore)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PAIR">
+          <mxGeometry x="71.1" y="302.3" width="255.3" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-dr" value="Rebuilt environment (after a declared region loss)&#10;hub · management · Key Vaults · ACR · cells ·&#10;stateful cluster&#10;from IaC + Git, names with suffix -&lt;pair&gt;" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PAIR">
+          <mxGeometry x="599.1" y="347.4" width="390.4" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_paas_bv_0" value="SQL LTR immutable ·&#10;PostgreSQL vaulted" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.859;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.223;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-paas" target="n-bv">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="345.0" y="442.2" as="sourcePoint" />
+            <mxPoint x="638.2" y="499.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="519.6" y="481.7" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_pv_bv_0" value="Azure Backup for AKS,&#10;vault tier" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.691;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-pv" target="n-bv">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="375.3" y="554.1" as="sourcePoint" />
+            <mxPoint x="638.2" y="541.9" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="519.6" y="554.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_bv_crr_0" value="GRS" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-bv" target="n-crr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="977.0" y="524.5" as="sourcePoint" />
+            <mxPoint x="1229.9" y="524.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1012.2" y="524.5" />
+              <mxPoint x="1112.1" y="524.5" />
+              <mxPoint x="1211.9" y="524.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_paas_geo_0" value="geo-redundant backup&#10;storage" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.524;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-paas" target="n-geo">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="393.1" y="415.8" as="sourcePoint" />
+            <mxPoint x="1283.0" y="416.7" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="519.6" y="416.7" />
+              <mxPoint x="807.6" y="416.7" />
+              <mxPoint x="1012.2" y="416.7" />
+              <mxPoint x="1112.1" y="416.7" />
+              <mxPoint x="1211.9" y="416.7" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_paas_st_0" value="blob object replication ·&#10;Cosmos DB daily export" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.592;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.124;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-paas" target="n-st">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="253.5" y="386.6" as="sourcePoint" />
+            <mxPoint x="1286.5" y="172.7" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="519.6" y="150.7" />
+              <mxPoint x="807.6" y="150.7" />
+              <mxPoint x="1012.2" y="150.7" />
+              <mxPoint x="1112.1" y="150.7" />
+              <mxPoint x="1211.9" y="150.7" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_kv_st_0" value="backup job: every new&#10;version + nightly" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.758;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-kv" target="n-st">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="994.2" y="232.1" as="sourcePoint" />
+            <mxPoint x="1245.7" y="228.3" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1012.2" y="232.1" />
+              <mxPoint x="1112.1" y="232.1" />
+              <mxPoint x="1211.9" y="232.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_git_dr_0" value="1-2 rebuild" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.901;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.401;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-git" target="n-dr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1507.6" y="65.6" as="sourcePoint" />
+            <mxPoint x="1967.6" y="434.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1701.2" y="121.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_st_dr_0" value="3-4 restore secrets, keys,&#10;blobs" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.369;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-st" target="n-dr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1575.5" y="209.3" as="sourcePoint" />
+            <mxPoint x="1955.0" y="434.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1701.2" y="209.3" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_geo_dr_0" value="4 geo-restore databases" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.058;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-geo" target="n-dr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1538.3" y="416.7" as="sourcePoint" />
+            <mxPoint x="1811.0" y="439.3" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1701.2" y="416.7" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_crr_dr_0" value="5 restore PVCs first, then&#10;StatefulSets" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.818;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-crr" target="n-dr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1591.4" y="524.5" as="sourcePoint" />
+            <mxPoint x="1811.0" y="508.3" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1701.2" y="524.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_fd_dr_0" value="7 traffic" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.704;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.126;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fd" target="n-dr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1467.2" y="689.4" as="sourcePoint" />
+            <mxPoint x="1860.3" y="524.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1701.2" y="574.3" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_gc_dr_0" value="dashboards and alerts&#10;already there" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.755;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.256;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-gc" target="n-dr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1456.0" y="775.0" as="sourcePoint" />
+            <mxPoint x="1910.8" y="524.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1701.2" y="624.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

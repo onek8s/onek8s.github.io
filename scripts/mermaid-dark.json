@@ -14,8 +14,11 @@
     "mainBkg": "#1f2a36",
     "nodeBorder": "#5b6b7d",
     "secondaryColor": "#1a232e",
-    "tertiaryColor": "#1a232e"
+    "tertiaryColor": "#1a232e",
+    "fontFamily": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif"
   },
+  "fontFamily": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+  "htmlLabels": false,
   "flowchart": {
     "nodeSpacing": 30,
     "rankSpacing": 36,
@@ -24,12 +27,13 @@
       "top": 2,
       "bottom": 2
     },
-    "wrappingWidth": 360
+    "wrappingWidth": 360,
+    "htmlLabels": false
   },
   "sequence": {
     "actorMargin": 40,
     "messageMargin": 30,
     "width": 130
   },
-  "themeCSS": "foreignObject { overflow: visible; }"
+  "themeCSS": ".edgeLabel rect { opacity: 1 !important; } text { font-family: Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif; }"
 }

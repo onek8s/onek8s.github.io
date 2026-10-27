@@ -1,0 +1,105 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="3.5-stateful-upgrade" id="3.5-stateful-upgrade">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-SF" value="aks-&lt;env&gt;-sf (AKS LTS, Premium tier, zone-redundant control plane)" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="530.6" width="842.3" height="131.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-cp" value="1. Control plane upgrade&#10;(no workload restart; API stays available)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="166.0" y="242.4" width="329.9" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-np" value="2. Fixed-size node pools one AZ at a time:&#10;maxSurge 1 / maxUnavailable 0,&#10;cordon → drain (PDB respected) → reimage,&#10;node soak time before next node&#10;(only when nodes must be replaced)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="151.3" y="351.6" width="359.3" height="108.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-pdb" value="Guardrails per StatefulSet&#10;• ≥ 3 replicas, one per AZ&#10;(topologySpreadConstraints)&#10;• PDB maxUnavailable 1&#10;• Premium_ZRS / StandardSSD_ZRS disks: pod&#10;can move zone&#10;• readiness gates on replication / quorum" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="579.6" y="334.0" width="383.5" height="143.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-when" value="When – only when absolutely necessary&#10;• OS security patches: in place on existing nodes,&#10;inside maintenance windows (dev → acc → prd&#10;staggered)&#10;• Kubernetes patch: only for security / bug /&#10;support,&#10;control plane only where possible&#10;• LTS minor: kept as long as LTS lasts, upgraded&#10;in the&#10;last 6 months of LTS support, dev → acc → prd" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="135.6" y="10.0" width="390.7" height="196.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Z3" value="AZ 3" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="626.4" y="18.0" width="196.0" height="95.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Z2" value="AZ 2" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="317.7" y="18.0" width="196.0" height="95.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Z1" value="AZ 1" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="20.0" y="18.0" width="277.7" height="95.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-n1" value="node pools *z1 (intfiz1, …)&#10;pod replica 1" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-Z1">
+          <mxGeometry x="25.0" y="22.0" width="227.7" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-n2" value="node pools *z2&#10;pod replica 2" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-Z2">
+          <mxGeometry x="25.0" y="22.0" width="146.0" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-n3" value="node pools *z3&#10;pod replica 3" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-Z3">
+          <mxGeometry x="25.0" y="22.0" width="146.0" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_cp_np_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-cp" target="n-np">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330.9" y="298.0" as="sourcePoint" />
+            <mxPoint x="330.9" y="351.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="330.9" y="316.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_np_n1_0" value="first" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.253;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-np" target="n-n1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="242.3" y="460.0" as="sourcePoint" />
+            <mxPoint x="166.8" y="570.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="166.8" y="506.1" />
+              <mxPoint x="166.8" y="534.6" />
+              <mxPoint x="166.8" y="552.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_np_n2_0" value="then" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.639;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-np" target="n-n2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="381.0" y="460.0" as="sourcePoint" />
+            <mxPoint x="423.7" y="570.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="423.7" y="506.1" />
+              <mxPoint x="423.7" y="534.6" />
+              <mxPoint x="423.7" y="552.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_np_n3_0" value="then" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.946;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.379;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-np" target="n-n3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="510.6" y="454.2" as="sourcePoint" />
+            <mxPoint x="714.7" y="570.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="703.4" y="506.1" />
+              <mxPoint x="703.4" y="534.6" />
+              <mxPoint x="703.4" y="552.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_when_cp_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-when" target="n-cp">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330.9" y="206.4" as="sourcePoint" />
+            <mxPoint x="330.9" y="242.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="330.9" y="224.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_pdb_SF_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.000;entryY=0.090;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-pdb" target="n-SF">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="771.3" y="477.6" as="sourcePoint" />
+            <mxPoint x="850.3" y="542.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="771.3" y="506.1" />
+              <mxPoint x="771.3" y="534.6" />
+              <mxPoint x="771.3" y="552.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

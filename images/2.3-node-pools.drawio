@@ -1,0 +1,121 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="2.3-node-pools" id="2.3-node-pools">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-POOLS" value="Node pools · every zone pool: label + taint platform/zone=&lt;zone&gt;, the zone's subnets" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="178.3" y="453.6" width="688.9" height="153.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NS" value="Namespaces" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="185.4" y="303.0" width="449.4" height="100.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-choice" value="The application chooses by pod label&#10;platform/arch: amd64 | arm64 | multi&#10;platform/capacity: on-demand | spot" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="45.8" y="12.0" width="303.3" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-adm" value="Azure Policy add-on (admission)&#10;namespace int-fi-* carries platform/zone=int-fi&#10;mutation: the zone's nodeSelector + toleration&#10;deny: any other zone's selector or toleration" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="14.7" y="120.2" width="365.5" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-csa" value="Stateless cells: the cluster autoscaler&#10;every zone pool from zero · spot first,&#10;on-demand when spot is missing · N+1" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="403.6" y="659.5" width="317.2" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-fix" value="Stateful cluster: pools &lt;zone&gt;z1–z3 per AZ&#10;fixed size, amd64 on-demand, no autoscaling" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="755.7" y="659.5" width="362.0" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ds" value="Platform DaemonSets (Cilium, CSI, Alloy) on&#10;every node" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="12.0" y="659.5" width="356.6" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-p_sys" value="system&#10;snet-system · fixed size" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-POOLS">
+          <mxGeometry x="12.0" y="50.6" width="207.3" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-p_ifi" value="int-fi · snet-int-fi-*&#10;intfi · intfispot&#10;intfiarm · intfiarmspot&#10;intfigpu on request" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-POOLS">
+          <mxGeometry x="487.0" y="50.6" width="189.9" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-p_ise" value="int-se · snet-int-se-*&#10;intse · intsespot&#10;intsearm · intsearmspot" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-POOLS">
+          <mxGeometry x="249.3" y="50.6" width="207.7" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ns_sys" value="kube-system,&#10;platform namespaces" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-NS">
+          <mxGeometry x="12.0" y="33.0" width="193.0" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ns_ifi" value="int-fi-*" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-NS">
+          <mxGeometry x="355.7" y="51.6" width="81.8" height="37.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ns_ise" value="int-se-*" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-NS">
+          <mxGeometry x="235.0" y="51.6" width="90.7" height="37.0" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_choice_adm_0_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-choice" target="n-adm">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="197.4" y="85.2" as="sourcePoint" />
+            <mxPoint x="197.4" y="120.2" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_adm_NS_0_0" value="every pod create / update" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.027;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-adm" target="n-NS">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="197.4" y="211.0" as="sourcePoint" />
+            <mxPoint x="197.4" y="303.0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ns_sys_p_sys_0_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ns_sys" target="n-p_sys">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="293.9" y="391.6" as="sourcePoint" />
+            <mxPoint x="293.9" y="504.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="293.9" y="411.1" />
+              <mxPoint x="293.9" y="446.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ns_ifi_p_ifi_0_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ns_ifi" target="n-p_ifi">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="582.0" y="391.6" as="sourcePoint" />
+            <mxPoint x="760.3" y="504.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="582.0" y="411.1" />
+              <mxPoint x="582.0" y="428.6" />
+              <mxPoint x="760.3" y="428.6" />
+              <mxPoint x="760.3" y="446.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ns_ise_p_ise_0_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ns_ise" target="n-p_ise">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="465.8" y="391.6" as="sourcePoint" />
+            <mxPoint x="531.4" y="504.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="465.8" y="411.1" />
+              <mxPoint x="465.8" y="428.6" />
+              <mxPoint x="531.4" y="428.6" />
+              <mxPoint x="531.4" y="446.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_POOLS_csa_0_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=none;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.039;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-POOLS" target="n-csa">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="205.3" y="607.0" as="sourcePoint" />
+            <mxPoint x="562.2" y="659.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="205.3" y="642.0" />
+              <mxPoint x="562.2" y="642.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_POOLS_fix_0_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=none;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.061;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-POOLS" target="n-fix">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="220.3" y="607.0" as="sourcePoint" />
+            <mxPoint x="936.7" y="659.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="220.3" y="624.5" />
+              <mxPoint x="936.7" y="624.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_POOLS_ds_0_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=none;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.017;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-POOLS" target="n-ds">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190.3" y="607.0" as="sourcePoint" />
+            <mxPoint x="190.3" y="659.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

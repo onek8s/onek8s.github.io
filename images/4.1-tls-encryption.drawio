@@ -1,0 +1,153 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="4.1-tls-encryption" id="4.1-tls-encryption">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-SF" value="Stateful cluster · no Gateway API, no Ingress" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="706.4" width="549.1" height="186.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SL" value="Stateless cell · Azure CNI Pod Subnet · VNet encryption between the nodes" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="175.6" y="373.8" width="940.6" height="279.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-MGMT" value="Management network" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="57.5" y="6.0" width="641.1" height="129.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-client" value="Clients&#10;external zones: Traffic Manager picks the cell by&#10;DNS&#10;internal clients: straight to the gateway" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="806.7" y="193.8" width="381.2" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-le" value="Let's Encrypt (ACME, DNS-01)&#10;the _acme-challenge TXT records go into a public&#10;validation zone,&#10;nothing else is public" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="384.1" y="193.8" width="392.5" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-kv" value="Platform Key Vault of the exposure&#10;one wildcard certificate per isolation zone,&#10;e.g. *.int-fi.&lt;env&gt;.example.com" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="17.0" y="202.6" width="337.1" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-paas" value="Azure PaaS private endpoint&#10;TLS enforced" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="875.1" y="728.4" width="244.2" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-job" value="Certificate renewal job of the environment&#10;managed identity, Officer roles on the platform&#10;vault only&#10;DNS-01 · once a month, one certificate at a time" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-MGMT">
+          <mxGeometry x="134.3" y="22.0" width="382.5" height="89.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-tr" value="Zone gateway (Traefik): one HTTPS listener on&#10;443&#10;HTTP/2 and TLS 1.3 only · certificate Secret&#10;written by ESO&#10;no port 80: Azure Policy denies HTTP listeners" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SL">
+          <mxGeometry x="347.4" y="22.0" width="374.7" height="108.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-app" value="app-a pods on nodes A and B&#10;h2c (HTTP/2 cleartext), no TLS in the application" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SL">
+          <mxGeometry x="341.9" y="206.0" width="385.7" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ilb" value="Internal load balancer Service, port 443 only" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="167.5" y="30.3" width="353.1" height="38.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-db" value="app-x pod terminates TLS itself&#10;the zone certificate as PEM files (ESO Secret)" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="41.5" y="112.6" width="367.3" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_client_tr_0" value="HTTPS" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.000;entryY=0.065;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-client" target="n-tr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="997.3" y="284.6" as="sourcePoint" />
+            <mxPoint x="897.7" y="402.9" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="997.3" y="331.2" />
+              <mxPoint x="997.3" y="377.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_tr_app_0" value="same node:&#10;h2c in the host" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.908;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.785;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-tr" target="n-app">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="863.4" y="504.2" as="sourcePoint" />
+            <mxPoint x="820.4" y="579.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="970.1" y="542.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_tr_app_2" value="other node: h2c,&#10;VNet encryption on the wire" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.000;exitY=0.935;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.098;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-tr" target="n-app">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="523.0" y="497.1" as="sourcePoint" />
+            <mxPoint x="555.4" y="579.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="344.7" y="542.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_app_ilb_0" value="TLS via the hub Firewall" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.000;exitY=0.943;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-app" target="n-ilb">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="517.5" y="632.2" as="sourcePoint" />
+            <mxPoint x="352.0" y="736.7" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="352.0" y="653.4" />
+              <mxPoint x="352.0" y="681.9" />
+              <mxPoint x="352.0" y="710.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ilb_db_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.697;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ilb" target="n-db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="352.0" y="774.7" as="sourcePoint" />
+            <mxPoint x="305.3" y="819.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="352.0" y="801.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_app_paas_0" value="TLS via the hub Firewall" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.952;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-app" target="n-paas">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="884.5" y="635.4" as="sourcePoint" />
+            <mxPoint x="997.3" y="728.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="997.3" y="653.4" />
+              <mxPoint x="997.3" y="681.9" />
+              <mxPoint x="997.3" y="710.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_job_le_0" value="order, renew" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.868;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-job" target="n-le">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="523.9" y="117.8" as="sourcePoint" />
+            <mxPoint x="580.4" y="193.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="580.4" y="135.8" />
+              <mxPoint x="580.4" y="164.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_job_kv_0" value="imports the certificate" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.132;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-job" target="n-kv">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="242.1" y="117.8" as="sourcePoint" />
+            <mxPoint x="185.6" y="202.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="185.6" y="135.8" />
+              <mxPoint x="185.6" y="164.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_kv_tr_0" value="the zone's ESO,&#10;RBAC on this certificate&#10;only" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.640;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.193;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-kv" target="n-tr">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="232.9" y="275.8" as="sourcePoint" />
+            <mxPoint x="523.0" y="416.7" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="304.5" y="331.2" />
+              <mxPoint x="304.5" y="377.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_kv_db_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.437;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.333;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-kv" target="n-db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="164.4" y="275.8" as="sourcePoint" />
+            <mxPoint x="171.9" y="819.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="132.3" y="331.2" />
+              <mxPoint x="132.3" y="377.8" />
+              <mxPoint x="132.3" y="450.0" />
+              <mxPoint x="132.3" y="542.0" />
+              <mxPoint x="132.3" y="607.6" />
+              <mxPoint x="132.3" y="653.4" />
+              <mxPoint x="132.3" y="681.9" />
+              <mxPoint x="132.3" y="710.4" />
+              <mxPoint x="132.3" y="755.7" />
+              <mxPoint x="132.3" y="801.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

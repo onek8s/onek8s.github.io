@@ -1,0 +1,113 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="3.5-update-policy" id="3.5-update-policy">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-SF" value="Stateful: sf · created on N-1, then LTS" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="109.6" width="448.2" height="257.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SLOW" value="Slow speed: sl-az2 (and sl-az3) · one minor behind sl-az1 (N-2)" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="596.8" y="109.6" width="457.1" height="384.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FAST" value="Fast speed: sl-az1 · minor N-1 (the second latest GA)" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="391.1" y="109.6" width="386.8" height="384.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-gate" value="Each step only if the previous environment of the&#10;same speed&#10;is healthy on that version (no rollback, SLOs met&#10;during the wait)" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="511.9" y="530.4" width="386.1" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-f_dev" value="dev&#10;+1 week" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-FAST">
+          <mxGeometry x="142.9" y="40.1" width="101.0" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-f_acc" value="acc&#10;+1 week after dev" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-FAST">
+          <mxGeometry x="110.0" y="166.9" width="166.8" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-f_prd" value="prd&#10;+1 week after acc&#10;(≈ 3 weeks)" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-FAST">
+          <mxGeometry x="110.5" y="293.6" width="165.9" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-s_dev" value="dev&#10;+3 weeks&#10;(never below 1.36)" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SLOW">
+          <mxGeometry x="142.3" y="30.8" width="172.5" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-s_acc" value="acc&#10;+3 weeks after dev" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SLOW">
+          <mxGeometry x="141.2" y="166.9" width="174.8" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-s_prd" value="prd&#10;+3 weeks after acc&#10;(≈ 9 weeks)" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SLOW">
+          <mxGeometry x="141.6" y="293.6" width="173.9" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sf_rule" value="Only when absolutely necessary:&#10;security, bug, AKS supportability&#10;patch the existing nodes in place first,&#10;the control plane alone before a node replacement" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="25.0" y="22.0" width="398.2" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sf_lts" value="Created on the second latest GA minor (N-1);&#10;that minor kept with LTS as long as possible;&#10;upgrade to the next LTS minor within the last&#10;6 months of LTS support, dev → acc → prd" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="43.5" y="148.8" width="361.1" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_f_dev_f_acc_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-f_dev" target="n-f_acc">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="584.5" y="204.3" as="sourcePoint" />
+            <mxPoint x="584.5" y="276.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="584.5" y="240.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_f_acc_f_prd_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-f_acc" target="n-f_prd">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="584.5" y="331.1" as="sourcePoint" />
+            <mxPoint x="584.5" y="403.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="584.5" y="367.2" />
+              <mxPoint x="584.5" y="385.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_s_dev_s_acc_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-s_dev" target="n-s_acc">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="825.3" y="213.6" as="sourcePoint" />
+            <mxPoint x="825.3" y="276.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="825.3" y="240.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_s_acc_s_prd_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-s_acc" target="n-s_prd">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="825.3" y="331.1" as="sourcePoint" />
+            <mxPoint x="825.3" y="403.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="825.3" y="367.2" />
+              <mxPoint x="825.3" y="385.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_sf_rule_sf_lts_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-sf_rule" target="n-sf_lts">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="232.1" y="222.4" as="sourcePoint" />
+            <mxPoint x="232.1" y="258.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="232.1" y="240.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_f_prd_gate_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=none;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.277;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-f_prd" target="n-gate">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="584.5" y="476.4" as="sourcePoint" />
+            <mxPoint x="618.7" y="530.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="584.5" y="494.4" />
+              <mxPoint x="584.5" y="512.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_s_prd_gate_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=none;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.723;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-s_prd" target="n-gate">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="825.3" y="476.4" as="sourcePoint" />
+            <mxPoint x="791.1" y="530.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="825.3" y="494.4" />
+              <mxPoint x="825.3" y="512.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -6,15 +6,18 @@
   'use strict';
   if (!window.mermaid) { return; }
 
+  var font = 'Arial, "Liberation Sans", Arimo, Helvetica, sans-serif';
   var layout = {
-    flowchart: { nodeSpacing: 30, rankSpacing: 36, padding: 10, subGraphTitleMargin: { top: 2, bottom: 2 }, wrappingWidth: 360 },
+    fontFamily: font,
+    htmlLabels: false,
+    flowchart: { nodeSpacing: 30, rankSpacing: 36, padding: 10, subGraphTitleMargin: { top: 2, bottom: 2 }, wrappingWidth: 360, htmlLabels: false },
     sequence: { actorMargin: 40, messageMargin: 30, width: 130 },
-    themeCSS: 'foreignObject { overflow: visible; }'
+    themeCSS: '.edgeLabel rect { opacity: 1 !important; } text { font-family: ' + font + '; }'
   };
   var dark = {
     theme: 'dark',
     themeVariables: {
-      background: '#161d26', primaryColor: '#1f2a36', primaryBorderColor: '#5b6b7d', primaryTextColor: '#e6edf3',
+      fontFamily: font, background: '#161d26', primaryColor: '#1f2a36', primaryBorderColor: '#5b6b7d', primaryTextColor: '#e6edf3',
       lineColor: '#9aa7b4', textColor: '#e6edf3', clusterBkg: '#1a232e', clusterBorder: '#5b6b7d',
       edgeLabelBackground: '#161d26', titleColor: '#e6edf3', mainBkg: '#1f2a36', nodeBorder: '#5b6b7d',
       secondaryColor: '#1a232e', tertiaryColor: '#1a232e'

@@ -1,0 +1,81 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="how-we-work" id="how-we-work">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-OWN" value="Who owns what" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffff;strokeColor=#9e9e9e;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="10.0" width="499.1" height="162.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-req" value="1 · A requirement changes,&#10;approved by a human" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="141.9" y="208.4" width="231.3" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-des" value="2 · The AI updates&#10;the design" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="172.3" y="300.0" width="170.5" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-iac" value="3 · The AI implements it&#10;as code" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="48.6" y="392.9" width="208.4" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-env" value="4 · Environments are&#10;built from the code" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="163.2" y="484.8" width="188.6" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-acc" value="5 · Acceptance tests&#10;prove the criteria" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="165.5" y="575.4" width="184.1" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-h_own" value="Humans own the&#10;requirements and&#10;acceptance criteria.&#10;A human approves&#10;every change." style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-OWN">
+          <mxGeometry x="30.5" y="29.0" width="178.8" height="108.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-a_own" value="AI owns the design&#10;and the&#10;infrastructure as code.&#10;The AI reviews&#10;every change." style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-OWN">
+          <mxGeometry x="270.2" y="29.0" width="198.3" height="108.4" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_req_des_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-req" target="n-des">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="257.5" y="264.0" as="sourcePoint" />
+            <mxPoint x="257.5" y="300.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="257.5" y="282.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_des_iac_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.127;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-des" target="n-iac">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="194.0" y="355.6" as="sourcePoint" />
+            <mxPoint x="152.8" y="392.9" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="152.8" y="373.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_iac_env_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.165;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-iac" target="n-env">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="152.8" y="447.5" as="sourcePoint" />
+            <mxPoint x="194.4" y="484.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="152.8" y="466.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_env_acc_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-env" target="n-acc">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="257.5" y="539.4" as="sourcePoint" />
+            <mxPoint x="257.5" y="575.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="257.5" y="557.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_env_des_0" value="a finding that changes&#10;the design goes back&#10;to the design first" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.835;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.873;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-env" target="n-des">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320.6" y="484.8" as="sourcePoint" />
+            <mxPoint x="321.1" y="355.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="362.3" y="466.8" />
+              <mxPoint x="362.3" y="420.2" />
+              <mxPoint x="362.3" y="373.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
