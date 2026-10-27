@@ -1,0 +1,71 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="5.2-example-zone" id="5.2-example-zone">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-OUT" value="What the Firewall opens for the zone" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="608.6" y="6.0" width="287.8" height="279.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Z" value="Isolation zone int-se" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="91.6" width="165.8" height="108.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-fw" value="Hub Firewall&#10;source: IP group of zone int-se" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="209.8" y="120.1" width="257.7" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-a_int_se_orders" value="int-se-orders&#10;team orders" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-Z">
+          <mxGeometry x="18.0" y="29.0" width="129.8" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-d_api_partner_example" value="api.partner.example:443&#10;asked by int-se-orders" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-OUT">
+          <mxGeometry x="38.0" y="29.0" width="211.8" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-z_login_microsoftonline_com" value="login.microsoftonline.com:443&#10;zone allow-list" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-OUT">
+          <mxGeometry x="18.0" y="114.6" width="251.8" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-p___grafana_net" value="*.grafana.net:443&#10;platform rule, every cell" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-OUT">
+          <mxGeometry x="41.2" y="199.2" width="205.4" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_a_int_se_orders_fw_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-a_int_se_orders" target="n-fw">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="155.8" y="147.9" as="sourcePoint" />
+            <mxPoint x="209.8" y="147.9" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="173.8" y="147.9" />
+              <mxPoint x="191.8" y="147.9" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_fw_d_api_partner_example_0" value="allowed" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.753;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fw" target="n-d_api_partner_example">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="403.8" y="120.1" as="sourcePoint" />
+            <mxPoint x="646.6" y="62.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="538.1" y="62.8" />
+              <mxPoint x="608.6" y="62.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_fw_z_login_microsoftonline_com_0" value="zone allow-list" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fw" target="n-z_login_microsoftonline_com">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="467.5" y="147.9" as="sourcePoint" />
+            <mxPoint x="626.6" y="147.9" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="538.1" y="147.9" />
+              <mxPoint x="608.6" y="147.9" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_fw_p___grafana_net_0" value="platform rule" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.753;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fw" target="n-p___grafana_net">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="403.8" y="175.7" as="sourcePoint" />
+            <mxPoint x="649.8" y="233.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="538.1" y="233.0" />
+              <mxPoint x="608.6" y="233.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

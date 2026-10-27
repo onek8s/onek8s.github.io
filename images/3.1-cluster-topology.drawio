@@ -1,0 +1,118 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="3.1-cluster-topology" id="3.1-cluster-topology">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-EDGE" value="Entry points, outside the cells" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="354.0" y="127.8" width="819.0" height="148.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-BACK" value="Backend network: no Internet route in either direction" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="105.2" y="817.0" width="903.4" height="250.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FRONT" value="Frontend network of the exposure's subscription: stateless clusters, one per availability zone" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="368.4" width="1097.7" height="207.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-internet" value="Internet" style="shape=ellipse;perimeter=ellipsePerimeter;fillColor=#ECECFF;strokeColor=#9370DB;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="524.4" y="10.0" width="64.8" height="64.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-corp" value="Corporate network&#10;(via the hub Firewall)" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="862.1" y="14.6" width="188.5" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-fw" value="Hub: Azure Firewall Premium&#10;Internet egress allow-list (frontend only) +&#10;east-west inspection" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="389.9" y="634.0" width="333.9" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-blocked" value="Internet" style="shape=ellipse;perimeter=ellipsePerimeter;fillColor=#ffebee;strokeColor=#c62828;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="524.4" y="1179.2" width="64.8" height="64.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sf" value="&lt;b&gt; aks-&lt;env&gt;-&lt;x&gt;-sf &lt;/b&gt; (optional, the last&#10;option,&#10;built with the first approved exception)&#10;own VNet · AKS LTS · Premium tier · the&#10;exposure's zones&#10;fixed-size node pools in AZ 1, 2, 3 (no autoscaling)&#10;network isolated (outbound type none) · Azure CNI&#10;(VNet)&#10;no Gateway API, no Ingress:&#10;internal LB Services, TLS by the application" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-BACK">
+          <mxGeometry x="30.5" y="29.0" width="399.3" height="196.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-paas" value="Azure PaaS: the first choice for data, private&#10;endpoints only&#10;Azure SQL / PostgreSQL (zone-redundant)&#10;Storage (ZRS) · Service Bus · Event Hubs ·&#10;Cosmos DB&#10;ACR Premium (zone-redundant), one per&#10;exposure&#10;Key Vault per isolation zone (app secrets)&#10;+ the exposure's platform Key Vault (certificates,&#10;keys)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-BACK">
+          <mxGeometry x="490.8" y="29.0" width="382.0" height="196.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sl1" value="&lt;b&gt; aks-&lt;env&gt;-&lt;x&gt;-sl-az1 &lt;/b&gt;&#10;own VNet (VNet encryption) · all nodes in AZ 1&#10;the exposure's zones: int-fi, int-se or ext-fi, ext-se&#10;Azure CNI Pod Subnet · Gateway API, HTTPS&#10;only&#10;≥ 2 replicas per app · HPA / KEDA · cluster&#10;autoscaler" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-FRONT">
+          <mxGeometry x="25.0" y="34.5" width="388.2" height="142.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sl2" value="&lt;b&gt; aks-&lt;env&gt;-&lt;x&gt;-sl-az2 &lt;/b&gt;&#10;own VNet · all nodes in AZ 2&#10;identical apps and configuration" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-FRONT">
+          <mxGeometry x="443.2" y="69.2" width="265.0" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sl3" value="&lt;b&gt; aks-&lt;env&gt;-&lt;x&gt;-sl-az3 &lt;/b&gt; (optional)&#10;all nodes in AZ 3" style="rounded=0;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-FRONT">
+          <mxGeometry x="738.3" y="78.5" width="334.4" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-waf" value="Traffic Manager · external zones · &lt;b&gt;&#10;active-active &lt;/b&gt;&#10;client network blocks → cell (Subnet routing)&#10;endpoints: the zone gateways' public load&#10;balancers" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-EDGE">
+          <mxGeometry x="25.0" y="22.5" width="355.7" height="107.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-agw_in" value="Hub Private DNS · internal zones&#10;&lt;app&gt;.int-fi.&lt;env&gt;.example.com → the zone&#10;gateway of its &lt;b&gt; home cell &lt;/b&gt;&#10;records kept by ExternalDNS in the cells, moved&#10;by the migration workflow" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-EDGE">
+          <mxGeometry x="410.7" y="22.0" width="383.3" height="108.4" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_internet_waf_0" value="DNS" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=3.5;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-internet" target="n-waf">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="556.8" y="74.8" as="sourcePoint" />
+            <mxPoint x="556.8" y="150.3" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="556.8" y="103.3" />
+              <mxPoint x="556.8" y="131.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_corp_agw_in_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=3.5;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-corp" target="n-agw_in">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="956.3" y="70.2" as="sourcePoint" />
+            <mxPoint x="956.3" y="149.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="956.3" y="103.3" />
+              <mxPoint x="956.3" y="131.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_EDGE_FRONT_0" value="HTTPS to the zone&#10;gateway,&#10;TLS ends there" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=3.5;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.248;exitY=0.875;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-EDGE" target="n-FRONT">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="556.8" y="257.7" as="sourcePoint" />
+            <mxPoint x="556.8" y="368.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="556.8" y="276.2" />
+              <mxPoint x="556.8" y="322.3" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_FRONT_fw_0" value="egress + east-west" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-FRONT" target="n-fw">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="556.8" y="576.0" as="sourcePoint" />
+            <mxPoint x="556.8" y="634.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="556.8" y="605.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_fw_BACK_0" value="TLS only: PaaS private&#10;endpoints&#10;(preferred), stateful app&#10;internal LBs" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fw" target="n-BACK">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="556.8" y="707.2" as="sourcePoint" />
+            <mxPoint x="556.8" y="817.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="556.8" y="762.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_BACK_blocked_0" value="⛔ blocked: no public IP, no&#10;outbound type,&#10;UDR 0/0 → Firewall&#10;deny-all" style="edgeStyle=none;rounded=1;html=0;strokeColor=#c62828;strokeWidth=3;endArrow=cross;startArrow=cross;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n-BACK" target="n-blocked">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="556.8" y="1067.4" as="sourcePoint" />
+            <mxPoint x="556.8" y="1179.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="556.8" y="1123.3" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_sf_paas_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-sf" target="n-paas">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="535.0" y="944.2" as="sourcePoint" />
+            <mxPoint x="596.0" y="944.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="565.5" y="944.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

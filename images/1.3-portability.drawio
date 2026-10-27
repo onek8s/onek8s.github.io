@@ -1,0 +1,111 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="1.3-portability" id="1.3-portability">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-CLOUDS" value="Cloud-specific infrastructure as code, one per cloud" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="799.6" width="847.0" height="148.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ADAPT" value="Cloud adapters: a few values per cluster (cluster-settings)" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="131.9" y="486.8" width="610.9" height="280.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-PORT" value="The same in every cloud" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="32.0" y="10.0" width="810.6" height="440.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-a_id" value="Workload identity&#10;OIDC federation" style="rounded=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ADAPT">
+          <mxGeometry x="44.8" y="29.5" width="162.4" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-a_lb" value="Gateway and load balancer&#10;GatewayClass · Service annotations" style="rounded=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ADAPT">
+          <mxGeometry x="282.5" y="29.0" width="297.9" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-a_sec" value="Secret store&#10;ESO provider" style="rounded=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ADAPT">
+          <mxGeometry x="57.6" y="114.6" width="136.7" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-a_disk" value="Storage&#10;CSI StorageClass" style="rounded=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ADAPT">
+          <mxGeometry x="347.8" y="114.6" width="167.2" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-a_dns" value="DNS&#10;external-dns provider" style="rounded=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ADAPT">
+          <mxGeometry x="30.5" y="200.2" width="191.0" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-a_reg" value="Registry&#10;OCI" style="rounded=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ADAPT">
+          <mxGeometry x="382.1" y="200.7" width="98.7" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-app" value="Applications&#10;OCI images · 12-factor configuration · no cloud&#10;SDKs" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PORT">
+          <mxGeometry x="213.2" y="34.5" width="372.7" height="72.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-team" value="Team repositories&#10;Deployment · Service · HTTPRoute ·&#10;ExternalSecret" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PORT">
+          <mxGeometry x="59.9" y="177.0" width="301.4" height="72.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-plat" value="Platform repository&#10;Flux · Helm · Gateway API · External Secrets ·&#10;external-dns&#10;NetworkPolicy · Pod Security · OpenTelemetry" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PORT">
+          <mxGeometry x="25.7" y="319.5" width="369.9" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-proto" value="Open protocols to the data services&#10;PostgreSQL · MySQL · Redis / Valkey · MongoDB&#10;wire&#10;Kafka · AMQP · S3 API · OIDC" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-PORT">
+          <mxGeometry x="391.4" y="167.7" width="394.2" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-az" value="Azure (AKS), the first cloud&#10;AKS · Traefik · Key Vault · Azure DNS · ACR&#10;Azure Database for PostgreSQL · Azure Managed&#10;Redis&#10;Cosmos DB for MongoDB" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-CLOUDS">
+          <mxGeometry x="25.0" y="22.0" width="395.2" height="108.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-other" value="A second cloud (section 7.5)&#10;the same contract on its managed Kubernetes,&#10;secret store, DNS, registry and data services" style="rounded=0;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-CLOUDS">
+          <mxGeometry x="450.2" y="39.6" width="371.8" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_PORT_ADAPT_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-PORT" target="n-ADAPT">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="437.3" y="450.8" as="sourcePoint" />
+            <mxPoint x="437.3" y="486.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="437.3" y="468.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ADAPT_az_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.200;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ADAPT" target="n-az">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="254.1" y="767.6" as="sourcePoint" />
+            <mxPoint x="230.6" y="821.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="230.6" y="785.6" />
+              <mxPoint x="230.6" y="803.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ADAPT_other_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.800;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-ADAPT" target="n-other">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="620.6" y="767.6" as="sourcePoint" />
+            <mxPoint x="644.1" y="839.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="644.1" y="785.6" />
+              <mxPoint x="644.1" y="803.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_app_team_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.225;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-app" target="n-team">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="329.2" y="116.7" as="sourcePoint" />
+            <mxPoint x="242.7" y="187.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="242.7" y="147.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_team_plat_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-team" target="n-plat">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="242.7" y="259.2" as="sourcePoint" />
+            <mxPoint x="242.7" y="329.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="242.7" y="299.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_app_proto_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.775;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-app" target="n-proto">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="534.0" y="116.7" as="sourcePoint" />
+            <mxPoint x="620.5" y="177.7" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="620.5" y="147.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

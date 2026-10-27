@@ -1,4 +1,9 @@
 {
+  "themeVariables": {
+    "fontFamily": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif"
+  },
+  "fontFamily": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+  "htmlLabels": false,
   "flowchart": {
     "nodeSpacing": 30,
     "rankSpacing": 36,
@@ -7,12 +12,13 @@
       "top": 2,
       "bottom": 2
     },
-    "wrappingWidth": 360
+    "wrappingWidth": 360,
+    "htmlLabels": false
   },
   "sequence": {
     "actorMargin": 40,
     "messageMargin": 30,
     "width": 130
   },
-  "themeCSS": "foreignObject { overflow: visible; }"
+  "themeCSS": ".edgeLabel rect { opacity: 1 !important; } text { font-family: Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif; }"
 }

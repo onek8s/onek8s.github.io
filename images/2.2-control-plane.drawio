@@ -1,0 +1,116 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="2.2-control-plane" id="2.2-control-plane">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-CELL" value="Cell VNet" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="411.4" y="153.6" width="563.2" height="392.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-MGMT" value="Management VNet" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="6.0" width="397.5" height="94.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-hub" value="Hub Firewall&#10;rule for the API server · DNS proxy&#10;resolves the API FQDN to its private address" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="26.4" y="175.6" width="357.5" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-pkv" value="Platform Key Vault&#10;key-&lt;cluster&gt;-kms&#10;KMS data encryption, trusted service" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="999.6" y="454.6" width="301.6" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-pub" value="Public API endpoint" style="rounded=0;fillColor=#ffebee;strokeColor=#c62828;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="999.6" y="193.2" width="179.3" height="38.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-admins" value="Platform admins&#10;Entra ID + PIM" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-MGMT">
+          <mxGeometry x="25.0" y="22.0" width="155.6" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ci" value="Pipelines, agents" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-MGMT">
+          <mxGeometry x="210.6" y="30.3" width="161.9" height="38.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-pe" value="API server private endpoint&#10;snet-system (Private Link)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-CELL">
+          <mxGeometry x="160.9" y="169.8" width="233.6" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sys" value="System pool · CriticalAddonsOnly&#10;CoreDNS, metrics-server, Cilium operator,&#10;the zone gateways and ESOs" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-CELL">
+          <mxGeometry x="75.7" y="22.0" width="338.8" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-nodes" value="Zone nodes · kubelet" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-CELL">
+          <mxGeometry x="85.7" y="319.1" width="190.9" height="37.0" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_admins_hub_0" value="kubectl · TCP 443" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.323;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-admins" target="n-hub">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110.8" y="82.6" as="sourcePoint" />
+            <mxPoint x="141.9" y="175.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="110.8" y="100.6" />
+              <mxPoint x="110.8" y="129.1" />
+              <mxPoint x="110.8" y="157.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ci_hub_0" value="kubectl · TCP 443" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.677;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ci" target="n-hub">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="299.5" y="74.3" as="sourcePoint" />
+            <mxPoint x="268.4" y="175.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="299.5" y="100.6" />
+              <mxPoint x="299.5" y="129.1" />
+              <mxPoint x="299.5" y="157.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_hub_pe_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.897;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.139;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-hub" target="n-pe">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="347.2" y="248.8" as="sourcePoint" />
+            <mxPoint x="604.9" y="323.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="491.9" y="286.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_sys_pe_0" value="TCP 443" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.440;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-sys" target="n-pe">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="656.5" y="248.8" as="sourcePoint" />
+            <mxPoint x="675.2" y="323.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="656.5" y="286.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_nodes_pe_0" value="TCP 443" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.660;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.548;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-nodes" target="n-pe">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="623.1" y="472.7" as="sourcePoint" />
+            <mxPoint x="700.3" y="379.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="715.5" y="416.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_pe_nodes_0" value="TCP 10250 (tunnel)&#10;logs, exec, port-forward" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.201;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.411;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-pe" target="n-nodes">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="619.3" y="379.0" as="sourcePoint" />
+            <mxPoint x="575.6" y="472.7" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="524.4" y="416.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_pe_pkv_0" value="TCP 443 · etcd keys" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.847;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.059;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-pe" target="n-pkv">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="770.1" y="379.0" as="sourcePoint" />
+            <mxPoint x="1017.5" y="454.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="880.3" y="416.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_pub_pe_0" value="disabled · no local accounts&#10;· no SSH" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=cross;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.162;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.801;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-pub" target="n-pe">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1028.7" y="231.2" as="sourcePoint" />
+            <mxPoint x="759.4" y="323.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="853.8" y="286.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,199 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="5.2-traffic-flow-docs" id="5.2-traffic-flow-docs">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-OUT" value="Markdown + Mermaid pages per cell, rendered by GitHub" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="904.8" width="1059.5" height="256.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SRC" value="Sources: Git only, nothing read from Azure or a cluster" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="210.8" y="6.0" width="924.9" height="456.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-gen" value="Deterministic generator&#10;no model · no timestamp · a check mode for CI" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="293.1" y="498.4" width="373.5" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-find" value="Findings&#10;amber: a hidden dependency or a stale rule&#10;red: the egress agent's next proposal" style="rounded=0;fillColor=#fffde7;strokeColor=#f9a825;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="171.6" y="590.0" width="348.8" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-agent" value="Documentation agent explains the findings&#10;one pull request, risk tier low" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="303.3" y="699.2" width="341.5" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-humans" value="Humans merge: Firewall owners · platform · teams" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="274.4" y="812.8" width="399.2" height="38.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-rules" value="The applications' rule files, one per namespace&#10;destination · reason · evidence (the egress agent's&#10;files)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SRC">
+          <mxGeometry x="63.8" y="22.0" width="398.9" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-iac" value="The cluster IaC&#10;namespaces → team, zone, Flux source and path,&#10;home cell" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SRC">
+          <mxGeometry x="176.3" y="131.2" width="397.5" height="72.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-app" value="Team repository (the Flux path)&#10;workloads · images · URLs in the environment ·&#10;routes · services" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SRC">
+          <mxGeometry x="376.5" y="239.4" width="379.0" height="72.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-allow" value="Zone allow-lists in the platform repository (open to&#10;the whole zone)&#10;the egress agent's open pull requests (proposed,&#10;not merged)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SRC">
+          <mxGeometry x="504.6" y="347.6" width="394.1" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-appPage" value="Per application&#10;client → gateway → Service → Deployment&#10;→ hub Firewall → destinations with their status" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-OUT">
+          <mxGeometry x="182.8" y="22.5" width="372.6" height="72.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-zonePage" value="Per zone&#10;applications → Firewall (the zone's IP group)&#10;→ what the zone may reach, and who asked for it" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-OUT">
+          <mxGeometry x="642.6" y="22.0" width="391.9" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-status" value="Status of every destination&#10;🟩 allowed, named in the configuration&#10;🟧 allowed, not in the configuration&#10;🟥 named, no rule (denied) · 🟪 proposed · 🟦&#10;zone allow-list" style="rounded=0;fillColor=#fffde7;strokeColor=#f9a825;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-OUT">
+          <mxGeometry x="388.2" y="131.2" width="373.9" height="107.4" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_rules_gen_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.280;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.278;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-rules" target="n-gen">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="386.2" y="101.2" as="sourcePoint" />
+            <mxPoint x="396.8" y="498.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="343.0" y="119.2" />
+              <mxPoint x="343.0" y="173.3" />
+              <mxPoint x="343.0" y="227.4" />
+              <mxPoint x="343.0" y="281.5" />
+              <mxPoint x="343.0" y="335.6" />
+              <mxPoint x="343.0" y="399.0" />
+              <mxPoint x="343.0" y="462.4" />
+              <mxPoint x="343.0" y="480.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_iac_gen_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.460;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.634;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-iac" target="n-gen">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="570.1" y="209.4" as="sourcePoint" />
+            <mxPoint x="529.9" y="498.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="562.3" y="227.4" />
+              <mxPoint x="562.3" y="281.5" />
+              <mxPoint x="562.3" y="335.6" />
+              <mxPoint x="562.3" y="399.0" />
+              <mxPoint x="562.3" y="462.4" />
+              <mxPoint x="562.3" y="480.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_app_gen_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.348;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.842;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-app" target="n-gen">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="719.2" y="317.6" as="sourcePoint" />
+            <mxPoint x="607.7" y="498.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="690.4" y="335.6" />
+              <mxPoint x="690.4" y="399.0" />
+              <mxPoint x="690.4" y="462.4" />
+              <mxPoint x="690.4" y="480.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_allow_gen_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.000;entryY=0.144;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-allow" target="n-gen">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="912.5" y="444.4" as="sourcePoint" />
+            <mxPoint x="666.6" y="506.4" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="912.5" y="462.4" />
+              <mxPoint x="912.5" y="480.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_gen_appPage_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.000;exitY=0.945;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.069;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-gen" target="n-appPage">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="293.1" y="550.9" as="sourcePoint" />
+            <mxPoint x="216.3" y="927.3" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="134.0" y="572.0" />
+              <mxPoint x="134.0" y="626.6" />
+              <mxPoint x="134.0" y="681.2" />
+              <mxPoint x="134.0" y="727.0" />
+              <mxPoint x="134.0" y="783.8" />
+              <mxPoint x="134.0" y="831.8" />
+              <mxPoint x="134.0" y="879.8" />
+              <mxPoint x="134.0" y="908.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_gen_zonePage_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.920;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-gen" target="n-zonePage">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="666.6" y="549.5" as="sourcePoint" />
+            <mxPoint x="846.6" y="926.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="846.6" y="572.0" />
+              <mxPoint x="846.6" y="626.6" />
+              <mxPoint x="846.6" y="681.2" />
+              <mxPoint x="846.6" y="727.0" />
+              <mxPoint x="846.6" y="783.8" />
+              <mxPoint x="846.6" y="831.8" />
+              <mxPoint x="846.6" y="879.8" />
+              <mxPoint x="846.6" y="908.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_appPage_status_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=none;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.087;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-appPage" target="n-status">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="377.1" y="999.5" as="sourcePoint" />
+            <mxPoint x="428.8" y="1036.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="377.1" y="1018.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_zonePage_status_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=none;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.000;entryY=0.026;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-zonePage" target="n-status">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="846.6" y="1000.0" as="sourcePoint" />
+            <mxPoint x="770.2" y="1038.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="846.6" y="1018.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_gen_find_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.282;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-gen" target="n-find">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="398.6" y="554.0" as="sourcePoint" />
+            <mxPoint x="346.0" y="590.0" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="346.0" y="572.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_find_agent_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.272;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-find" target="n-agent">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="346.0" y="663.2" as="sourcePoint" />
+            <mxPoint x="396.3" y="699.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="346.0" y="681.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_gen_agent_0" value="pages changed" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.699;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.728;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-gen" target="n-agent">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="554.0" y="554.0" as="sourcePoint" />
+            <mxPoint x="551.8" y="699.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="602.1" y="572.0" />
+              <mxPoint x="602.1" y="626.6" />
+              <mxPoint x="602.1" y="681.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_agent_humans_0" value="pull request" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-agent" target="n-humans">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="474.0" y="754.8" as="sourcePoint" />
+            <mxPoint x="474.0" y="812.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="474.0" y="783.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_humans_OUT_0" value="merge" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.438;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-humans" target="n-OUT">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="474.0" y="850.8" as="sourcePoint" />
+            <mxPoint x="472.0" y="904.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="474.0" y="879.8" />
+              <mxPoint x="474.0" y="908.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,157 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="2.4-allowed-flows" id="2.4-allowed-flows">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-H" value="Hub" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="256.8" y="480.6" width="712.7" height="250.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Z" value="Zone int-fi" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="48.7" y="6.0" width="687.1" height="367.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-CP" value="System subnet" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="755.8" y="142.6" width="459.1" height="95.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-O" value="Other zone (int-se)" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="502.6" width="223.8" height="92.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-azure" value="AKS FQDNs, MCR, Entra ID,&#10;the zone's rule files" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="994.5" y="658.1" width="247.1" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-on" value="Nodes, pods, ILB" style="rounded=0;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-O">
+          <mxGeometry x="30.5" y="29.0" width="162.8" height="38.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-api" value="API server&#10;private endpoint" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-CP">
+          <mxGeometry x="25.0" y="22.0" width="154.4" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-dns" value="CoreDNS · metrics-server" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-CP">
+          <mxGeometry x="209.4" y="31.3" width="224.7" height="37.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-n" value="Nodes&#10;snet-int-fi-nodes" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-Z">
+          <mxGeometry x="224.7" y="295.2" width="154.7" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-p" value="Pods&#10;snet-int-fi-pods" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-Z">
+          <mxGeometry x="252.2" y="22.0" width="145.8" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-eso" value="ESO&#10;ns int-fi-secrets" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-Z">
+          <mxGeometry x="513.6" y="295.2" width="148.5" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-fw" value="Azure Firewall" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-H">
+          <mxGeometry x="99.6" y="49.5" width="141.4" height="37.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-pe" value="Private endpoints&#10;kv-int-fi · platform vault" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-H">
+          <mxGeometry x="417.9" y="40.2" width="202.4" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-gpe" value="Grafana Cloud&#10;private endpoint" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-H">
+          <mxGeometry x="25.0" y="177.0" width="154.4" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_n_api_0" value="① TCP 443" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.000;exitY=0.146;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.338;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-n" target="n-api">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="273.4" y="309.2" as="sourcePoint" />
+            <mxPoint x="833.1" y="220.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="115.4" y="269.7" />
+              <mxPoint x="816.9" y="238.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_api_n_0" value="② TCP 10250" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.932;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-api" target="n-n">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="924.7" y="220.2" as="sourcePoint" />
+            <mxPoint x="350.7" y="301.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="967.8" y="238.2" />
+              <mxPoint x="350.7" y="269.7" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_p_dns_0" value="③ DNS 53" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.302;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-p" target="n-dns">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="373.8" y="83.6" as="sourcePoint" />
+            <mxPoint x="965.3" y="185.1" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="373.8" y="115.1" />
+              <mxPoint x="373.8" y="146.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_dns_n_0" value="④ TCP 10250" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.000;entryY=0.178;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-dns" target="n-n">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1077.6" y="210.9" as="sourcePoint" />
+            <mxPoint x="428.1" y="310.9" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1077.6" y="238.2" />
+              <mxPoint x="609.2" y="269.7" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_eso_pe_0" value="⑤ ⑤b TCP 443 · ESO&#10;only" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.201;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-eso" target="n-pe">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="636.6" y="355.8" as="sourcePoint" />
+            <mxPoint x="715.4" y="520.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="636.6" y="373.8" />
+              <mxPoint x="636.6" y="429.2" />
+              <mxPoint x="636.6" y="484.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_api_pe_0" value="KMS · own key only" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.676;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-api" target="n-pe">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="858.0" y="220.2" as="sourcePoint" />
+            <mxPoint x="811.6" y="520.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="858.0" y="238.2" />
+              <mxPoint x="858.0" y="269.7" />
+              <mxPoint x="858.0" y="328.5" />
+              <mxPoint x="858.0" y="373.8" />
+              <mxPoint x="858.0" y="429.2" />
+              <mxPoint x="858.0" y="484.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_fw_azure_0" value="FQDN rules" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.827;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.230;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fw" target="n-azure">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="473.2" y="567.1" as="sourcePoint" />
+            <mxPoint x="994.5" y="670.7" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="620.4" y="626.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_fw_gpe_0" value="⑥b Alloy telemetry" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.385;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fw" target="n-gpe">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410.8" y="567.1" as="sourcePoint" />
+            <mxPoint x="359.0" y="657.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="359.0" y="626.1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_Z_fw_0" value="⑥ every flow out of the cell" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.551;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-Z" target="n-fw">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="427.0" y="373.8" as="sourcePoint" />
+            <mxPoint x="427.0" y="530.1" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="427.0" y="373.8" />
+              <mxPoint x="427.0" y="429.2" />
+              <mxPoint x="427.0" y="484.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_Z_O_0" value="⛔ blocked: Firewall&#10;(logged) + NSG + Cilium&#10;⑦ Cilium health between&#10;zones fails" style="edgeStyle=none;rounded=1;html=0;strokeColor=#c62828;strokeWidth=3;endArrow=cross;startArrow=cross;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.327;exitY=0.918;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="n-Z" target="n-O">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="273.4" y="343.7" as="sourcePoint" />
+            <mxPoint x="119.9" y="502.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="119.9" y="373.8" />
+              <mxPoint x="119.9" y="429.2" />
+              <mxPoint x="119.9" y="484.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

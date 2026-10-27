@@ -1,0 +1,203 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="2.5-key-vault-abac" id="2.5-key-vault-abac">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-KV" value="Key Vault kv-&lt;env&gt;-int-fi · private endpoint" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="48.0" y="746.8" width="457.6" height="95.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ENTRA" value="Microsoft Entra ID" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="88.0" y="597.2" width="700.2" height="95.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ZONE" value="Zone int-fi" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="6.0" width="998.7" height="537.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-paas" value="Zone PaaS · local auth disabled&#10;PostgreSQL, Storage, Event Hubs …" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="538.6" y="768.8" width="304.2" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-pkv" value="Platform vault&#10;int-fi-gateway--wildcard&#10;the gateway's ESO share,&#10;the same way" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1031.7" y="175.2" width="224.5" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ext" value="Third-party API&#10;no Entra ID" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1031.7" y="324.5" width="146.7" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NSA" value="ns int-fi-app-a · no secrets" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ZONE">
+          <mxGeometry x="538.2" y="423.6" width="246.6" height="95.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NSB" value="ns int-fi-app-b · a secret exception" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ZONE">
+          <mxGeometry x="20.0" y="147.2" width="918.1" height="244.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-eso" value="External Secrets Operator · ns int-fi-secrets&#10;controllerClass int-fi · the only pods that reach a&#10;vault" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ZONE">
+          <mxGeometry x="548.7" y="22.0" width="378.9" height="72.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-miBs" value="Reader identity of int-fi-app-b&#10;federated to key-vault" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ENTRA">
+          <mxGeometry x="101.0" y="22.0" width="246.4" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-miA" value="id-int-fi-app-a&#10;federated per cluster" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-ENTRA">
+          <mxGeometry x="487.8" y="22.0" width="187.4" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sB1" value="int-fi-app-b--api-key" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-KV">
+          <mxGeometry x="35.3" y="30.8" width="178.7" height="38.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sX" value="int-fi-app-c--…" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-KV">
+          <mxGeometry x="290.3" y="30.8" width="142.2" height="38.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-saB" value="ServiceAccount app-b&#10;no Key Vault role" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-NSB">
+          <mxGeometry x="543.2" y="170.8" width="196.6" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-esB" value="ExternalSecret → Secret&#10;mounted as a volume" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-NSB">
+          <mxGeometry x="676.5" y="40.1" width="216.6" height="54.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-rdB" value="ServiceAccount key-vault&#10;no pod may use it" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-NSB">
+          <mxGeometry x="174.2" y="39.6" width="220.2" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-saA" value="ServiceAccount app-a&#10;workload identity" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-NSA">
+          <mxGeometry x="25.0" y="22.0" width="196.6" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_eso_esB_0" value="reconciles" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.598;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-eso" target="n-esB">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="783.4" y="100.2" as="sourcePoint" />
+            <mxPoint x="812.8" y="193.3" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="812.8" y="128.7" />
+              <mxPoint x="812.8" y="157.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_eso_rdB_0" value="token" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.000;exitY=0.891;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-eso" target="n-rdB">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="556.7" y="92.3" as="sourcePoint" />
+            <mxPoint x="312.3" y="192.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="312.3" y="128.7" />
+              <mxPoint x="312.3" y="157.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_rdB_miBs_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-rdB" target="n-miBs">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="312.3" y="248.4" as="sourcePoint" />
+            <mxPoint x="312.3" y="619.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="312.3" y="295.0" />
+              <mxPoint x="312.3" y="351.8" />
+              <mxPoint x="312.3" y="397.6" />
+              <mxPoint x="312.3" y="415.6" />
+              <mxPoint x="312.3" y="433.6" />
+              <mxPoint x="312.3" y="479.4" />
+              <mxPoint x="312.3" y="525.2" />
+              <mxPoint x="312.3" y="543.2" />
+              <mxPoint x="312.3" y="572.2" />
+              <mxPoint x="312.3" y="601.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_miBs_sB1_0" value="ABAC: int-fi-app-b--*" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.179;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.390;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-miBs" target="n-sB1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="233.3" y="674.8" as="sourcePoint" />
+            <mxPoint x="152.9" y="777.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="182.1" y="692.8" />
+              <mxPoint x="125.2" y="721.8" />
+              <mxPoint x="125.2" y="750.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_miBs_sX_0" value="ForbiddenByRbac" style="edgeStyle=none;rounded=1;html=0;strokeColor=#c62828;strokeWidth=2;endArrow=cross;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.739;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=5 5;" edge="1" parent="1" source="n-miBs" target="n-sX">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="371.2" y="674.8" as="sourcePoint" />
+            <mxPoint x="409.4" y="777.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="409.4" y="692.8" />
+              <mxPoint x="409.4" y="721.8" />
+              <mxPoint x="409.4" y="750.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_esB_ext_0" value="calls with the key" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.239;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-esB" target="n-ext">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="812.8" y="247.9" as="sourcePoint" />
+            <mxPoint x="1031.7" y="337.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="812.8" y="295.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_saA_miA_0" value="projected token" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-saA" target="n-miA">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="669.5" y="507.2" as="sourcePoint" />
+            <mxPoint x="669.5" y="619.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="669.5" y="525.2" />
+              <mxPoint x="669.5" y="543.2" />
+              <mxPoint x="669.5" y="572.2" />
+              <mxPoint x="669.5" y="601.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_miA_paas_0" value="data-plane roles" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.458;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-miA" target="n-paas">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="669.5" y="674.8" as="sourcePoint" />
+            <mxPoint x="677.8" y="768.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="669.5" y="692.8" />
+              <mxPoint x="669.5" y="721.8" />
+              <mxPoint x="669.5" y="750.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_saB_paas_0" value="workload identity" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.895;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.867;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-saB" target="n-paas">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="767.8" y="373.8" as="sourcePoint" />
+            <mxPoint x="802.3" y="768.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="874.5" y="397.6" />
+              <mxPoint x="874.5" y="415.6" />
+              <mxPoint x="874.5" y="433.6" />
+              <mxPoint x="874.5" y="479.4" />
+              <mxPoint x="874.5" y="525.2" />
+              <mxPoint x="874.5" y="543.2" />
+              <mxPoint x="874.5" y="572.2" />
+              <mxPoint x="874.5" y="601.2" />
+              <mxPoint x="874.5" y="647.0" />
+              <mxPoint x="874.5" y="692.8" />
+              <mxPoint x="874.5" y="721.8" />
+              <mxPoint x="874.5" y="750.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_eso_pkv_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.824;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.059;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-eso" target="n-pkv">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="869.1" y="100.2" as="sourcePoint" />
+            <mxPoint x="1031.7" y="180.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="966.1" y="128.7" />
+              <mxPoint x="966.1" y="157.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_saB_KV_0" value="no role, no path" style="edgeStyle=none;rounded=1;html=0;strokeColor=#c62828;strokeWidth=2;endArrow=cross;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.000;exitY=0.635;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.365;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=5 5;" edge="1" parent="1" source="n-saB" target="n-KV">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="571.2" y="359.3" as="sourcePoint" />
+            <mxPoint x="214.9" y="746.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="68.0" y="397.6" />
+              <mxPoint x="68.0" y="415.6" />
+              <mxPoint x="68.0" y="433.6" />
+              <mxPoint x="68.0" y="479.4" />
+              <mxPoint x="68.0" y="525.2" />
+              <mxPoint x="68.0" y="543.2" />
+              <mxPoint x="68.0" y="572.2" />
+              <mxPoint x="68.0" y="601.2" />
+              <mxPoint x="68.0" y="647.0" />
+              <mxPoint x="68.0" y="692.8" />
+              <mxPoint x="220.1" y="721.8" />
+              <mxPoint x="220.1" y="750.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

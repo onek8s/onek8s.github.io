@@ -1,0 +1,76 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="2.1-network-subnets" id="2.1-network-subnets">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-VNET" value="Cell VNet · nodes and LBs in /24 slots of 10.100.0.0/16 · pods in /20 slots of 100.64.0.0/16" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="69.1" y="119.2" width="647.7" height="692.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-rt" value="Route tables, every node and pod subnet&#10;0.0.0.0/0 + both address spaces → Firewall&#10;own slot → VNet (a zone's own LB → Firewall)" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="8.0" y="10.0" width="371.2" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-nsg" value="NSG per subnet · deny-all inbound last&#10;kubelet 10250 from snet-system&#10;443 from Internet / VirtualNetwork · LB probes" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="409.2" y="10.0" width="366.1" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-hub" value="Hub VNet of the exposure · Azure Firewall&#10;Premium&#10;DNS proxy · SNAT · IP group per zone (node +&#10;pod slots)" style="rounded=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="206.4" y="869.8" width="373.1" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-shared" value="Environment network · snet-shared-pe&#10;private endpoints: Key Vaults, registry, IaC state" style="rounded=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="203.3" y="996.6" width="379.2" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-s0" value="Slot 0 · system&#10;snet-system 10.100.0.0/24: system pool, zone&#10;gateways, ESO, API server endpoint&#10;snet-system-pods 100.64.0.0/20" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-VNET">
+          <mxGeometry x="140.6" y="34.5" width="366.5" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-s1" value="Slot 1 · zone int-fi&#10;snet-int-fi-nodes 10.100.1.0/25 · snet-int-fi-ilb&#10;10.100.1.128/27&#10;snet-int-fi-pods 100.64.16.0/20" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-VNET">
+          <mxGeometry x="144.6" y="186.3" width="358.5" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-s2" value="Slot 2 · zone int-se&#10;snet-int-se-nodes 10.100.2.0/25 · snet-int-se-ilb&#10;10.100.2.128/27&#10;snet-int-se-pods 100.64.32.0/20" style="rounded=0;fillColor=#e3f2fd;strokeColor=#1565c0;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-VNET">
+          <mxGeometry x="135.7" y="338.1" width="376.3" height="90.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sf" value="Slots 3 to 14 · free&#10;a new zone takes its index's slot in every cell" style="rounded=0;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-VNET">
+          <mxGeometry x="145.3" y="489.9" width="357.0" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-s15" value="Slot 15 · reserved&#10;snet-apiserver for VNet integration" style="rounded=0;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-VNET">
+          <mxGeometry x="182.0" y="606.5" width="283.7" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_hub_shared_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=block;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-hub" target="n-shared">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="392.9" y="960.6" as="sourcePoint" />
+            <mxPoint x="392.9" y="996.6" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="392.9" y="978.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_rt_VNET_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.207;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-rt" target="n-VNET">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="193.6" y="83.2" as="sourcePoint" />
+            <mxPoint x="203.5" y="119.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="193.6" y="101.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_nsg_VNET_0" value="" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.793;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-nsg" target="n-VNET">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="592.3" y="83.2" as="sourcePoint" />
+            <mxPoint x="582.4" y="119.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="592.3" y="101.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_VNET_hub_0" value="peering, encrypted" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=block;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.500;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-VNET" target="n-hub">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="392.9" y="811.8" as="sourcePoint" />
+            <mxPoint x="392.9" y="869.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="392.9" y="840.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

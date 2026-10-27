@@ -1,0 +1,98 @@
+<mxfile host="onek8s scripts/drawio.py">
+  <diagram name="4.2-encryption-at-rest" id="4.2-encryption-at-rest">
+    <mxGraphModel grid="1" gridSize="10" guides="1" page="0" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n-SF" value="Stateful cluster" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="655.1" y="6.0" width="434.5" height="367.8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SL" value="Stateless cell (one per cell)" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="655.1" y="389.8" width="434.5" height="264.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ksl" value="Per cell&#10;key-&lt;cell&gt;-kms · key-&lt;cell&gt;-disk" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="84.3" y="491.6" width="269.5" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ksf" value="Stateful cluster&#10;key-sf-kms · key-sf-disk&#10;key-sf-pv-&lt;zone&gt;, one per isolation zone" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="54.5" y="122.6" width="329.2" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-certs" value="cert-&lt;zone&gt;-… (section 4.1)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="99.4" y="587.0" width="239.2" height="38.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-note" value="Not possible in AKS: a disk key per node pool →&#10;one OS-disk key per cluster, application data&#10;separated per zone&#10;Rotation: a new key version every 12 months, no&#10;expiry dates; disk encryption sets and KMS data&#10;encryption follow the versionless key" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="26.0" y="675.0" width="386.1" height="126.0" as="geometry" />
+        </mxCell>
+        <mxCell id="n-slapi" value="Control plane: Secrets in etcd&#10;KMS data encryption, the key named without a&#10;version" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SL">
+          <mxGeometry x="31.7" y="29.0" width="371.0" height="72.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sldisk" value="Disk encryption set des-&lt;cell&gt; (cluster-wide, set at&#10;creation)&#10;→ ephemeral OS disks of the system pool and&#10;every zone node&#10;+ encryption at host" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SL">
+          <mxGeometry x="18.6" y="131.2" width="397.2" height="108.4" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sfapi" value="Control plane: Secrets in etcd, KMS data&#10;encryption" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="52.6" y="29.0" width="329.2" height="55.6" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sfdisk" value="Disk encryption set des-sf&#10;→ OS disks of the system pool and the zone pools&#10;+ encryption at host" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="18.0" y="114.6" width="398.5" height="73.2" as="geometry" />
+        </mxCell>
+        <mxCell id="n-sfpv" value="Disk encryption set des-sf-&lt;zone&gt;, one per zone&#10;→ StorageClasses &lt;zone&gt;-premium-zrs, … and&#10;the zone's Azure Files account&#10;→ persistent volumes and backups of the zone&#10;Azure Policy: a PVC only on its own zone's&#10;classes" style="rounded=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-SF">
+          <mxGeometry x="25.1" y="217.8" width="384.3" height="125.0" as="geometry" />
+        </mxCell>
+        <mxCell id="e-L_ksl_slapi_0" value="Crypto User on the KMS&#10;key&#10;(control plane identity)" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.837;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ksl" target="n-slapi">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="309.9" y="491.6" as="sourcePoint" />
+            <mxPoint x="686.8" y="454.9" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="430.1" y="454.9" />
+              <mxPoint x="542.6" y="454.9" />
+              <mxPoint x="655.1" y="454.9" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ksl_sldisk_0" value="Crypto Service Encryption&#10;User&#10;on the disk key, automatic&#10;rotation" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.890;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ksl" target="n-sldisk">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="324.3" y="547.2" as="sourcePoint" />
+            <mxPoint x="673.7" y="575.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="430.1" y="575.2" />
+              <mxPoint x="542.6" y="575.2" />
+              <mxPoint x="655.1" y="575.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ksf_sfapi_0" value="Crypto User on the KMS&#10;key" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.743;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ksf" target="n-sfapi">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="299.2" y="122.6" as="sourcePoint" />
+            <mxPoint x="707.7" y="62.8" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="430.1" y="62.8" />
+              <mxPoint x="542.6" y="62.8" />
+              <mxPoint x="655.1" y="62.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ksf_sfdisk_0" value="Crypto Service Encryption&#10;User" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.479;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ksf" target="n-sfdisk">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="383.6" y="157.6" as="sourcePoint" />
+            <mxPoint x="673.1" y="157.2" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="430.1" y="157.2" />
+              <mxPoint x="542.6" y="157.2" />
+              <mxPoint x="655.1" y="157.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-L_ksf_sfpv_0" value="one key per zone" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.685;exitY=1.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-ksf" target="n-sfpv">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="279.8" y="195.8" as="sourcePoint" />
+            <mxPoint x="680.1" y="286.3" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="430.1" y="286.3" />
+              <mxPoint x="542.6" y="286.3" />
+              <mxPoint x="655.1" y="286.3" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
