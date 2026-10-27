@@ -32,15 +32,18 @@ scripts/render.sh diagrams/2.2-control-plane.mmd   # or only the ones you change
 The dark rendering uses Mermaid's dark theme (`scripts/mermaid-dark.json`) and turns the colours of the `classDef`,
 `style` and `linkStyle` lines dark (`scripts/dark-mmd.py`: the same hue, a dark fill, a light stroke and text), so
 write the colours for a white background as before - one source serves both. Labels are SVG text in Arial's metrics
-(`fontFamily` and `htmlLabels: false` in both settings files: Liberation Sans or Arimo where the renderer has no Arial),
+(`fontFamily`, the sequence diagrams' `*FontFamily` and `htmlLabels: false` in both settings files: Liberation Sans or Arimo where the renderer has no Arial),
 because Mermaid sizes every box for the font of the machine that renders it: HTML labels in another font were cut off
 in a reader's browser. A picture whose lines miss their boxes (edges to or from a subgraph) can use the ELK layout,
 `config: layout: elk` in front matter on the first lines of its source, as 1.1 and 2.3 do.
 
-`scripts/render.sh` also writes `images/<name>.drawio` for every flowchart (`scripts/drawio.py`): the light rendering
-as native Draw.io shapes - boxes, subgraphs as containers, edges with their route, colours and text - for readers who
-want to edit a picture. A page links it under its picture: `[Download the picture for Draw.io](../images/<name>.drawio){: download="<name>.drawio"}`.
-The Mermaid source stays the master; a change made in Draw.io comes back as a change to the `.mmd`. The light rendering uses the spacing of
+`scripts/render.sh` also writes `images/<name>.drawio` for every flowchart and sequence diagram (`scripts/drawio.py`):
+the light rendering as native Draw.io shapes - boxes, subgraphs as containers, edges with their route, colours and
+text; participants, lifelines, notes and numbered messages - for readers who want to edit a picture. Every picture of
+the design has the link under it: `[Download the picture for Draw.io](../images/<name>.drawio){: download="<name>.drawio"}`.
+The Mermaid source stays the master; a change made in Draw.io comes back as a change to the `.mmd`.
+
+The light rendering uses the spacing of
 `scripts/mermaid.json`; keep a picture at most about 1 200 px wide (and 1 500 px tall), because the PDF scales it to
 the page and the 16 px labels turn unreadable beyond that - stack subgraphs (`a ~~~ b`), keep edge labels to a few
 words and prefer `flowchart TB` with two or three columns to a wide `LR` row.

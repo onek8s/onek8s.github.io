@@ -11,7 +11,7 @@
     fontFamily: font,
     htmlLabels: false,
     flowchart: { nodeSpacing: 30, rankSpacing: 36, padding: 10, subGraphTitleMargin: { top: 2, bottom: 2 }, wrappingWidth: 360, htmlLabels: false },
-    sequence: { actorMargin: 40, messageMargin: 30, width: 130 },
+    sequence: { actorMargin: 40, messageMargin: 30, width: 130, actorFontFamily: font, noteFontFamily: font, messageFontFamily: font },
     themeCSS: '.edgeLabel rect { opacity: 1 !important; } text { font-family: ' + font + '; }'
   };
   var dark = {

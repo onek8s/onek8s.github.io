@@ -6,7 +6,7 @@ sequenceDiagram
     participant A as Cell az1
     participant B as Cell az2
     participant T as Traffic layer<br/>(Traffic Manager · internal DNS)
-    Note over A,B: External: both cells serve, clients pinned by their network (DNS).<br/>Internal: each app in its home cell. Each cell can carry 100 % (N+1).
+    Note over A,B: External: both cells serve,<br/>clients pinned by their<br/>network (DNS). Internal:<br/>each app in its home cell.<br/>Each cell can carry<br/>100 % (N+1).
     P->>B: Pre-scale: raise HPA minReplicas to full-load capacity,<br/>the cluster autoscaler adds nodes
     P->>T: Take az1 out: disable its Traffic Manager endpoints<br/>(cluster upgrade: first migrate its internal apps to az2 - deploy, test, DNS switch)
     T-->>A: DNS TTL + connection draining:<br/>az1's clients move to az2 (old version)
@@ -14,6 +14,6 @@ sequenceDiagram
     A->>A: Flux reconciles every app,<br/>health checks
     P->>A: Smoke and synthetic tests through<br/>the per-cell test host names
     P->>T: Return az1: its external clients come back and get the new version<br/>(cluster upgrade: after soak, migrate its internal apps back)
-    Note over P,A: Watch the error-rate and latency SLOs.<br/>Breach: take az1 out again, stop (release: move the branch back).
+    Note over P,A: Watch the error-rate and latency SLOs.<br/>Breach: take az1 out again, stop<br/>(release: move the branch back).
     P->>A: Release: soak, pre-scale az1,<br/>repeat steps 2-7 for az2 (and az3)<br/>Cluster update: az2 (and az3)<br/>follow later on the slow speed
     P->>B: Remove the pre-scale: HPA / KEDA and<br/>the cluster autoscaler take over
