@@ -18,7 +18,10 @@
   "sequence": {
     "actorMargin": 40,
     "messageMargin": 30,
-    "width": 130
+    "width": 130,
+    "actorFontFamily": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+    "noteFontFamily": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif",
+    "messageFontFamily": "Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif"
   },
   "themeCSS": ".edgeLabel rect { opacity: 1 !important; } text { font-family: Arial, \"Liberation Sans\", Arimo, Helvetica, sans-serif; }"
 }

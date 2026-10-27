@@ -5,7 +5,8 @@ becomes a native Draw.io shape at the place Mermaid drew it, with its colours, l
 
 Usage: scripts/drawio.py diagrams/<name>.mmd ...   (render.sh runs it after each rendering)
 
-Flowcharts only (others are skipped); the labels must be SVG text (htmlLabels false in scripts/mermaid.json).
+Flowcharts and sequence diagrams (others are skipped); the labels must be SVG text (htmlLabels false in
+scripts/mermaid.json).
 """
 import base64
 import html
@@ -175,13 +176,7 @@ def convert(mmd):
 
 
 def mxfile(name, cells, boxes, edges):
-    mxf = ET.Element('mxfile', host='onek8s scripts/drawio.py')
-    diagram = ET.SubElement(mxf, 'diagram', name=name, id=name)
-    model = ET.SubElement(diagram, 'mxGraphModel', grid='1', gridSize='10', guides='1', page='0', math='0',
-                          shadow='0')
-    top = ET.SubElement(model, 'root')
-    ET.SubElement(top, 'mxCell', id='0')
-    ET.SubElement(top, 'mxCell', id='1', parent='0')
+    mxf, top = model(name)
     font = f'fontFamily={FONT};fontSize=16;html=0;whiteSpace=wrap;'
 
     def cid(i):
@@ -240,11 +235,104 @@ def mxfile(name, cells, boxes, edges):
     return ET.tostring(mxf, encoding='unicode') + '\n'
 
 
+def sequence(mmd):
+    """A sequence diagram: participants, lifelines, notes, and messages with their numbers and text where Mermaid drew
+    them (the text and the numbers are shapes of their own, so they stay where they were)."""
+    name = Path(mmd).stem
+    elements = walk(ET.parse(Path('images') / f'{name}.svg').getroot())
+    mxf, top = model(name)
+    font = f'fontFamily={FONT};fontSize=16;html=0;whiteSpace=wrap;fontColor={TEXT};'
+    count = [0]
+
+    def vertex(value, style, x, y, w, h):
+        count[0] += 1
+        cell = ET.SubElement(top, 'mxCell', id=f'v{count[0]}', value=value, style=style, vertex='1', parent='1')
+        ET.SubElement(cell, 'mxGeometry', x=f'{x:.1f}', y=f'{y:.1f}', width=f'{w:.1f}', height=f'{h:.1f}',
+                      **{'as': 'geometry'})
+
+    def edge(pts, style):
+        count[0] += 1
+        cell = ET.SubElement(top, 'mxCell', id=f'e{count[0]}', value='', style=style, edge='1', parent='1')
+        geo = ET.SubElement(cell, 'mxGeometry', relative='1', **{'as': 'geometry'})
+        ET.SubElement(geo, 'mxPoint', x=f'{pts[0][0]:.1f}', y=f'{pts[0][1]:.1f}', **{'as': 'sourcePoint'})
+        ET.SubElement(geo, 'mxPoint', x=f'{pts[-1][0]:.1f}', y=f'{pts[-1][1]:.1f}', **{'as': 'targetPoint'})
+        if len(pts) > 2:
+            arr = ET.SubElement(geo, 'Array', **{'as': 'points'})
+            for x, y in pts[1:-1]:
+                ET.SubElement(arr, 'mxPoint', x=f'{x:.1f}', y=f'{y:.1f}')
+
+    def lines(texts):
+        return '\n'.join(' '.join(''.join(t.itertext()).split()) for t in texts)
+
+    # Participant names: Mermaid writes them as texts over the boxes, top and bottom.
+    names = [(ox + float(t.get('x')), oy + float(t.get('y')), t) for t, ox, oy in elements
+             if t.tag == SVG + 'text' and 'actor-box' in classes(t)]
+    pending = []  # the lines of a message's text, written before its arrow
+    for el, ox, oy in elements:
+        cls = classes(el)
+        if el.tag == SVG + 'rect' and 'actor' in cls:
+            x, y = ox + float(el.get('x')), oy + float(el.get('y'))
+            w, h = float(el.get('width')), float(el.get('height'))
+            label = lines([t for tx, ty, t in names if x <= tx <= x + w and y <= ty <= y + h])
+            vertex(label, f'rounded=1;arcSize=5;fillColor={el.get("fill")};strokeColor={el.get("stroke")};{font}',
+                   x, y, w, h)
+        elif el.tag == SVG + 'line' and 'actor-line' in cls:
+            edge([(ox + float(el.get('x1')), oy + float(el.get('y1'))),
+                  (ox + float(el.get('x2')), oy + float(el.get('y2')))],
+                 f'endArrow=none;strokeColor={el.get("stroke") or "#999"};strokeWidth=0.5;')
+        elif el.tag == SVG + 'g' and el.get('data-et') == 'note':
+            rect = el.find(SVG + 'rect')
+            vertex(lines(el.findall(SVG + 'text')),
+                   f'rounded=0;fillColor={rect.get("fill")};strokeColor={rect.get("stroke")};{font}',
+                   ox + float(rect.get('x')), oy + float(rect.get('y')), float(rect.get('width')),
+                   float(rect.get('height')))
+        elif el.tag == SVG + 'text' and 'messageText' in cls:
+            pending.append((ox + float(el.get('x')), oy + float(el.get('y')), el))
+        elif el.get('data-et') == 'message':
+            if el.tag == SVG + 'line':
+                pts = [(ox + float(el.get('x1')), oy + float(el.get('y1'))),
+                       (ox + float(el.get('x2')), oy + float(el.get('y2')))]
+            else:  # a message to itself: a loop to the right
+                xy = [float(v) for v in re.findall(r'-?[\d.]+', el.get('d'))]
+                (x0, y0), (x1, _), (x3, y3) = (xy[0], xy[1]), (xy[2], xy[3]), (xy[-2], xy[-1])
+                pts = [(ox + x0, oy + y0), (ox + x1 - 20, oy + y0), (ox + x1 - 20, oy + y3), (ox + x3, oy + y3)]
+            style = f'endArrow=block;endFill=1;strokeColor={EDGE};strokeWidth=1.5;rounded=0;'
+            if 'dasharray' in (el.get('style') or ''):
+                style += 'dashed=1;dashPattern=3 3;'
+            edge(pts, style)
+            if pending:
+                text = lines([t for _, _, t in pending])
+                w = max(len(line) for line in text.split('\n')) * 8.6 + 10
+                vertex(text, f'text;strokeColor=none;fillColor=none;align=center;verticalAlign=top;{font}', pending[0][0] - w / 2,
+                       pending[0][1] + 4, w, 18 * len(pending) + 4)
+                pending = []
+        elif el.tag == SVG + 'text' and 'sequenceNumber' in cls:
+            x, y = ox + float(el.get('x')), oy + float(el.get('y'))
+            vertex(''.join(el.itertext()), f'shape=ellipse;perimeter=ellipsePerimeter;fillColor={EDGE};strokeColor={EDGE};fontColor=#ffffff;'
+                   f'fontFamily={FONT};fontSize=12;html=0;', x - 9, y - 13, 18, 18)
+
+    ET.indent(mxf)
+    return ET.tostring(mxf, encoding='unicode') + '\n'
+
+
+def model(name):
+    """An empty Draw.io file: its root element and the parent of every cell."""
+    mxf = ET.Element('mxfile', host='onek8s scripts/drawio.py')
+    diagram = ET.SubElement(mxf, 'diagram', name=name, id=name)
+    graph = ET.SubElement(diagram, 'mxGraphModel', grid='1', gridSize='10', guides='1', page='0', math='0',
+                          shadow='0')
+    top = ET.SubElement(graph, 'root')
+    ET.SubElement(top, 'mxCell', id='0')
+    ET.SubElement(top, 'mxCell', id='1', parent='0')
+    return mxf, top
+
+
 if __name__ == '__main__':
     for src in sys.argv[1:]:
         out = Path('images') / f'{Path(src).stem}.drawio'
-        if 'flowchart' not in ET.parse(out.with_suffix('.svg')).getroot().get('aria-roledescription', ''):
-            print(f'Skipped {out}: not a flowchart')
+        kind = ET.parse(out.with_suffix('.svg')).getroot().get('aria-roledescription', '')
+        if kind not in ('flowchart-v2', 'sequence'):
+            print(f'Skipped {out}: a {kind}, neither a flowchart nor a sequence diagram')
             continue
-        out.write_text(convert(src))
+        out.write_text(sequence(src) if kind == 'sequence' else convert(src))
         print(f'Wrote {out}')
