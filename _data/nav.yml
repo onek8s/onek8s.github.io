@@ -107,6 +107,10 @@
       number: "3.5"
       title: Zero-downtime cluster upgrades
       pdf: design
+    - path: design/3.6-node-pool-upgrades-rolling-or-blue-green.md
+      number: "3.6"
+      title: "Node pool upgrades: rolling or blue/green"
+      pdf: design
 
 - number: 4
   part: Encryption

@@ -18,8 +18,8 @@ flowchart TB
     subgraph POOLS["Node pools · every zone pool: label + taint platform/zone=&lt;zone&gt;, the zone's subnets"]
         direction LR
         p_sys["system<br/>snet-system · fixed size"]
-        p_ifi["int-fi · snet-int-fi-*<br/>intfi · intfispot<br/>intfiarm · intfiarmspot<br/>intfigpu on request"]
-        p_ise["int-se · snet-int-se-*<br/>intse · intsespot<br/>intsearm · intsearmspot"]
+        p_ifi["int-fi · snet-int-fi-*<br/>fi1 · fi1spot<br/>fi1arm · fi1armspot<br/>fi1gpu on request"]
+        p_ise["int-se · snet-int-se-*<br/>se1 · se1spot<br/>se1arm · se1armspot"]
     end
 
     csa["Stateless cells: the cluster autoscaler<br/>every zone pool from zero · spot first,<br/>on-demand when spot is missing · N+1"]
