@@ -119,6 +119,10 @@
       number: "4.2"
       title: Encryption at rest
       pdf: design
+    - path: design/4.3-service-mesh-pros-and-cons.md
+      number: "4.3"
+      title: "Service mesh: pros and cons"
+      pdf: design
 
 - number: 5
   part: Egress control
