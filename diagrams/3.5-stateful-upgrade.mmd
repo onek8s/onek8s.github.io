@@ -4,7 +4,7 @@ flowchart TB
     subgraph SF["aks-&lt;env&gt;-sf (AKS LTS, Premium tier, zone-redundant control plane)"]
         direction LR
         subgraph Z1["AZ 1"]
-            n1["node pools *z1 (intfiz1, …)<br/>pod replica 1"]
+            n1["node pools *z1 (fi1z1, …)<br/>pod replica 1"]
         end
         subgraph Z2["AZ 2"]
             n2["node pools *z2<br/>pod replica 2"]
