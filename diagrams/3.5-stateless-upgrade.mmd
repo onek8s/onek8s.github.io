@@ -1,19 +1,19 @@
-%% Zero-downtime change of the cells (stateless clusters): one cell at a time is drained from the traffic layer,
-%% changed (cluster upgrade, rebuild or application release), verified and put back. Same pipeline in dev, acc, prd.
+%% Zero-downtime change of the cells (stateless clusters): one cell at a time, its applications migrated out for a
+%% cluster upgrade or rebuild, updated in place for a release, verified, then the next cell. Same pipeline in dev, acc, prd.
 sequenceDiagram
     autonumber
     participant P as Pipeline<br/>(cluster upgrade or release)
     participant A as Cell az1
     participant B as Cell az2
-    participant T as Traffic layer<br/>(Traffic Manager · internal DNS)
-    Note over A,B: External: both cells serve,<br/>clients pinned by their<br/>network (DNS). Internal:<br/>each app in its home cell.<br/>Each cell can carry<br/>100 % (N+1).
+    participant T as DNS<br/>(public and private zones)
+    Note over A,B: Every app in its home cell,<br/>internal and external.<br/>Each cell can carry<br/>100 % (N+1).
     P->>B: Pre-scale: raise HPA minReplicas to full-load capacity,<br/>the cluster autoscaler adds nodes
-    P->>T: Take az1 out: disable its Traffic Manager endpoints<br/>(cluster upgrade: first migrate its internal apps to az2 - deploy, test, DNS switch)
-    T-->>A: DNS TTL + connection draining:<br/>az1's clients move to az2 (old version)
+    P->>A: Cluster upgrade: migrate az1's apps to az2 - deploy, test on the per-cell names, DNS switch<br/>(release: nothing moves, az1's apps update in place by their rolling update)
+    T-->>A: The home routes leave az1: its records move to az2<br/>within a minute + TTL, connections drain
     P->>A: Upgrade the control plane and every<br/>node pool (surge), rebuild from IaC,<br/>or move the cell's branch
     A->>A: Flux reconciles every app,<br/>health checks
     P->>A: Smoke and synthetic tests through<br/>the per-cell test host names
-    P->>T: Return az1: its external clients come back and get the new version<br/>(cluster upgrade: after soak, migrate its internal apps back)
-    Note over P,A: Watch the error-rate and latency SLOs.<br/>Breach: take az1 out again, stop<br/>(release: move the branch back).
+    P->>T: Cluster upgrade: after soak, migrate az1's apps back
+    Note over P,A: Watch the error-rate and latency SLOs.<br/>Breach: stop<br/>(release: move the branch back).
     P->>A: Release: soak, pre-scale az1,<br/>repeat steps 2-7 for az2 (and az3)<br/>Cluster update: az2 (and az3)<br/>follow later on the slow speed
     P->>B: Remove the pre-scale: HPA / KEDA and<br/>the cluster autoscaler take over

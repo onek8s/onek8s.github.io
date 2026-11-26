@@ -14,10 +14,10 @@
           <mxGeometry x="1289.7" y="10.0" width="241.9" height="55.6" as="geometry" />
         </mxCell>
         <mxCell id="n-gc" value="Grafana Cloud&#10;(outside the region)" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
-          <mxGeometry x="1321.7" y="775.0" width="177.9" height="55.6" as="geometry" />
+          <mxGeometry x="1321.7" y="791.6" width="177.9" height="55.6" as="geometry" />
         </mxCell>
-        <mxCell id="n-fd" value="Traffic Manager (global)&#10;endpoints moved to the new cells" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
-          <mxGeometry x="1272.3" y="689.4" width="276.6" height="55.6" as="geometry" />
+        <mxCell id="n-fd" value="Azure DNS (global)&#10;public records rewritten by the new cells'&#10;ExternalDNS" style="rounded=0;fillColor=#ede7f6;strokeColor=#5e35b1;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1247.3" y="689.4" width="326.8" height="72.2" as="geometry" />
         </mxCell>
         <mxCell id="n-note" value="Retention example: daily 35 d · weekly 12 w ·&#10;monthly 12 m (prd); acc 14 d&#10;Backup subscription per environment: no platform&#10;or agent role can delete&#10;Region loss is declared by humans · drill in acc&#10;every six months" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
           <mxGeometry x="26.0" y="640.7" width="392.2" height="126.0" as="geometry" />
@@ -151,18 +151,18 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e-L_fd_dr_0" value="7 traffic" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.704;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.126;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fd" target="n-dr">
+        <mxCell id="e-L_fd_dr_0" value="7 traffic" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.712;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.126;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-fd" target="n-dr">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1467.2" y="689.4" as="sourcePoint" />
+            <mxPoint x="1480.0" y="689.4" as="sourcePoint" />
             <mxPoint x="1860.3" y="524.8" as="targetPoint" />
             <Array as="points">
               <mxPoint x="1701.2" y="574.3" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e-L_gc_dr_0" value="dashboards and alerts&#10;already there" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.755;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.256;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-gc" target="n-dr">
+        <mxCell id="e-L_gc_dr_0" value="dashboards and alerts&#10;already there" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.733;exitY=0.000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.256;entryY=1.000;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;dashPattern=2 2;" edge="1" parent="1" source="n-gc" target="n-dr">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1456.0" y="775.0" as="sourcePoint" />
+            <mxPoint x="1452.1" y="791.6" as="sourcePoint" />
             <mxPoint x="1910.8" y="524.8" as="targetPoint" />
             <Array as="points">
               <mxPoint x="1701.2" y="624.6" />

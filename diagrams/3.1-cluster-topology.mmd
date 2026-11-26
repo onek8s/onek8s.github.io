@@ -6,7 +6,7 @@ flowchart TB
     corp["Corporate network<br/>(via the hub Firewall)"]
 
     subgraph EDGE["Entry points, outside the cells"]
-        waf["Traffic Manager · external zones · <b>active-active</b><br/>client network blocks → cell (Subnet routing)<br/>endpoints: the zone gateways' public load balancers"]
+        waf["Public Azure DNS · external zones<br/>&lt;app&gt;.ext-fi.&lt;env&gt;.example.com → the zone gateway's public load balancer of its <b>home cell</b><br/>records kept by ExternalDNS in the cells, moved by the migration workflow"]
         agw_in["Hub Private DNS · internal zones<br/>&lt;app&gt;.int-fi.&lt;env&gt;.example.com → the zone gateway of its <b>home cell</b><br/>records kept by ExternalDNS in the cells, moved by the migration workflow"]
     end
 

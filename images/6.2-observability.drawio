@@ -5,7 +5,7 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="n-GC" value="Grafana Cloud (Azure, outside the platform's primary region)" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
-          <mxGeometry x="2079.3" y="199.9" width="951.7" height="210.0" as="geometry" />
+          <mxGeometry x="2079.3" y="199.9" width="839.6" height="210.0" as="geometry" />
         </mxCell>
         <mxCell id="n-MG" value="Management VNet" style="rounded=0;container=1;collapsible=0;verticalAlign=top;fillColor=#ffffde;strokeColor=#aaaa33;fontColor=#333333;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
           <mxGeometry x="1082.4" y="323.5" width="383.4" height="195.2" as="geometry" />
@@ -17,13 +17,13 @@
           <mxGeometry x="8.0" y="6.0" width="1038.4" height="316.7" as="geometry" />
         </mxCell>
         <mxCell id="n-law" value="Log Analytics log-&lt;env&gt;-platform&#10;(diagnostic settings, SOC)" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
-          <mxGeometry x="3162.7" y="237.7" width="273.0" height="55.6" as="geometry" />
+          <mxGeometry x="3050.6" y="237.7" width="273.0" height="55.6" as="geometry" />
         </mxCell>
         <mxCell id="n-users" value="Users and AI agents&#10;Entra ID SSO, grp-grafana-&lt;env&gt;&#10;everyone sees all data of the stack" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
           <mxGeometry x="1518.7" y="332.5" width="287.4" height="73.2" as="geometry" />
         </mxCell>
         <mxCell id="n-oncall" value="Platform and team on-call&#10;operations agent (webhook)" style="rounded=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
-          <mxGeometry x="2699.6" y="434.9" width="238.4" height="55.6" as="geometry" />
+          <mxGeometry x="2643.6" y="434.9" width="238.4" height="55.6" as="geometry" />
         </mxCell>
         <mxCell id="n-note" value="Not used: Container Insights, Azure Monitor&#10;managed Prometheus&#10;Never sent: secrets, tokens, request/response&#10;bodies, personal IDs in labels&#10;Watchdog: absent-data alert per cluster and Alloy&#10;(fires on region loss too)" style="rounded=0;fillColor=#fffde7;strokeColor=#9e9d24;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="1">
           <mxGeometry x="44.0" y="347.7" width="389.0" height="126.0" as="geometry" />
@@ -52,8 +52,8 @@
         <mxCell id="n-stack" value="Stacks &lt;org&gt;-dev / -acc / -prd&#10;Metrics · Logs · Traces · SLO&#10;Alerting · IRM on-call · Synthetic Monitoring" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-GC">
           <mxGeometry x="18.0" y="75.4" width="348.6" height="73.2" as="geometry" />
         </mxCell>
-        <mxCell id="n-amds" value="Azure Monitor data source&#10;Activity Log, AKS audit, Firewall, Traffic Manager,&#10;Key Vault, PaaS logs and metrics" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-GC">
-          <mxGeometry x="545.3" y="29.0" width="388.3" height="73.2" as="geometry" />
+        <mxCell id="n-amds" value="Azure Monitor data source&#10;Activity Log, AKS audit, Firewall,&#10;Key Vault, PaaS logs and metrics" style="rounded=0;fillColor=#eceff1;strokeColor=#455a64;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-GC">
+          <mxGeometry x="545.3" y="29.0" width="276.3" height="73.2" as="geometry" />
         </mxCell>
         <mxCell id="n-app" value="Application pod&#10;stdout JSON logs · /metrics&#10;OpenTelemetry SDK" style="rounded=0;fillColor=#e0f2f1;strokeColor=#00695c;fontColor=#000;fontFamily=Arial;fontSize=16;html=0;whiteSpace=wrap;" vertex="1" parent="n-NODE">
           <mxGeometry x="95.1" y="37.8" width="234.8" height="73.2" as="geometry" />
@@ -164,11 +164,11 @@
         </mxCell>
         <mxCell id="e-L_amds_law_0" value="read in place" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-amds" target="n-law">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="3013.0" y="265.5" as="sourcePoint" />
-            <mxPoint x="3162.7" y="265.5" as="targetPoint" />
+            <mxPoint x="2900.9" y="265.5" as="sourcePoint" />
+            <mxPoint x="3050.6" y="265.5" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="3031.0" y="265.5" />
-              <mxPoint x="3096.8" y="265.5" />
+              <mxPoint x="2918.9" y="265.5" />
+              <mxPoint x="2984.8" y="265.5" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -183,10 +183,10 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e-L_stack_oncall_0" value="alerts by team label" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.967;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.166;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-stack" target="n-oncall">
+        <mxCell id="e-L_stack_oncall_0" value="alerts by team label" style="edgeStyle=none;rounded=1;html=0;strokeColor=#333333;strokeWidth=1;endArrow=block;startArrow=none;endFill=1;startFill=1;fontFamily=Arial;fontSize=16;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1.000;exitY=0.967;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.232;entryY=0.000;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="n-stack" target="n-oncall">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="2445.9" y="346.1" as="sourcePoint" />
-            <mxPoint x="2739.3" y="434.9" as="targetPoint" />
+            <mxPoint x="2699.0" y="434.9" as="targetPoint" />
             <Array as="points">
               <mxPoint x="2535.3" y="363.6" />
             </Array>

@@ -59,9 +59,9 @@ page's requirements line, no link into `archive/`).
   `aks-prd-int-stateless-az1`); what the implementation still lacks is tracked with the implementation, not here.
   A finding in an environment that changes the design is a design pull request first. The landing zone is out of
   scope: refer to Microsoft's documentation instead of explaining it here.
-- **Versions** (the user): the design is **v4.0 since 2026-10-20**. Every pull request that changes the design adds
-  the next minor version (v4.1, v4.2, ...; a major version only when a human says so) at the top of
-  `design/8.1-release-notes.md` - `## v4.N - <date>`, one short sentence per change ending in the pull request link
+- **Versions** (the user): the design is **v5.0 since 2026-11-26** (v4.0 since 2026-10-20). Every pull request that
+  changes the design adds the next minor version (v5.1, v5.2, ...; a major version only when a human says so) at the
+  top of `design/8.1-release-notes.md` - `## v5.N - <date>`, one short sentence per change ending in the pull request link
   (`[#NN](https://github.com/onek8s/onek8s.github.io/pull/NN)`) - and sets the same `version:` in `_config.yml`;
   create the pull request first if its number is not known yet. `check.sh` fails when the two disagree or an entry
   has no pull request link. Every version is tagged `v<version>` in every repository by aks-terraform's `Design tags`
@@ -82,7 +82,10 @@ page's requirements line, no link into `archive/`).
   and 7.1's acceptance tests in 0.3 (anchors such as `#cis-benchmark` now point into 0.3); v4.0 moved what no
   requirement names to `archive/`, the decision log (7.2) and open questions (7.3) with it, and dropped the summary
   and reference PDFs - the `v3.8` tag holds the design before
-  v4.0, with the release notes of v2.0 to v3.8 (8.1 lists only v4).
+  v4.0, with the release notes of v2.0 to v3.8; v5.0 (2026-11-26, the user) made App Routing's Istio the one
+  gateway (Traefik gone), DNS App Routing's managed ExternalDNS with the route as the DNS switch, and removed Traffic
+  Manager: every application, external too, in one home cell - the `v4.12` tag holds v4's release notes (8.1 lists
+  only v5).
 
 ## The design in v4.0
 
