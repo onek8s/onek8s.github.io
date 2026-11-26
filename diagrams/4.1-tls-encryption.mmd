@@ -4,7 +4,7 @@
 %% on its own internal load balancer. Certificates are issued once per environment and exposure by a renewal job into the
 %% platform Key Vault and shared by every cluster of that exposure.
 flowchart TB
-    client["Clients<br/>external zones: Traffic Manager picks the cell by DNS<br/>internal clients: straight to the gateway"]
+    client["Clients<br/>straight to the zone gateway of the application's home cell<br/>(public DNS for external zones, private DNS for internal ones)"]
 
     subgraph MGMT["Management network"]
         job["Certificate renewal job of the environment<br/>managed identity, Officer roles on the platform vault only<br/>DNS-01 · once a month, one certificate at a time"]
