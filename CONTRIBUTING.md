@@ -116,8 +116,8 @@ GitHub for what the site does not publish. The build fails when a link inside a 
 builds the same PDFs on every pull request and attaches them to the run as `onek8s-design-pdf`; the requirements PDF
 is `--only requirements --subtitle Requirements`.
 
-The design is v4.0 since 2026-10-20 (the user's decision; the versions before it are in the Git tags, `v3.8` the last
-of v3, `v1.15` the last of v1). A pull request that changes the design adds the next minor version (v4.1, v4.2, ...;
+The design is v5.0 since 2026-11-26 (the user's decision; the versions before it are in the Git tags, `v4.12` the last
+of v4, `v3.8` the last of v3, `v1.15` the last of v1). A pull request that changes the design adds the next minor version (v5.1, v5.2, ...;
 a major version only when a human says so) to [8.1 Release notes](design/8.1-release-notes.md) - one short sentence
 per change with the link to the pull request - and sets the same `version` in `_config.yml`; `scripts/check.sh` fails
 when the two disagree or an entry has no pull request link. Every version is tagged `v<version>` in every repository
