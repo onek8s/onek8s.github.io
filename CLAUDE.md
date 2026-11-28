@@ -59,7 +59,7 @@ page's requirements line, no link into `archive/`).
   `aks-prd-int-stateless-az1`); what the implementation still lacks is tracked with the implementation, not here.
   A finding in an environment that changes the design is a design pull request first. The landing zone is out of
   scope: refer to Microsoft's documentation instead of explaining it here.
-- **Versions** (the user): the design is **v5.0 since 2026-11-26** (v4.0 since 2026-10-20). Every pull request that
+- **Versions** (the user): the design is **v5.1 since 2026-11-28** (v5.0 since 2026-11-26) (v4.0 since 2026-10-20). Every pull request that
   changes the design adds the next minor version (v5.1, v5.2, ...; a major version only when a human says so) at the
   top of `design/8.1-release-notes.md` - `## v5.N - <date>`, one short sentence per change ending in the pull request link
   (`[#NN](https://github.com/onek8s/onek8s.github.io/pull/NN)`) - and sets the same `version:` in `_config.yml`;
